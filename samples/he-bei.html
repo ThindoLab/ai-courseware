@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>苹果分给两人 · 和倍问题</title>
+<!-- 题型：和倍 / 核心：总和按倍数份均分 / 年龄：8-11 / 场景：家庭+教室 -->
+<style>
+:root{
+  --accent:#eab308; --ok:#10b981; --ink:#1f2a44; --muted:#667085; --line:#fde68a;
+  --ease:cubic-bezier(0.25,1,0.5,1); --touch:52px;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  font-family:-apple-system,"PingFang SC",system-ui,sans-serif;color:var(--ink);
+  background:linear-gradient(160deg,#fefce8,#ecfdf5);min-height:100vh;padding:14px 12px 28px;
+}
+.card{
+  max-width:760px;margin:0 auto;background:#fff;border:1px solid var(--line);
+  border-radius:20px;box-shadow:0 12px 28px rgba(234,179,8,.12);padding:18px 16px 22px;
+}
+.top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.top h1{margin:0;font-size:22px;font-weight:800}
+.badge{font-size:14px;font-weight:700;color:#a16207;background:#fef9c3;padding:5px 12px;border-radius:999px}
+.story{
+  background:linear-gradient(135deg,#fef9c3,#d1fae5);border-left:5px solid var(--accent);
+  border-radius:0 14px 14px 0;padding:12px;margin-bottom:12px;font-size:16px;line-height:1.7;
+}
+.stage{background:#fffbeb;border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:12px}
+.stage h3{margin:0 0 10px;font-size:14px;color:var(--muted)}
+.bars{display:flex;flex-direction:column;gap:14px}
+.person{display:grid;grid-template-columns:64px 1fr 56px;gap:8px;align-items:center}
+.person .name{font-size:28px;text-align:center}
+.track{
+  height:36px;background:#f1f5f9;border-radius:10px;position:relative;overflow:hidden;
+  border:2px solid #e2e8f0;
+}
+.track .fill{
+  height:100%;border-radius:8px;transition:width .45s var(--ease);
+  display:flex;align-items:center;justify-content:flex-end;padding-right:6px;
+  font-size:12px;font-weight:800;color:#fff;min-width:0;
+}
+.track .fill.a{background:linear-gradient(90deg,#fbbf24,#f59e0b)}
+.track .fill.b{background:linear-gradient(90deg,#34d399,#059669)}
+.person .num{font-size:20px;font-weight:800;color:var(--accent);text-align:right}
+.units{
+  display:flex;flex-wrap:wrap;gap:4px;justify-content:center;margin-top:12px;min-height:40px;
+}
+.unit{
+  width:28px;height:28px;border-radius:6px;background:#fde68a;border:2px solid #d97706;
+  opacity:0;transform:scale(.5);transition:opacity .3s var(--ease),transform .3s var(--ease);
+  font-size:11px;display:flex;align-items:center;justify-content:center;font-weight:800;color:#78350f;
+}
+.unit.in{opacity:1;transform:scale(1)}
+.unit.b{background:#6ee7b7;border-color:#059669;color:#064e3b}
+.formula{
+  text-align:center;margin-top:10px;font-size:15px;font-weight:700;padding:10px;
+  background:#fff;border-radius:12px;border:1px dashed #fcd34d;
+}
+.ctrl{display:flex;flex-direction:column;gap:12px}
+.row{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:10px}
+.row label{font-weight:700;font-size:15px}
+.step button{
+  min-width:var(--touch);min-height:var(--touch);border-radius:14px;border:2px solid var(--line);
+  background:#fff;font-size:22px;font-weight:800;cursor:pointer;font-family:inherit;
+}
+.step .v{min-width:48px;text-align:center;font-size:22px;font-weight:800;color:var(--accent)}
+input[type=range]{width:min(200px,45vw)}
+.btn-row{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+.btn{
+  min-height:var(--touch);padding:12px 18px;border-radius:14px;border:2px solid var(--line);
+  background:#fff;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit;
+}
+.btn.primary{background:linear-gradient(135deg,var(--accent),#ca8a04);color:#fff;border:none}
+.fb{min-height:52px;border-radius:14px;padding:12px;background:#f8fafc;border:1px solid #e2e8f0;font-size:16px;line-height:1.55;margin:10px 0}
+.fb.ok{background:#ecfdf5;border-color:#6ee7b7}
+.fb.bad{background:#fff7ed;border-color:#fcd34d}
+.thinking{background:#fffbeb;border-radius:12px;padding:10px;font-size:15px;border:1px dashed #fcd34d}
+.thinking .tag{font-weight:800;color:#b45309}
+.say{margin-top:8px;font-size:15px;min-height:22px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main class="card">
+  <div class="top">
+    <h1>苹果分给两人</h1>
+    <span class="badge">8–11 岁 · 和倍</span>
+  </div>
+  <div class="story">
+    一共有 <strong id="sumShow">24</strong> 个苹果。
+    哥哥的是弟弟的 <strong id="mulShow">3</strong> 倍。
+    把总数按「倍数份」切开：弟弟 1 份，哥哥 <span id="mulShow2">3</span> 份，一共 <strong id="partsShow">4</strong> 份。
+  </div>
+  <div class="stage" role="img" aria-label="和倍条形图解">
+    <h3>条形：每格是 1 份（同样多）</h3>
+    <div class="bars">
+      <div class="person">
+        <div class="name">👦</div>
+        <div class="track"><div class="fill a" id="fillA">哥哥</div></div>
+        <div class="num" id="numA">—</div>
+      </div>
+      <div class="person">
+        <div class="name">🧒</div>
+        <div class="track"><div class="fill b" id="fillB">弟弟</div></div>
+        <div class="num" id="numB">—</div>
+      </div>
+    </div>
+    <div class="units" id="units" aria-label="份数格子"></div>
+    <div class="formula" id="formula">总数 ÷ (倍数+1) = 1 份</div>
+  </div>
+  <div class="ctrl">
+    <div class="row">
+      <label>总数</label>
+      <div class="step">
+        <button type="button" id="sMinus">−</button>
+        <span class="v" id="sVal">24</span>
+        <button type="button" id="sPlus">+</button>
+      </div>
+      <input type="range" id="sum" min="6" max="48" value="24" step="1" aria-label="总数">
+    </div>
+    <div class="row">
+      <label>倍数</label>
+      <div class="step">
+        <button type="button" id="mMinus">−</button>
+        <span class="v" id="mVal">3</span>
+        <button type="button" id="mPlus">+</button>
+      </div>
+      <input type="range" id="mul" min="2" max="6" value="3" aria-label="倍数">
+      <span>倍</span>
+    </div>
+    <div class="row" style="margin-bottom:4px">
+      <button type="button" class="btn" id="pre1" style="min-height:44px;font-size:14px">例：24÷(3+1)</button>
+      <button type="button" class="btn" id="pre2" style="min-height:44px;font-size:14px">例：30÷(2+1)</button>
+    </div>
+    <div class="btn-row">
+      <button type="button" class="btn primary" id="btnCheck">✓ 验算</button>
+      <button type="button" class="btn" id="btnReset">↻ 重新开始</button>
+      <button type="button" class="btn" id="btnSay">🗣️ 我会说</button>
+    </div>
+  </div>
+  <div class="fb" id="fb" aria-live="polite">调总数和倍数，看条形怎么变。总数要能被「倍数+1」整除才分得开。</div>
+  <p class="thinking"><span class="tag">我怎么想：</span><span id="think">先把总数分成 (倍数+1) 份，1 份是弟弟，倍数份是哥哥。</span></p>
+  <div class="say" id="say"></div>
+</main>
+<script>
+(function(){
+  let sum=24, mul=3;
+  const $ = id => document.getElementById(id);
+
+  function solve(){
+    const parts = mul + 1;
+    if(sum % parts !== 0) return {ok:false, parts};
+    const unit = sum / parts;
+    return {ok:true, parts, unit, little: unit, big: unit * mul};
+  }
+
+  function draw(){
+    $('sumShow').textContent=sum; $('mulShow').textContent=mul; $('mulShow2').textContent=mul;
+    $('sVal').textContent=sum; $('mVal').textContent=mul;
+    const sol = solve();
+    $('partsShow').textContent = sol.parts;
+    const units = $('units');
+    units.innerHTML = '';
+    if(!sol.ok){
+      $('fillA').style.width = '0%';
+      $('fillB').style.width = '0%';
+      $('numA').textContent = '?';
+      $('numB').textContent = '?';
+      $('formula').textContent = sum + ' 不能被 ' + sol.parts + ' 整除 → 分不开';
+      $('fb').className = 'fb bad';
+      $('fb').textContent = '总数调一调，让它能被 (倍数+1)=' + sol.parts + ' 整除。';
+      $('think').textContent = '和倍题先看「一共几份」，份数要整除总数。';
+      return;
+    }
+    // 绝对刻度：按「份」对齐，每份等宽，哥条= mul 份，弟条= 1 份
+    const unitW = Math.max(8, Math.min(28, Math.floor(200 / sol.parts)));
+    $('fillA').style.width = (sol.big * unitW) + 'px';
+    $('fillB').style.width = (sol.little * unitW) + 'px';
+    $('fillA').style.maxWidth = '100%';
+    $('fillB').style.maxWidth = '100%';
+    $('fillA').textContent = sol.big + '（'+mul+'份）';
+    $('fillB').textContent = sol.little + '（1份）';
+    $('numA').textContent = sol.big;
+    $('numB').textContent = sol.little;
+    // 份块：先弟弟 1 份（绿），再哥哥 mul 份（黄）——顺序=先定 1 份再倍增
+    const u = document.createElement('div');
+    u.className = 'unit b';
+    u.textContent = '弟×1';
+    u.title = '弟弟：1 份 = ' + sol.unit;
+    units.appendChild(u);
+    setTimeout(()=>u.classList.add('in'), 0);
+    for(let i=0;i<mul;i++){
+      const g = document.createElement('div');
+      g.className = 'unit';
+      g.textContent = '哥';
+      g.title = '哥哥的第 '+(i+1)+' 份';
+      units.appendChild(g);
+      setTimeout(()=>g.classList.add('in'), (i+1)*40);
+    }
+    const tot = document.createElement('div');
+    tot.className = 'unit';
+    tot.style.background = '#e0e7ff';
+    tot.style.borderColor = '#6366f1';
+    tot.textContent = '共'+sol.parts+'份';
+    units.appendChild(tot);
+    setTimeout(()=>tot.classList.add('in'), (mul+2)*40);
+
+    $('formula').textContent = sum + ' ÷ ' + sol.parts + ' = ' + sol.unit + '（1份）→ 弟 ' + sol.little + ' · 哥 ' + sol.big;
+    $('fb').className = 'fb';
+    $('fb').textContent = '先定 1 份=' + sol.unit + '（弟）；哥哥是 ' + mul + ' 个这样的份=' + sol.big + '。';
+    $('think').textContent = '和倍：份数=倍数+1 → 每份=总数÷份数 → 小数=1份，大数=倍数份。';
+  }
+
+  function sync(){ sum=+$('sum').value; mul=+$('mul').value; draw(); }
+  function bind(m,p,r){
+    $(m).onclick=()=>{ r.value=Math.max(+r.min,+r.value-1); sync(); };
+    $(p).onclick=()=>{ r.value=Math.min(+r.max,+r.value+1); sync(); };
+    r.oninput=sync;
+  }
+  bind('sMinus','sPlus',$('sum'));
+  bind('mMinus','mPlus',$('mul'));
+  $('btnCheck').onclick=()=>{
+    const sol=solve();
+    if(!sol.ok){
+      $('fb').className='fb bad';
+      $('fb').textContent='还分不开。把总数改成 ' + sol.parts + ' 的倍数再验。';
+      return;
+    }
+    $('fb').className='fb ok';
+    $('fb').textContent='验算：'+sol.little+'+'+sol.big+'='+(sol.little+sol.big)+'；'+sol.little+'×'+mul+'='+sol.big+'。';
+  };
+  $('btnReset').onclick=()=>{ $('sum').value=24; $('mul').value=3; sync(); };
+  if($('pre1')) $('pre1').onclick=()=>{ $('sum').value=24; $('mul').value=3; sync(); };
+  if($('pre2')) $('pre2').onclick=()=>{ $('sum').value=30; $('mul').value=2; sync(); };
+  $('btnSay').onclick=()=>{
+    const sol=solve();
+    $('say').textContent = sol.ok
+      ? '我会说：一共'+(mul+1)+'份，每份'+sol.unit+'，弟弟'+sol.little+'，哥哥'+sol.big+'。'
+      : '我会说：要先让总数能被份数整除。';
+  };
+  draw();
+})();
+</script>
+</body>
+</html>

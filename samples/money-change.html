@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>超市找零 · 元角分</title>
+<!-- 题型：生活数学·找零 / 核心认知动作：比较·减法可视化 / 年龄：6-9 岁 / 场景：家庭+生活 -->
+<style>
+:root{
+  --accent:#0ea5e9; --ok:#10b981; --warn:#f59e0b; --bad:#ef4444;
+  --ink:#1f2a44; --muted:#667085; --line:#dbeafe; --ease:cubic-bezier(0.25,1,0.5,1);
+  --touch:52px;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  font-family:-apple-system,"PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+  color:var(--ink); background:linear-gradient(160deg,#e0f2fe,#fef9c3);
+  min-height:100vh; padding:14px 12px 28px;
+}
+.card{
+  max-width:760px; margin:0 auto; background:#fff; border:1px solid var(--line);
+  border-radius:20px; box-shadow:0 12px 30px rgba(14,165,233,.12); padding:18px 16px 22px;
+  animation:fadeInUp .5s var(--ease) both;
+}
+.topbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.topbar h1{margin:0;font-size:24px;font-weight:800}
+.badge{font-size:14px;font-weight:700;color:#0369a1;background:#e0f2fe;padding:5px 12px;border-radius:999px}
+.mode{margin-left:auto;font-size:14px;color:var(--muted);display:flex;gap:6px;align-items:center;cursor:pointer}
+.mode input{width:18px;height:18px}
+.story{
+  background:linear-gradient(135deg,#e0f2fe,#fef9c3); border-left:5px solid var(--accent);
+  border-radius:0 14px 14px 0; padding:12px 14px; margin-bottom:14px;
+  font-size:16px; line-height:1.7; display:flex; gap:12px;
+}
+.story .m{font-size:42px;flex-shrink:0}
+.story p{margin:0}
+.stage{
+  background:linear-gradient(180deg,#f0f9ff,#fffbeb); border:1px solid var(--line);
+  border-radius:16px; padding:14px; margin-bottom:14px;
+}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:560px){.row{grid-template-columns:1fr}}
+.box{background:#fff;border:1px dashed #bae6fd;border-radius:14px;padding:12px;text-align:center}
+.box h3{margin:0 0 8px;font-size:15px;color:var(--muted)}
+.price{font-size:32px;font-weight:800;color:#0369a1;font-variant-numeric:tabular-nums}
+.coins{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;min-height:48px;margin-top:8px}
+.coin{
+  width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:13px;font-weight:800;color:#78350f;background:linear-gradient(145deg,#fde68a,#f59e0b);
+  border:2px solid #d97706; box-shadow:0 2px 0 #b45309;
+  transition:transform .35s var(--ease), opacity .35s var(--ease);
+  opacity:0; transform:scale(.5);
+}
+.coin.in{opacity:1;transform:scale(1)}
+.coin.fly{animation:pop .4s var(--ease)}
+.coin.change{background:linear-gradient(145deg,#bbf7d0,#34d399);border-color:#059669;color:#064e3b}
+.arrow{
+  text-align:center; font-size:15px; font-weight:700; color:var(--muted);
+  padding:8px 0; grid-column:1/-1;
+}
+.bar-wrap{margin-top:12px;display:flex;flex-direction:column;gap:8px}
+.bar-row{display:grid;grid-template-columns:64px 1fr 48px;gap:8px;align-items:center}
+.bar-row .lab{font-size:13px;font-weight:700;color:var(--muted)}
+.bar-row .val{font-size:14px;font-weight:800;text-align:right;font-variant-numeric:tabular-nums}
+.bar{
+  height:22px; background:#e2e8f0; border-radius:999px; overflow:hidden; position:relative;
+}
+.bar > i{display:block;height:100%;width:0;border-radius:999px;transition:width .45s var(--ease)}
+.bar .cost{background:#fbbf24}
+.bar .paid{background:#38bdf8}
+.bar .chg{background:#34d399}
+.bar .short{background:#f87171}
+.ctrl{display:flex;flex-direction:column;gap:12px;margin-bottom:12px}
+.field{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap}
+.field label{font-size:16px;font-weight:700}
+.stepper{display:flex;align-items:center;gap:8px}
+.stepper button{
+  min-width:var(--touch); min-height:var(--touch); border-radius:14px; border:2px solid var(--line);
+  background:#fff; font-size:22px; font-weight:800; cursor:pointer; font-family:inherit;
+}
+.stepper .val{min-width:64px; text-align:center; font-size:24px; font-weight:800; color:var(--accent)}
+.btn-row{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+.btn{
+  min-height:var(--touch); padding:12px 18px; border-radius:14px; border:2px solid var(--line);
+  background:#fff; font-size:16px; font-weight:700; cursor:pointer; font-family:inherit;
+}
+.btn.primary{background:linear-gradient(135deg,var(--accent),#0284c7);color:#fff;border-color:transparent}
+.feedback{min-height:64px;border-radius:14px;padding:12px;background:#f8fafc;border:1px solid var(--line);font-size:16px;line-height:1.6;margin-bottom:10px}
+.feedback.ok{background:#ecfdf5;border-color:#6ee7b7}
+.feedback.bad{background:#fff7ed;border-color:#fcd34d}
+.thinking{background:#fffbeb;border-radius:12px;padding:10px 12px;font-size:15px;border:1px dashed #fcd34d;line-height:1.6}
+.thinking .tag{font-weight:800;color:#b45309}
+.say{font-size:15px;margin-top:8px;min-height:22px}
+@keyframes fadeInUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes pop{0%{transform:scale(.6)}70%{transform:scale(1.15)}to{transform:scale(1)}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+body.static *{animation:none!important;transition:none!important}
+body.static .coin{opacity:1;transform:none}
+</style>
+</head>
+<body>
+<main class="card">
+  <div class="topbar">
+    <h1>超市找零</h1>
+    <span class="badge">6–9 岁 · 生活数学</span>
+    <label class="mode"><input type="checkbox" id="staticMode"> 静态模式</label>
+  </div>
+  <div class="story">
+    <div class="m" id="mascot">🧒</div>
+    <p>妈妈让你去买东西。商品<strong>多少钱</strong>、你付了<strong>多少</strong>、应找回<strong>多少</strong>？拖滑块改数字，看图里的「钱条」怎么变。</p>
+  </div>
+  <div class="stage" role="img" aria-label="找零图解：付款条与商品价对比">
+    <div class="row">
+      <div class="box">
+        <h3>🛒 商品价钱</h3>
+        <div class="price" id="costShow">¥8</div>
+        <div class="coins" id="costCoins" aria-hidden="true"></div>
+      </div>
+      <div class="box">
+        <h3>💵 你付的钱</h3>
+        <div class="price" id="payShow">¥10</div>
+        <div class="coins" id="payCoins" aria-hidden="true"></div>
+      </div>
+    </div>
+    <div class="arrow" id="relation">付的 ≥ 价钱 才能买 · 找回 = 付的 − 价钱</div>
+    <div class="bar-wrap" aria-hidden="true">
+      <div class="bar-row">
+        <span class="lab">价钱</span>
+        <div class="bar"><i class="cost" id="barCost"></i></div>
+        <span class="val" id="barCostV">0</span>
+      </div>
+      <div class="bar-row">
+        <span class="lab">付款</span>
+        <div class="bar"><i class="paid" id="barPaid"></i></div>
+        <span class="val" id="barPaidV">0</span>
+      </div>
+      <div class="bar-row">
+        <span class="lab">找零</span>
+        <div class="bar"><i class="chg" id="barChg"></i></div>
+        <span class="val" id="barChgV">0</span>
+      </div>
+    </div>
+    <div class="box" style="margin-top:12px">
+      <h3>找给你</h3>
+      <div class="price" id="chgShow" style="color:#059669">¥2</div>
+      <div class="coins" id="chgCoins"></div>
+    </div>
+  </div>
+  <div class="ctrl">
+    <div class="field">
+      <label for="cost">价钱 ¥</label>
+      <div class="stepper">
+        <button type="button" id="costMinus" aria-label="价钱减1">−</button>
+        <span class="val" id="costVal">8</span>
+        <button type="button" id="costPlus" aria-label="价钱加1">+</button>
+      </div>
+      <input type="range" id="cost" min="1" max="20" value="8" aria-label="商品价钱">
+    </div>
+    <div class="field">
+      <label for="pay">付款 ¥</label>
+      <div class="stepper">
+        <button type="button" id="payMinus" aria-label="付款减1">−</button>
+        <span class="val" id="payVal">10</span>
+        <button type="button" id="payPlus" aria-label="付款加1">+</button>
+      </div>
+      <input type="range" id="pay" min="1" max="20" value="10" aria-label="付款金额">
+    </div>
+    <div class="btn-row">
+      <button type="button" class="btn primary" id="btnCheck">✓ 我算对了吗</button>
+      <button type="button" class="btn" id="btnReset">↻ 重置</button>
+      <button type="button" class="btn" id="btnSay">🗣️ 我会说</button>
+    </div>
+  </div>
+  <div class="feedback" id="feedback" aria-live="polite">调价钱和付款，看绿色「找零」条有多长。</div>
+  <p class="thinking"><span class="tag">我怎么想：</span><span id="thinkText">找回的钱 = 我付的 − 商品价钱。付不够就买不成。</span></p>
+  <div class="say" id="sayBox"></div>
+</main>
+<script>
+(function(){
+  let cost=8, pay=10, reduced=false;
+  const $ = id => document.getElementById(id);
+
+  function change(){ return pay - cost; }
+
+  function coinStack(n, el, cls){
+    el.innerHTML = '';
+    const count = Math.min(Math.max(n,0), 20);
+    for(let i=0;i<count;i++){
+      const c = document.createElement('div');
+      c.className = 'coin' + (cls? ' '+cls : '');
+      c.textContent = '1';
+      el.appendChild(c);
+      if(!reduced) setTimeout(()=>{ c.classList.add('in'); if(cls) c.classList.add('fly'); }, i*15);
+      else c.classList.add('in');
+    }
+    if(n>20){
+      const more = document.createElement('div');
+      more.className = 'coin in';
+      more.textContent = '+';
+      el.appendChild(more);
+    }
+  }
+
+  function sync(){
+    cost = +$('cost').value; pay = +$('pay').value;
+    $('costVal').textContent = cost; $('payVal').textContent = pay;
+    $('costShow').textContent = '¥'+cost;
+    $('payShow').textContent = '¥'+pay;
+    const ch = change();
+    const max = Math.max(cost, pay, 1);
+    // 三条独立条：同刻度对比，避免叠在一根里看不清
+    $('barCost').style.width = (cost/max*100)+'%';
+    $('barPaid').style.width = (pay/max*100)+'%';
+    $('barCostV').textContent = '¥'+cost;
+    $('barPaidV').textContent = '¥'+pay;
+    if(ch>=0){
+      $('barChg').className = 'chg';
+      $('barChg').style.width = (ch/max*100)+'%';
+      $('barChgV').textContent = '¥'+ch;
+      $('chgShow').textContent = '¥'+ch;
+      $('chgShow').style.color = '#059669';
+      $('relation').textContent = '付的 ¥'+pay+' − 价钱 ¥'+cost+' = 找回 ¥'+ch;
+      $('relation').style.color = '#059669';
+      coinStack(ch, $('chgCoins'), 'change');
+      $('thinkText').textContent = '三条分开看：绿条=付款比价钱多出来的部分（找零）。';
+    } else {
+      $('barChg').className = 'short';
+      $('barChg').style.width = ((-ch)/max*100)+'%';
+      $('barChgV').textContent = '差¥'+(-ch);
+      $('chgShow').textContent = '不够';
+      $('chgShow').style.color = '#dc2626';
+      $('relation').textContent = '付的 ¥'+pay+' 比价钱 ¥'+cost+' 少 ¥'+(-ch)+'，还差钱';
+      $('relation').style.color = '#dc2626';
+      $('chgCoins').innerHTML = '';
+      $('thinkText').textContent = '红条表示还差多少。把付款调到 ≥ 价钱，绿条才会出现。';
+    }
+    coinStack(cost, $('costCoins'), '');
+    coinStack(pay, $('payCoins'), '');
+    $('feedback').className = 'feedback';
+    $('feedback').textContent = '调价钱和付款，看绿色「找零」条有多长。';
+    $('sayBox').textContent = '';
+  }
+
+  function bindStep(minus, plus, range, delta){
+    $(minus).onclick = ()=>{ range.value = Math.max(+range.min, +range.value-delta); sync(); };
+    $(plus).onclick = ()=>{ range.value = Math.min(+range.max, +range.value+delta); sync(); };
+    range.oninput = sync;
+  }
+  bindStep('costMinus','costPlus',$('cost'),1);
+  bindStep('payMinus','payPlus',$('pay'),1);
+
+  $('btnReset').onclick = ()=>{
+    $('cost').value=8; $('pay').value=10; sync();
+  };
+  $('btnCheck').onclick = ()=>{
+    const ch = change();
+    if(ch>=0){
+      $('feedback').className = 'feedback ok';
+      $('feedback').textContent = '对：找回 '+ch+' 元。图里绿色段就是多付的部分被「退」回来。';
+    } else {
+      $('feedback').className = 'feedback bad';
+      $('feedback').textContent = '你付了 ¥'+pay+'，商品 ¥'+cost+'。差异：还差 ¥'+(-ch)+'。下一步：把付款调到 ≥ 价钱，再看找零。';
+    }
+  };
+  $('btnSay').onclick = ()=>{
+    const ch = change();
+    $('sayBox').textContent = ch>=0
+      ? '我会说：付 '+pay+' 元，东西 '+cost+' 元，找回 '+(pay-cost)+' 元。'
+      : '我会说：钱不够，还差 '+(-ch)+' 元才能买。';
+  };
+  $('staticMode').onchange = e=>{
+    reduced = e.target.checked;
+    document.body.classList.toggle('static', reduced);
+    sync();
+  };
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches){
+    $('staticMode').checked = true; reduced = true; document.body.classList.add('static');
+  }
+  sync();
+})();
+</script>
+</body>
+</html>

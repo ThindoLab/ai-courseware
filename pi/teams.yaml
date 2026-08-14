@@ -1,0 +1,25 @@
+# 花名册：只有岗位名字。
+# 出场顺序、可否跳过、工具分配 → 只认 pi/教练.md
+# 各岗认定 → pi/角色/<岗>.md
+
+courseware-pipeline:
+  - researcher   # 调研：知识点、低龄教学法、动画参考
+  - organizer    # 整理：场景/角色/具象物品/动态过程/验收点
+  - writer       # 生成：按整理结果写出完整单文件 HTML
+  - qa           # 质检：低龄心印/动画动态/错误引导/无外链
+  - regenerator  # 重生成：根据 QA 必须修复项改写 HTML
+
+# 快速迭代（跳过调研，直接生成+质检+重生成）
+courseware-fast:
+  - organizer
+  - writer
+  - qa
+  - regenerator
+
+# Skill/提示词 持续进化循环（≥10 轮，每轮角色轮换，每步不同角色）
+skill-evolve:
+  - optimizer   # 优化：诊断现状+出新场景
+  - generator   # 生成：按提案产出 HTML/提示词草稿
+  - reviewer    # 审核：多视角 verdict+mustFix
+  - reflector   # 反思：提炼可固化规律
+  - reoptimizer # 再优化：固化进 system.md/SKILL.md

@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>手掌量一量 · 非标准测量</title>
+<!-- param-visual · 测量启蒙 / 6-9岁 · 家庭+教室 -->
+<style>
+:root{--accent:#0d9488;--ink:#1f2a44;--muted:#667085;--line:#99f6e4;--ease:cubic-bezier(0.25,1,0.5,1);--touch:52px}
+*{box-sizing:border-box}html,body{margin:0}
+body{font-family:-apple-system,"PingFang SC",system-ui,sans-serif;color:var(--ink);background:linear-gradient(160deg,#f0fdfa,#ecfeff);min-height:100vh;padding:14px 12px 28px}
+.card{max-width:720px;margin:0 auto;background:#fff;border:1px solid var(--line);border-radius:20px;box-shadow:0 12px 28px rgba(13,148,136,.12);padding:18px 16px 22px}
+.top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.top h1{margin:0;font-size:20px;font-weight:800}
+.badge{font-size:14px;font-weight:700;color:#0f766e;background:#ccfbf1;padding:5px 12px;border-radius:999px}
+.story{background:linear-gradient(135deg,#ccfbf1,#e0f2fe);border-left:5px solid var(--accent);border-radius:0 14px 14px 0;padding:12px;margin-bottom:12px;font-size:16px;line-height:1.7}
+.stage{background:#f0fdfa;border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:12px}
+.obj{height:48px;background:linear-gradient(90deg,#38bdf8,#0284c7);border-radius:8px;margin:12px 0;position:relative;transition:width .4s var(--ease);display:flex;align-items:center;padding-left:10px;color:#fff;font-weight:800}
+.palms{display:flex;flex-wrap:wrap;gap:4px;margin:12px 0;min-height:56px;align-items:center}
+.palm{font-size:36px;opacity:0;transform:scale(.5);transition:opacity .3s var(--ease),transform .3s var(--ease)}
+.palm.in{opacity:1;transform:scale(1)}
+.palm.half{opacity:.55}
+.remain{height:12px;background:#fde68a;border-radius:4px;margin:6px 0;max-width:100%;transition:width .4s var(--ease)}
+.result{text-align:center;font-size:22px;font-weight:800;color:#0f766e;margin:8px 0}
+.row{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;align-items:center;margin:10px 0}
+.step button{min-width:var(--touch);min-height:var(--touch);border-radius:14px;border:2px solid var(--line);background:#fff;font-size:22px;font-weight:800;cursor:pointer;font-family:inherit}
+.step .v{min-width:40px;text-align:center;font-size:20px;font-weight:800;color:var(--accent)}
+.btn-row{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+.btn{min-height:var(--touch);padding:12px 18px;border-radius:14px;border:2px solid var(--line);background:#fff;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit}
+.btn.primary{background:linear-gradient(135deg,var(--accent),#0f766e);color:#fff;border:none}
+.fb{min-height:52px;border-radius:14px;padding:12px;background:#f8fafc;border:1px solid #e2e8f0;font-size:16px;line-height:1.55;margin:10px 0}
+.thinking{background:#fffbeb;border-radius:12px;padding:10px;font-size:15px;border:1px dashed #fcd34d}
+.thinking .tag{font-weight:800;color:#b45309}
+.say{margin-top:8px;font-size:15px;min-height:22px}
+.hint{font-size:13px;color:var(--muted);text-align:center}
+@media (prefers-reduced-motion:reduce){.palm,.obj{transition:none!important}.palm{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+<main class="card">
+  <div class="top"><h1>手掌量一量</h1><span class="badge">6–9 岁 · 测量</span></div>
+  <div class="story">用「一掌宽」当尺子（非标准单位）。桌子有多长？一手接一手排过去，数数要几掌。点「量一次」看手掌排上去。</div>
+  <div class="stage" role="img" aria-label="手掌测量图解">
+    <div class="hint">被测物体（长度单位：小格）</div>
+    <div class="obj" id="obj">桌子 ▭</div>
+    <div class="hint">手掌一把接一把（每掌 = <span id="pw">3</span> 小格）</div>
+    <div class="palms" id="palms"></div>
+    <div class="hint" id="remLab" hidden>还剩不满一掌的长度 ↓</div>
+    <div class="remain" id="remain" hidden></div>
+    <div class="result" id="result">？ 掌</div>
+  </div>
+  <div class="row">
+    <label style="font-weight:700">物体长</label>
+    <div class="step"><button type="button" id="lM">−</button><span class="v" id="lV">12</span><button type="button" id="lP">+</button></div>
+    <input type="range" id="len" min="4" max="24" value="12" aria-label="物体长度">
+  </div>
+  <div class="row">
+    <label style="font-weight:700">一掌宽</label>
+    <div class="step"><button type="button" id="pM">−</button><span class="v" id="pV">3</span><button type="button" id="pP">+</button></div>
+    <input type="range" id="palm" min="2" max="5" value="3" aria-label="掌宽">
+  </div>
+  <div class="btn-row">
+    <button type="button" class="btn primary" id="btnMeasure">▶ 量一次</button>
+    <button type="button" class="btn" id="btnReset">↻ 重新开始</button>
+    <button type="button" class="btn" id="btnSay">🗣️ 我会说</button>
+  </div>
+  <div class="fb" id="fb" aria-live="polite">调物体长度和掌宽，点「量一次」看要几掌。</div>
+  <p class="thinking"><span class="tag">我怎么想：</span><span id="think">先点「量一次」：看手掌怎么一把接一把排，再谈除法。</span></p>
+  <div class="say" id="say"></div>
+</main>
+<script>
+(function(){
+  let len=12, palmW=3;
+  const $=id=>document.getElementById(id);
+  function unit(){ return 14; } // px per small unit for display
+  function sync(){
+    len=+$('len').value; palmW=+$('palm').value;
+    $('lV').textContent=len; $('pV').textContent=palmW; $('pw').textContent=palmW;
+    $('obj').style.width=Math.max(40, len*unit())+'px';
+    $('obj').textContent='桌子 · '+len+' 小格';
+  }
+  function measure(){
+    sync();
+    const full = Math.floor(len / palmW);
+    const rem = len % palmW;
+    const palms=$('palms'); palms.innerHTML='';
+    for(let i=0;i<full;i++){
+      const s=document.createElement('span');
+      s.className='palm'; s.textContent='🖐️';
+      s.title='第'+(i+1)+'掌';
+      palms.appendChild(s);
+      setTimeout(()=>s.classList.add('in'), i*80);
+    }
+    const remEl=$('remain'), remLab=$('remLab');
+    if(rem>0){
+      const s=document.createElement('span');
+      s.className='palm half'; s.textContent='🖐️';
+      s.title='还多一点，不到一满掌';
+      palms.appendChild(s);
+      setTimeout(()=>s.classList.add('in'), full*80);
+      remEl.hidden=false; remLab.hidden=false;
+      remEl.style.width=Math.max(8, rem*unit())+'px';
+    } else {
+      remEl.hidden=true; remLab.hidden=true;
+    }
+    const exact = (len/palmW).toFixed(1);
+    $('result').textContent = rem
+      ? '大约 '+full+' 掌多一点（'+exact+' 掌）'
+      : '正好 '+full+' 掌';
+    $('fb').textContent = rem
+      ? len+' ÷ '+palmW+' = '+exact+'：'+full+' 个满掌 + 黄色剩余 '+rem+' 小格。'
+      : len+' ÷ '+palmW+' = '+full+'，刚好整掌排满。';
+    $('think').textContent='测量：同一单位一手接一手，不要留缝、不要重叠；量不满就记「多一点」。';
+  }
+  function bind(m,p,r){
+    $(m).onclick=()=>{ r.value=Math.max(+r.min,+r.value-1); sync(); $('palms').innerHTML=''; $('result').textContent='？ 掌'; };
+    $(p).onclick=()=>{ r.value=Math.min(+r.max,+r.value+1); sync(); $('palms').innerHTML=''; $('result').textContent='？ 掌'; };
+    r.oninput=()=>{ sync(); $('palms').innerHTML=''; $('result').textContent='？ 掌'; };
+  }
+  bind('lM','lP',$('len')); bind('pM','pP',$('palm'));
+  $('btnMeasure').onclick=measure;
+  $('btnReset').onclick=()=>{
+    $('len').value=12; $('palm').value=3; sync();
+    $('palms').innerHTML=''; $('result').textContent='？ 掌';
+    $('fb').textContent='调物体长度和掌宽，点「量一次」看要几掌。';
+    $('say').textContent='';
+  };
+  $('btnSay').onclick=()=>{
+    const full=Math.floor(len/palmW), rem=len%palmW;
+    $('say').textContent=rem
+      ? '我会说：用一掌宽去量，大约 '+full+' 掌多一点。'
+      : '我会说：一共正好 '+full+' 掌长。';
+  };
+  sync();
+})();
+</script>
+</body>
+</html>

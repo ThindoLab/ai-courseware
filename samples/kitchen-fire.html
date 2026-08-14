@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>厨房着火了 · 正确求助</title>
+<!-- 题型：选择分支·安全 / 核心认知动作：识别危险·正确行动链 / 年龄：5-9 岁 / 场景：家庭 -->
+<style>
+:root{
+  --accent:#f59e0b; --ok:#10b981; --bad:#ef4444;
+  --ink:#1f2a44; --muted:#667085; --line:#fed7aa; --ease:cubic-bezier(0.25,1,0.5,1);
+  --touch:52px;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  font-family:-apple-system,"PingFang SC",system-ui,sans-serif;
+  color:var(--ink); background:linear-gradient(160deg,#fff7ed,#fee2e2);
+  min-height:100vh; padding:14px 12px 28px;
+}
+.card{
+  max-width:720px; margin:0 auto; background:#fff; border:1px solid var(--line);
+  border-radius:20px; box-shadow:0 12px 30px rgba(245,158,11,.15); padding:18px 16px 22px;
+}
+.topbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.topbar h1{margin:0;font-size:24px;font-weight:800}
+.badge{font-size:14px;font-weight:700;color:#b45309;background:#fef3c7;padding:5px 12px;border-radius:999px}
+.progress{font-size:14px;font-weight:700;color:var(--muted);margin-bottom:8px}
+.scene{
+  background:linear-gradient(180deg,#fff7ed,#fef2f2); border:1px solid var(--line);
+  border-radius:16px; padding:12px; margin-bottom:12px; text-align:center;
+}
+.scene svg{max-width:100%;height:auto}
+.scene p{font-size:17px;line-height:1.65;margin:10px 0 0;text-align:left}
+.choices{display:flex;flex-direction:column;gap:10px;margin-bottom:12px}
+.btn{
+  min-height:var(--touch); padding:14px 16px; border-radius:14px; border:2px solid var(--line);
+  background:#fff; font-size:16px; font-weight:700; cursor:pointer; font-family:inherit; text-align:left;
+}
+.btn:disabled{opacity:.75;cursor:not-allowed}
+.btn.ok{border-color:var(--ok);background:#ecfdf5}
+.btn.bad{border-color:var(--bad);background:#fef2f2}
+.consequence{display:none;border-radius:14px;padding:12px;margin-bottom:12px;border:1px solid var(--line);background:#f8fafc}
+.consequence.show{display:block}
+.consequence.ok{background:#ecfdf5;border-color:#6ee7b7}
+.consequence.bad{background:#fff7ed;border-color:#fcd34d}
+.consequence .txt{font-size:16px;line-height:1.6;margin-top:8px}
+.btn-row{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+.btn.small{min-height:48px;font-size:15px;text-align:center}
+.btn.primary{background:linear-gradient(135deg,#f59e0b,#dc2626);color:#fff;border:none;text-align:center}
+.thinking{background:#fffbeb;border-radius:12px;padding:10px;font-size:15px;border:1px dashed #fcd34d;margin-top:10px}
+.thinking .tag{font-weight:800;color:#b45309}
+@keyframes wobble{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.shake{animation:wobble .4s ease}
+@media (prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+</head>
+<body>
+<main class="card">
+  <div class="topbar">
+    <h1>厨房着火了</h1>
+    <span class="badge">5–9 岁 · 家庭安全</span>
+  </div>
+  <div class="progress" id="progress">情境 1</div>
+  <div class="scene">
+    <svg viewBox="0 0 320 120" role="img" aria-label="厨房油锅起火示意">
+      <rect x="20" y="30" width="280" height="70" rx="10" fill="#ffedd5"/>
+      <ellipse cx="160" cy="85" rx="50" ry="12" fill="#444"/>
+      <ellipse cx="160" cy="78" rx="42" ry="8" fill="#292524"/>
+      <path d="M140 70 Q135 40 150 28" stroke="#f59e0b" stroke-width="5" fill="none"/>
+      <path d="M160 68 Q158 30 170 22" stroke="#ef4444" stroke-width="6" fill="none"/>
+      <path d="M180 70 Q190 42 175 30" stroke="#f59e0b" stroke-width="5" fill="none"/>
+      <text x="160" y="20" text-anchor="middle" font-size="14" fill="#b45309" font-weight="700">油锅起火</text>
+    </svg>
+    <p id="nodeText">锅里突然冒起火苗。大人不在身边。你会怎么做？记住：错误做法不要学着做。</p>
+  </div>
+  <div class="choices" id="choices"></div>
+  <div class="consequence" id="consequence">
+    <div id="consSvg"></div>
+    <div class="txt" id="consTxt" aria-live="polite"></div>
+  </div>
+  <div class="btn-row">
+    <button type="button" class="btn small primary" id="btnNext" hidden>下一步 →</button>
+    <button type="button" class="btn small" id="btnReset">↻ 重新开始</button>
+    <button type="button" class="btn small" id="btnSay">🗣️ 我会说</button>
+  </div>
+  <p class="thinking"><span class="tag">我怎么想：</span><span id="thinkText">先保护自己，再找大人或打 119。不要靠近火，不要用水浇油火。</span></p>
+</main>
+<script>
+(function(){
+  // 安全红线：错误选项一律疑问式/第三人称，禁止祈使句
+  const NODES = {
+    start:{
+      progress:'情境 · 油锅起火',
+      text:'锅里突然冒起火苗。大人不在身边。你会怎么做？',
+      choices:[
+        { text:'🚪 立刻离开厨房，大声叫大人 / 拨打 119', next:'leave', correct:true,
+          fb:'对：先离开危险处，叫大人或打 119。火大时不要自己灭。',
+          svg:`<svg viewBox="0 0 220 110"><rect width="220" height="110" rx="10" fill="#ecfdf5"/><text x="70" y="55" font-size="36" text-anchor="middle">🚪</text><text x="150" y="55" font-size="32" text-anchor="middle">📞</text><text x="110" y="95" text-anchor="middle" font-size="13" fill="#065f46">离开 + 叫大人/119</text></svg>`},
+        { text:'有人用水去浇油锅里的火，会怎样？', next:'water', correct:false,
+          fb:'停下，不要这样做。油火遇水会溅开，火更大更危险。应离开并叫大人或 119。',
+          svg:`<svg viewBox="0 0 220 110"><rect width="220" height="110" rx="10" fill="#fff7ed"/><ellipse cx="110" cy="85" rx="45" ry="10" fill="#444"/><circle cx="110" cy="50" r="6" fill="#60a5fa"/><path d="M80 75 Q70 40 90 30" stroke="#ef4444" stroke-width="5" fill="none"/><path d="M110 70 Q105 28 120 20" stroke="#f59e0b" stroke-width="6" fill="none"/><path d="M140 75 Q155 40 135 28" stroke="#ef4444" stroke-width="5" fill="none"/><text x="110" y="20" text-anchor="middle" font-size="12" fill="#dc2626">水让火溅开！</text></svg>`},
+        { text:'有人拿毛巾用力去拍打火苗，行吗？', next:'towel', correct:false,
+          fb:'停下。拍打可能让油溅出、人被烫伤。先离开，叫大人；大人可用锅盖从侧面盖住。',
+          svg:`<svg viewBox="0 0 220 110"><rect width="220" height="110" rx="10" fill="#fef2f2"/><text x="110" y="55" text-anchor="middle" font-size="40">🩹</text><text x="110" y="95" text-anchor="middle" font-size="13" fill="#991b1b">容易被烫到</text></svg>`}
+      ]
+    },
+    water:{
+      progress:'后果 · 水浇油火',
+      text:'火苗溅得更大了。现在最重要的是什么？',
+      choices:[
+        { text:'远离灶台，退出厨房，叫大人或打 119', next:'success', correct:true,
+          fb:'对。已经危险时，保护自己、求助优先。',
+          svg:`<svg viewBox="0 0 220 100"><rect width="220" height="100" rx="10" fill="#ecfdf5"/><text x="110" y="55" text-anchor="middle" font-size="36">🏃📞</text></svg>`},
+        { text:'有人想再浇更多水试试，会怎样？', next:'fail', correct:false,
+          fb:'会更糟。不要靠近，立即离开并报警求助。',
+          svg:`<svg viewBox="0 0 220 100"><rect width="220" height="100" rx="10" fill="#fff7ed"/><text x="110" y="55" text-anchor="middle" font-size="36">🔥🔥</text></svg>`}
+      ]
+    },
+    towel:{
+      progress:'后果 · 拍打',
+      text:'手被热浪逼得抬不起来。接下来？',
+      choices:[
+        { text:'后退离开，找大人或打 119', next:'success', correct:true,
+          fb:'对。儿童不要自己灭油火。',
+          svg:`<svg viewBox="0 0 220 100"><rect width="220" height="100" rx="10" fill="#ecfdf5"/><text x="110" y="55" text-anchor="middle" font-size="36">🚪</text></svg>`},
+        { text:'有人会掀开锅盖看一眼里面，行吗？', next:'fail', correct:false,
+          fb:'停下。掀盖会让更多空气进入，火可能更旺，还易被烫。离开并求助。',
+          svg:`<svg viewBox="0 0 220 100"><rect width="220" height="100" rx="10" fill="#fef2f2"/><text x="110" y="55" text-anchor="middle" font-size="36">♨️</text></svg>`}
+      ]
+    },
+    leave:{
+      progress:'行动链 · 离开之后',
+      text:'你已到门外安全处。大人还没到。还要做什么？',
+      choices:[
+        { text:'拨打 119，说清地址「厨房油锅起火」', next:'success', correct:true,
+          fb:'完整行动：离开 → 叫大人/119 → 说清地址。不要乘电梯冲回火场。',
+          svg:`<svg viewBox="0 0 220 100"><rect width="220" height="100" rx="10" fill="#ecfdf5"/><text x="110" y="45" text-anchor="middle" font-size="28">119</text><text x="110" y="80" text-anchor="middle" font-size="13" fill="#065f46">说清地址与情况</text></svg>`},
+        { text:'有人会跑回去拿手机或玩具，会怎样？', next:'fail', correct:false,
+          fb:'不要返回火场。人身安全第一，用安全处的电话求助。',
+          svg:`<svg viewBox="0 0 220 100"><rect width="220" height="100" rx="10" fill="#fff7ed"/><text x="110" y="55" text-anchor="middle" font-size="36">🚫</text></svg>`}
+      ]
+    },
+    success:{
+      progress:'✓ 安全', ending:true, success:true,
+      text:'正确链路：离开厨房 → 叫大人 / 打 119 → 说清地址。火大不要自己灭，不要用水浇油火，不要返回火场。',
+      choices:[]
+    },
+    fail:{
+      progress:'需重来', ending:true, success:false,
+      text:'危险做法会让火更大或让人受伤。记住：离开、叫大人、打 119。点「重新开始」再选一次。',
+      choices:[]
+    }
+  };
+
+  let nodeId='start', answered=false;
+  const $ = id => document.getElementById(id);
+
+  function updateScene(n){
+    // 主场景随节点变化，避免「文案变了图还停在起火」
+    const svg = document.querySelector('.scene svg');
+    if(!svg) return;
+    if(n.ending && n.success){
+      svg.innerHTML = '<rect x="20" y="30" width="280" height="70" rx="10" fill="#d1fae5"/><text x="160" y="75" text-anchor="middle" font-size="36">🚪📞</text><text x="160" y="100" text-anchor="middle" font-size="14" fill="#065f46">已离开并求助</text>';
+    } else if(nodeId==='water' || nodeId==='fail'){
+      svg.innerHTML = '<rect x="20" y="30" width="280" height="70" rx="10" fill="#fee2e2"/><ellipse cx="160" cy="85" rx="50" ry="12" fill="#444"/><path d="M130 70 Q120 30 145 20" stroke="#ef4444" stroke-width="6" fill="none"/><path d="M160 68 Q155 25 175 18" stroke="#f59e0b" stroke-width="7" fill="none"/><path d="M190 70 Q205 35 185 22" stroke="#ef4444" stroke-width="6" fill="none"/><text x="160" y="20" text-anchor="middle" font-size="14" fill="#dc2626">火势更大</text>';
+    } else if(nodeId==='leave' || nodeId==='success'){
+      svg.innerHTML = '<rect x="20" y="30" width="280" height="70" rx="10" fill="#ecfdf5"/><text x="100" y="80" text-anchor="middle" font-size="40">🚪</text><text x="200" y="80" text-anchor="middle" font-size="36">🏃</text>';
+    }
+  }
+  function render(){
+    const n = NODES[nodeId];
+    answered = false;
+    $('progress').textContent = n.progress;
+    $('nodeText').textContent = n.text;
+    updateScene(n);
+    $('consequence').className = 'consequence';
+    $('btnNext').hidden = true;
+    const box = $('choices');
+    box.innerHTML = '';
+    if(n.ending){
+      $('thinkText').textContent = n.success
+        ? '离开 → 119/大人 → 说清地址。不浇水、不拍打、不回去。'
+        : '错误做法危险。回到开始，选「离开并求助」。';
+      return;
+    }
+    n.choices.forEach(c=>{
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'btn';
+      b.textContent = c.text;
+      b.onclick = ()=> choose(c, b);
+      box.appendChild(b);
+    });
+    $('thinkText').textContent = '先保护自己，再求助。油火不能用水浇。';
+  }
+
+  function choose(c, btn){
+    if(answered) return;
+    answered = true;
+    [...$('choices').children].forEach(el=> el.disabled = true);
+    btn.classList.add(c.correct ? 'ok' : 'bad');
+    if(!c.correct) btn.classList.add('shake');
+    const cons = $('consequence');
+    cons.className = 'consequence show ' + (c.correct ? 'ok' : 'bad');
+    $('consSvg').innerHTML = c.svg;
+    $('consTxt').textContent = c.fb;
+    nodeId = c.next;
+    $('btnNext').hidden = false;
+    if(!c.correct){
+      setTimeout(()=>{
+        [...$('choices').children].forEach(el=>{
+          if(!el.classList.contains('bad')) el.disabled = false;
+        });
+        answered = false;
+      }, 900);
+    }
+  }
+
+  $('btnNext').onclick = render;
+  $('btnReset').onclick = ()=>{ nodeId='start'; render(); };
+  $('btnSay').onclick = ()=>{
+    $('consequence').className = 'consequence show ok';
+    $('consSvg').innerHTML = '';
+    $('consTxt').textContent = '我会说：厨房着火，我先离开，叫大人或打 119，说清地址。不浇水、不拍火。';
+  };
+  render();
+})();
+</script>
+</body>
+</html>

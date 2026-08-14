@@ -1,0 +1,18 @@
+{
+  "title": "鸡兔同笼",
+  "grade": "小学四年级",
+  "params": [
+    { "id": "heads", "label": "头的数量", "min": 1, "max": 50, "step": 1, "value": 35 },
+    { "id": "legs", "label": "腿的数量", "min": 2, "max": 200, "step": 2, "value": 94 }
+  ],
+  "formulas": [
+    { "id": "rabbits", "label": "兔", "expr": "(legs - 2 * heads) / 2" },
+    { "id": "chickens", "label": "鸡", "expr": "heads - rabbits" }
+  ],
+  "visual": { "type": "icon-grid", "mapping": { "chickens": "🐔", "rabbits": "🐰" } },
+  "validateCounts": true,
+  "noSolutionMessage": "这个组合无解：腿数得是偶数，且 2×头 ≤ 腿数 ≤ 4×头。调一调滑块试试。",
+  "conclusionTemplate": "鸡 {{chickens}} 只，兔 {{rabbits}} 只",
+  "hints": ["先假设全是鸡", "多出来的腿，每 2 条换 1 只兔"],
+  "source": { "refs": [], "module": "learning-coaching" }
+}

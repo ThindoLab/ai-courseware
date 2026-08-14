@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>参数图解 · 教具</title>
+<style>
+  :root{
+    --bg1:#eef2ff; --bg2:#fdf2f8; --card:#fff; --line:#ece9f5; --ink:#2a2440;
+    --muted:#7a7493; --accent:#6d5efc; --accent2:#ff7ab6; --accent3:#22c1c3;
+    --ok:#10b981; --warn:#f59e0b; --shadow:0 12px 30px rgba(109,94,252,.12);
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0}
+  body{min-height:100dvh;height:100dvh;overflow:hidden;background:linear-gradient(135deg,var(--bg1),var(--bg2));color:var(--ink);
+    font-family:-apple-system,"PingFang SC","Microsoft YaHei",system-ui,sans-serif;line-height:1.5;display:flex;flex-direction:column}
+  /* 浮动装饰背景 */
+  .deco{position:fixed;border-radius:50%;filter:blur(2px);opacity:.35;pointer-events:none;z-index:0;animation:float 9s ease-in-out infinite}
+  .deco1{width:120px;height:120px;background:radial-gradient(circle,#c4b5fd,#fff);top:8%;right:10%}
+  .deco2{width:90px;height:90px;background:radial-gradient(circle,#fbcfe8,#fff);bottom:12%;left:6%;animation-delay:1.5s}
+  .deco3{width:70px;height:70px;background:radial-gradient(circle,#99f6e4,#fff);top:40%;left:80%;animation-delay:3s}
+  @keyframes float{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-22px) rotate(8deg)}}
+  .card{position:relative;z-index:1;flex:1;min-height:0;width:100%;max-width:760px;margin:0 auto;padding:12px 14px 14px;
+    display:flex;flex-direction:column;overflow:hidden}
+  .topbar{flex:none;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border-radius:16px;padding:12px 16px;box-shadow:var(--shadow);margin-bottom:10px;animation:fadeInUp .5s}
+  .topbar h1{margin:0;font-size:22px;font-weight:800;letter-spacing:.5px}
+  .topbar .grade{margin:6px 0 0;opacity:.92;font-size:14px}
+  .panel{flex:1;min-height:0;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px 14px;box-shadow:var(--shadow);
+    margin-bottom:0;animation:fadeInUp .55s;display:flex;flex-direction:column;overflow:hidden}
+  .ctrl{flex:none}
+  .ctrl{margin-bottom:16px}
+  .ctrl label{display:flex;justify-content:space-between;align-items:center;font-size:15px;font-weight:600;color:var(--muted);margin-bottom:10px}
+  /* 数值徽章 */
+  .val{font-weight:800;color:#fff;background:linear-gradient(135deg,var(--accent),var(--accent2));padding:4px 16px;border-radius:999px;font-size:20px;min-width:54px;text-align:center;box-shadow:0 4px 12px rgba(109,94,252,.35);display:inline-block}
+  .val.jello{animation:jello .5s}
+  /* 滑条美化 */
+  input[type=range]{width:100%;min-height:44px;-webkit-appearance:none;appearance:none;background:transparent}
+  input[type=range]::-webkit-slider-runnable-track{height:12px;border-radius:999px;background:linear-gradient(90deg,#e9e3ff,#fde7f3)}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:30px;height:30px;border-radius:50%;background:#fff;border:3px solid var(--accent);box-shadow:0 4px 10px rgba(109,94,252,.4);margin-top:-9px;cursor:pointer;transition:transform .1s}
+  input[type=range]::-webkit-slider-thumb:active{transform:scale(1.2)}
+  input[type=range]::-moz-range-track{height:12px;border-radius:999px;background:linear-gradient(90deg,#e9e3ff,#fde7f3)}
+  input[type=range]::-moz-range-thumb{width:28px;height:28px;border-radius:50%;background:#fff;border:3px solid var(--accent);cursor:pointer}
+  .stage{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+  .stage svg,.stage canvas{width:100%;height:100%;max-height:100%}
+  .stage::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 30% 20%,#f5f0ff,transparent 60%),radial-gradient(circle at 80% 80%,#fef0f7,transparent 55%);pointer-events:none}
+  /* icon-grid */
+  .icons{display:flex;flex-direction:column;gap:16px;align-items:center;width:100%;position:relative;z-index:1}
+  .igroup{display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:center}
+  .irow{font-size:34px;display:flex;flex-wrap:wrap;gap:6px;max-width:560px}
+  .irow span{display:inline-block;animation:bounceIn .5s both;transition:transform .15s}
+  .irow span:hover{transform:scale(1.25) rotate(-6deg)}
+  .icount{font-size:18px;font-weight:800;color:#fff;background:linear-gradient(135deg,var(--accent3),var(--accent));padding:5px 16px;border-radius:999px;white-space:nowrap;animation:pulse 1.6s infinite}
+  .no-solution{color:var(--warn);font-size:17px;text-align:center;font-weight:600;animation:wobble .6s}
+  .conclusion{font-size:20px;font-weight:800;color:#fff;background:linear-gradient(135deg,var(--ok),#34d399);border-radius:16px;padding:16px 18px;box-shadow:0 8px 20px rgba(16,185,129,.25);animation:fadeInUp .4s}
+  .conclusion.celebrate{animation:tada .7s}
+  .hints{margin:14px 0 0;padding-left:22px;color:var(--muted);font-size:14px}
+  .hints li{margin:5px 0}
+  .hints li::marker{content:"💡 "}
+  .btn{margin-top:20px;min-height:52px;font-size:16px;font-weight:700;border:none;border-radius:14px;cursor:pointer;padding:0 24px;color:#fff;background:linear-gradient(135deg,var(--accent),var(--accent2));box-shadow:0 8px 18px rgba(109,94,252,.35);transition:transform .1s,box-shadow .15s}
+  .btn:hover{transform:translateY(-2px);box-shadow:0 12px 24px rgba(109,94,252,.45)}
+  .btn:active{transform:translateY(1px) scale(.97)}
+  /* bar */
+  .vbar{width:100%;position:relative;z-index:1}
+  .vbar-label{font-size:14px;color:var(--muted);margin-bottom:10px}
+  .vbar-label b{color:var(--ink);font-size:22px}
+  .vbar-track{width:100%;height:30px;background:#eee;border-radius:15px;overflow:hidden;box-shadow:inset 0 2px 4px rgba(0,0,0,.08)}
+  .vbar-fill{height:100%;border-radius:15px;transition:width .3s ease;background:linear-gradient(90deg,var(--accent3),var(--accent));animation:bounceIn .4s}
+  .stats{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;position:relative;z-index:1}
+  .stat{background:linear-gradient(135deg,#f5f0ff,#fef0f7);border-radius:14px;padding:12px 16px;text-align:center;min-width:78px;animation:bounceIn .4s both}
+  .stat b{display:block;font-size:22px;color:var(--accent)}
+  .stat span{font-size:12px;color:var(--muted)}
+  .stage svg,.diagram-wrap{position:relative;z-index:1;animation:fadeInUp .4s}
+  .diagram-wrap{width:100%}
+  /* 借鉴自 animate.css 的 keyframes(内联,离线) */
+  @keyframes bounceIn{0%{opacity:0;transform:scale3d(.3,.3,.3)}20%{transform:scale3d(1.1,1.1,1.1)}40%{transform:scale3d(.9,.9,.9)}60%{opacity:1;transform:scale3d(1.03,1.03,1.03)}80%{transform:scale3d(.97,.97,.97)}to{opacity:1;transform:scaleX(1)}}
+  @keyframes fadeInUp{0%{opacity:0;transform:translate3d(0,30%,0)}to{opacity:1;transform:translateZ(0)}}
+  @keyframes pulse{0%,100%{transform:scaleX(1)}50%{transform:scale3d(1.06,1.06,1.06)}}
+  @keyframes jello{0%,11.1%,to{transform:translateZ(0)}22.2%{transform:skewX(-12.5deg) skewY(-12.5deg)}33.3%{transform:skewX(6.25deg) skewY(6.25deg)}44.4%{transform:skewX(-3.125deg) skewY(-3.125deg)}55.5%{transform:skewX(1.56deg) skewY(1.56deg)}66.6%{transform:skewX(-.78deg) skewY(-.78deg)}77.7%{transform:skewX(.39deg) skewY(.39deg)}}
+  @keyframes tada{0%{transform:scaleX(1)}10%,20%{transform:scale3d(.9,.9,.9) rotate(-3deg)}30%,50%,70%,90%{transform:scale3d(1.1,1.1,1.1) rotate(3deg)}40%,60%,80%{transform:scale3d(1.1,1.1,1.1) rotate(-3deg)}to{transform:scaleX(1)}}
+  @keyframes wobble{0%{transform:translateZ(0)}15%{transform:translate3d(-25%,0,0) rotate(-5deg)}30%{transform:translate3d(20%,0,0) rotate(3deg)}45%{transform:translate3d(-15%,0,0) rotate(-3deg)}60%{transform:translate3d(10%,0,0) rotate(2deg)}75%{transform:translate3d(-5%,0,0) rotate(-1deg)}to{transform:translateZ(0)}}
+  @media(max-width:560px){.topbar h1{font-size:22px}}
+</style>
+</head>
+<body>
+<div class="deco deco1"></div><div class="deco deco2"></div><div class="deco deco3"></div>
+<main class="card">
+  <div class="topbar"><h1 id="title"></h1><p class="grade" id="grade"></p></div>
+  <div class="panel"><div id="controls"></div></div>
+  <div class="panel stage" id="stage"></div>
+  <p class="conclusion" id="conclusion"></p>
+  <ul class="hints" id="hints"></ul>
+  <button class="btn" id="btn-reset" data-action="reset">↻ 重置</button>
+</main>
+
+<script type="application/json" id="widget-config">
+{
+  "title": "鸡兔同笼",
+  "grade": "小学四年级",
+  "params": [
+    { "id": "heads", "label": "头的数量", "min": 1, "max": 50, "step": 1, "value": 35 },
+    { "id": "legs", "label": "腿的数量", "min": 2, "max": 200, "step": 2, "value": 94 }
+  ],
+  "formulas": [
+    { "id": "rabbits", "label": "兔", "expr": "(legs - 2 * heads) / 2" },
+    { "id": "chickens", "label": "鸡", "expr": "heads - rabbits" }
+  ],
+  "visual": { "type": "icon-grid", "mapping": { "chickens": "🐔", "rabbits": "🐰" } },
+  "validateCounts": true,
+  "noSolutionMessage": "这个组合无解：腿数得是偶数，且 2×头 ≤ 腿数 ≤ 4×头。调一调滑块试试。",
+  "conclusionTemplate": "鸡 {{chickens}} 只，兔 {{rabbits}} 只",
+  "hints": ["先假设全是鸡", "多出来的腿，每 2 条换 1 只兔"],
+  "source": { "refs": [], "module": "learning-coaching" }
+}
+</script>
+
+<script>
+(function () {
+  "use strict";
+  var cfg = JSON.parse(document.getElementById("widget-config").textContent);
+  var initials = {};
+  cfg.params.forEach(function (p) { initials[p.id] = p.value; });
+  var prevVals = {};
+
+  function evalExpr(expr, vars) {
+    var tokens = expr.match(/\d+\.?\d*|[a-zA-Z_]\w*|[+\-*/()]/g) || [];
+    var pos = 0;
+    function peek(){return tokens[pos]} function next(){return tokens[pos++]}
+    function factor(){var t=next();if(t==="("){var v=expr1();next();return v}if(/^[a-zA-Z_]/.test(t)){return Object.prototype.hasOwnProperty.call(vars,t)?vars[t]:0}return parseFloat(t)}
+    function term(){var v=factor();while(peek()==="*"||peek()==="/"){var op=next(),r=factor();v=op==="*"?v*r:v/r}return v}
+    function expr1(){var v=term();while(peek()==="+"||peek()==="-"){var op=next(),r=term();v=op==="+"?v+r:v-r}return v}
+    return expr1();
+  }
+  function has(o,k){return Object.prototype.hasOwnProperty.call(o,k)}
+  function resolveVal(x,vars){if(typeof x==="number")return x;if(typeof x==="string"&&has(vars,x))return vars[x];return 0}
+  function fmtNum(v){if(typeof v!=="number"||!isFinite(v))return "-";if(Math.abs(v-Math.round(v))<1e-9)return String(Math.round(v));return String(Math.round(v*100)/100)}
+  function isCount(v){return typeof v==="number"&&v>=-1e-9&&Math.abs(v-Math.round(v))<1e-9}
+  function fillVars(s,vars){return s.replace(/\{\{\s*(\w+)\s*\}\}/g,function(_,n){return has(vars,n)?fmtNum(vars[n]):""})}
+
+  // 数字 count-up 动画
+  function countUp(el, to){
+    var from = parseFloat(prevVals[el.dataset.val]);
+    if(isNaN(from)) from = to;
+    if(Math.abs(from-to)<1e-9){ el.textContent = fmtNum(to); prevVals[el.dataset.val]=to; return; }
+    var start=performance.now(), dur=260;
+    function step(t){
+      var k=Math.min(1,(t-start)/dur); var v=from+(to-from)*(1-Math.pow(1-k,3));
+      el.textContent = fmtNum(v);
+      if(k<1) requestAnimationFrame(step); else { el.textContent=fmtNum(to); prevVals[el.dataset.val]=to; }
+    }
+    requestAnimationFrame(step);
+    el.classList.remove("jello"); void el.offsetWidth; el.classList.add("jello");
+  }
+
+  document.getElementById("title").textContent = cfg.title;
+  if (cfg.grade) document.getElementById("grade").textContent = cfg.grade;
+  var hintsEl = document.getElementById("hints");
+  (cfg.hints || []).forEach(function (h) { var li=document.createElement("li"); li.textContent=h; hintsEl.appendChild(li); });
+
+  var controlsEl = document.getElementById("controls");
+  var inputs = {};
+  cfg.params.forEach(function (p) {
+    var wrap = document.createElement("div"); wrap.className="ctrl";
+    var lab = document.createElement("label"); lab.htmlFor="param-"+p.id;
+    lab.innerHTML = "<span>"+p.label+"</span><span class=\"val\" data-val=\""+p.id+"\">"+fmtNum(p.value)+"</span>";
+    var input = document.createElement("input"); input.type="range"; input.id="param-"+p.id;
+    input.min=p.min; input.max=p.max; input.step=p.step; input.value=p.value; input.setAttribute("data-param",p.id);
+    wrap.appendChild(lab); wrap.appendChild(input); controlsEl.appendChild(wrap);
+    inputs[p.id]=input; prevVals[p.id]=p.value;
+    input.addEventListener("input", compute);
+  });
+  var stageEl = document.getElementById("stage");
+  var conclusionEl = document.getElementById("conclusion");
+  var prevValid = null;
+
+  function renderIconGrid(v, vars){
+    var grid=document.createElement("div"); grid.className="icons";
+    var mapping=v.mapping||{}; var idx=0;
+    Object.keys(mapping).forEach(function(key){
+      var raw=vars[key]; var count=isCount(raw)?Math.max(0,Math.round(raw)):0;
+      var g=document.createElement("div"); g.className="igroup";
+      var icons=document.createElement("span"); icons.className="irow";
+      var shown=Math.min(count,12);
+      for(var i=0;i<shown;i++){ var s=document.createElement("span"); s.textContent=mapping[key]; s.style.animationDelay=(idx*0.04+i*0.03)+"s"; icons.appendChild(s); }
+      g.appendChild(icons);
+      var lbl=document.createElement("span"); lbl.className="icount"; lbl.textContent="×"+count;
+      g.appendChild(lbl); grid.appendChild(g); idx++;
+    });
+    if(!grid.childNodes.length){ grid.textContent="无"; grid.style.color="#ccc"; }
+    stageEl.appendChild(grid);
+  }
+  function renderBar(v, vars){
+    var val=resolveVal(v.value,vars); var max=resolveVal(v.max,vars); if(!(max>0))max=100;
+    var pct=Math.max(0,Math.min(100,(val/max)*100)); var color=v.color||"#6d5efc"; var unit=v.unit||"";
+    var w=document.createElement("div"); w.className="vbar";
+    w.innerHTML='<div class="vbar-label">'+(v.label||"")+' <b>'+fmtNum(val)+unit+'</b> / '+fmtNum(max)+unit+'</div><div class="vbar-track"><div class="vbar-fill" style="width:'+pct+'%;background:linear-gradient(90deg,'+color+',#ff7ab6)"></div></div>';
+    stageEl.appendChild(w);
+  }
+  function renderPie(v, vars){
+    var val=resolveVal(v.value,vars); var max=resolveVal(v.max,vars); if(!(max>0))max=1;
+    var frac=Math.max(0,Math.min(1,val/max)); var r=58,c=2*Math.PI*r,dash=frac*c,color=v.color||"#6d5efc";
+    stageEl.innerHTML='<svg viewBox="0 0 160 160" width="170" height="170"><circle cx="80" cy="80" r="'+r+'" fill="#f3f0ff"/><circle cx="80" cy="80" r="'+(r/2)+'" fill="none" stroke="'+color+'" stroke-width="'+r+'" stroke-dasharray="'+dash+' '+(c-dash)+'" transform="rotate(-90 80 80)" stroke-linecap="round"/><text x="80" y="88" text-anchor="middle" font-size="22" font-weight="800" fill="#2a2440">'+Math.round(frac*100)+'%</text></svg>';
+  }
+  function renderRect(v, vars){
+    var w=resolveVal(v.width,vars),h=resolveVal(v.height,vars); if(!(w>0))w=1; if(!(h>0))h=1;
+    var s=Math.min(240/w,240/h,4); var dw=w*s,dh=h*s; var x=(300-dw)/2,y=(190-dh)/2+5;
+    stageEl.innerHTML='<svg viewBox="0 0 300 210" width="100%" height="200"><rect x="'+x+'" y="'+y+'" width="'+dw+'" height="'+dh+'" fill="url(#rg)" stroke="#6d5efc" stroke-width="2" rx="6"/><defs><linearGradient id="rg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#eef2ff"/><stop offset="1" stop-color="#fdf2f8"/></linearGradient></defs><text x="'+(x+dw/2)+'" y="'+(y-8)+'" text-anchor="middle" font-size="14" fill="#7a7493">宽 '+fmtNum(w)+(v.unit||"")+'</text><text x="'+(x+dw+10)+'" y="'+(y+dh/2+4)+'" font-size="14" fill="#7a7493">高 '+fmtNum(h)+(v.unit||"")+'</text></svg>';
+  }
+  function renderDiagram(v, vars){
+    var svg=(v.svg||"").replace(/<script[\s\S]*?<\/script>/gi,""); svg=fillVars(svg,vars);
+    var w=document.createElement("div"); w.className="diagram-wrap"; w.innerHTML=svg; stageEl.appendChild(w);
+  }
+  function renderStats(cfg, vars){
+    var w=document.createElement("div"); w.className="stats";
+    cfg.formulas.forEach(function(f,i){var st=document.createElement("div");st.className="stat";st.style.animationDelay=(i*0.06)+"s";st.innerHTML='<b>'+fmtNum(vars[f.id])+'</b><span>'+(f.label||f.id)+'</span>';w.appendChild(st)});
+    if(!w.childNodes.length){w.textContent="无";w.style.color="#ccc"}
+    stageEl.appendChild(w);
+  }
+  function renderVisual(cfg, vars){
+    var v=cfg.visual;
+    if(!v||!v.type){renderStats(cfg,vars);return}
+    if(v.type==="icon-grid")renderIconGrid(v,vars);
+    else if(v.type==="bar")renderBar(v,vars);
+    else if(v.type==="pie")renderPie(v,vars);
+    else if(v.type==="rect")renderRect(v,vars);
+    else if(v.type==="diagram")renderDiagram(v,vars);
+    else renderStats(cfg,vars);
+  }
+
+  function compute() {
+    var vars = {};
+    cfg.params.forEach(function (p) { vars[p.id] = parseFloat(inputs[p.id].value); });
+    cfg.formulas.forEach(function (f) { vars[f.id] = evalExpr(f.expr, vars); });
+    cfg.params.forEach(function (p) { var el=controlsEl.querySelector('[data-val="'+p.id+'"]'); if(el) countUp(el, vars[p.id]); });
+    stageEl.innerHTML = "";
+    var valid = true;
+    if (cfg.validateCounts === true) valid = cfg.formulas.every(function (f) { return isCount(vars[f.id]); });
+    if (!valid) {
+      var warn=document.createElement("p"); warn.className="no-solution";
+      warn.textContent=cfg.noSolutionMessage||"当前组合没有合理结果，调整滑块试试。";
+      stageEl.appendChild(warn); conclusionEl.textContent="（无解）"; conclusionEl.style.opacity=.6; prevValid=false; return;
+    }
+    conclusionEl.style.opacity=1;
+    renderVisual(cfg, vars);
+    conclusionEl.textContent = fillVars(cfg.conclusionTemplate, vars);
+    conclusionEl.classList.remove("celebrate"); void conclusionEl.offsetWidth;
+    if(!prevValid) conclusionEl.classList.add("celebrate"); // 从无解->有解时庆祝
+    prevValid = true;
+  }
+  document.getElementById("btn-reset").addEventListener("click", function () {
+    cfg.params.forEach(function (p) { inputs[p.id].value = initials[p.id]; }); compute();
+  });
+  compute();
+})();
+</script>
+</body>
+</html>

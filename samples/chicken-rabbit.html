@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>小鸡小兔住一笼 · 假设法</title>
+<!-- 题型：鸡兔同笼 / 核心认知：假设→数腿差→换算 / 年龄：7-10 / 场景：家庭+教室 -->
+<style>
+:root{
+  --accent:#f59e0b; --ok:#10b981; --bad:#ef4444; --ink:#1f2a44; --muted:#667085;
+  --line:#fde68a; --ease:cubic-bezier(0.25,1,0.5,1); --touch:52px;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  font-family:-apple-system,"PingFang SC",system-ui,sans-serif; color:var(--ink);
+  background:linear-gradient(160deg,#fffbeb,#ecfdf5); min-height:100vh; padding:14px 12px 28px;
+}
+.card{
+  max-width:780px; margin:0 auto; background:#fff; border:1px solid var(--line);
+  border-radius:20px; box-shadow:0 12px 30px rgba(245,158,11,.12); padding:18px 16px 22px;
+}
+.top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.top h1{margin:0;font-size:24px;font-weight:800}
+.badge{font-size:14px;font-weight:700;color:#b45309;background:#fef3c7;padding:5px 12px;border-radius:999px}
+.mode{margin-left:auto;font-size:14px;color:var(--muted);display:flex;gap:6px;align-items:center}
+.story{
+  background:linear-gradient(135deg,#fef3c7,#d1fae5); border-left:5px solid var(--accent);
+  border-radius:0 14px 14px 0; padding:12px 14px; margin-bottom:12px; font-size:16px; line-height:1.7;
+}
+.story strong{color:#b45309}
+.stage{
+  background:linear-gradient(180deg,#fffbeb,#f0fdf4); border:1px solid var(--line);
+  border-radius:16px; padding:12px; margin-bottom:12px;
+}
+.stage h3{margin:0 0 8px;font-size:14px;color:var(--muted)}
+#diagram{width:100%; height:auto; display:block}
+.legend{display:flex;flex-wrap:wrap;gap:10px;font-size:13px;color:var(--muted);margin-top:8px}
+.legend span{display:inline-flex;align-items:center;gap:4px}
+.dot{width:12px;height:12px;border-radius:3px;display:inline-block}
+.ctrl{display:flex;flex-direction:column;gap:12px;margin-bottom:12px}
+.row{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:10px}
+.row label{font-size:15px;font-weight:700;min-width:4em}
+.step button{
+  min-width:var(--touch); min-height:var(--touch); border-radius:14px; border:2px solid var(--line);
+  background:#fff; font-size:22px; font-weight:800; cursor:pointer; font-family:inherit;
+}
+.step .v{min-width:48px;text-align:center;font-size:22px;font-weight:800;color:var(--accent)}
+input[type=range]{width:min(220px,50vw)}
+.tabs{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.tab{
+  min-height:44px; padding:8px 14px; border-radius:999px; border:2px solid var(--line);
+  background:#fff; font-size:14px; font-weight:700; cursor:pointer; font-family:inherit;
+}
+.tab.on{background:#fef3c7;border-color:var(--accent);color:#b45309}
+.btn-row{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+.btn{
+  min-height:var(--touch); padding:12px 18px; border-radius:14px; border:2px solid var(--line);
+  background:#fff; font-size:16px; font-weight:700; cursor:pointer; font-family:inherit;
+}
+.btn.primary{background:linear-gradient(135deg,var(--accent),#d97706);color:#fff;border:none}
+.fb{min-height:56px;border-radius:14px;padding:12px;background:#f8fafc;border:1px solid #e2e8f0;font-size:16px;line-height:1.55;margin-bottom:10px}
+.fb.ok{background:#ecfdf5;border-color:#6ee7b7}
+.fb.bad{background:#fff7ed;border-color:#fcd34d}
+.thinking{background:#fffbeb;border-radius:12px;padding:10px;font-size:15px;border:1px dashed #fcd34d}
+.thinking .tag{font-weight:800;color:#b45309}
+.say{font-size:15px;margin-top:8px;min-height:22px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+body.static *{transition:none!important;animation:none!important}
+</style>
+</head>
+<body>
+<main class="card">
+  <div class="top">
+    <h1>小鸡小兔住一笼</h1>
+    <span class="badge">7–10 岁 · 假设法</span>
+    <label class="mode"><input type="checkbox" id="staticMode"> 静态</label>
+  </div>
+  <div class="story">
+    笼子里共有 <strong id="headShow">8</strong> 个头、
+    <strong id="legShow">26</strong> 条腿。鸡 2 条腿，兔 4 条腿。
+    先<strong>假设全是鸡</strong>，看腿差多少，再一只有换成兔。
+  </div>
+  <div class="stage" role="img" aria-label="假设法三态图解">
+    <h3 id="phaseTitle">① 假设：全是鸡（每只 2 腿）</h3>
+    <svg id="diagram" viewBox="0 0 360 160" xmlns="http://www.w3.org/2000/svg"></svg>
+    <div class="legend">
+      <span><i class="dot" style="background:#fbbf24"></i>鸡(2腿)</span>
+      <span><i class="dot" style="background:#a78bfa"></i>兔(4腿)</span>
+      <span><i class="dot" style="background:#f97316"></i>多出来的腿</span>
+    </div>
+  </div>
+  <div class="ctrl">
+    <div class="tabs">
+      <button type="button" class="tab on" data-mode="chicken">假设全是鸡</button>
+      <button type="button" class="tab" data-mode="rabbit">假设全是兔</button>
+    </div>
+    <div class="row">
+      <label>头数</label>
+      <div class="step">
+        <button type="button" id="hMinus" aria-label="头减">−</button>
+        <span class="v" id="hVal">8</span>
+        <button type="button" id="hPlus" aria-label="头加">+</button>
+      </div>
+      <input type="range" id="heads" min="2" max="12" value="8" aria-label="头数">
+    </div>
+    <div class="row">
+      <label>腿数</label>
+      <div class="step">
+        <button type="button" id="lMinus" aria-label="腿减">−</button>
+        <span class="v" id="lVal">26</span>
+        <button type="button" id="lPlus" aria-label="腿加">+</button>
+      </div>
+      <input type="range" id="legs" min="4" max="40" value="26" step="1" aria-label="腿数">
+    </div>
+    <div class="btn-row">
+      <button type="button" class="btn primary" id="btnStep">▶ 下一步图解</button>
+      <button type="button" class="btn" id="btnJump" title="直接看结果">跳到结果</button>
+      <button type="button" class="btn" id="btnReset">↻ 重新开始</button>
+      <button type="button" class="btn" id="btnSay">🗣️ 我会说</button>
+    </div>
+    <p style="text-align:center;font-size:13px;color:var(--muted);margin:6px 0 0" id="phaseDots">● ○ ○</p>
+  </div>
+  <div class="fb" id="fb" aria-live="polite">拖头数/腿数，点「下一步」看：假设 → 多出的腿 → 换成兔。</div>
+  <p class="thinking"><span class="tag">我怎么想：</span><span id="think">先假设全是鸡，算腿；腿不够或太多就调整假设。</span></p>
+  <div class="say" id="say"></div>
+</main>
+<script>
+(function(){
+  let heads=8, legs=26, mode='chicken', phase=0; // 0 assume 1 diff 2 result
+  const $ = id => document.getElementById(id);
+  const svg = $('diagram');
+
+  function solveChicken(){
+    // 兔=(腿-2*头)/2, 鸡=头-兔
+    const diff = legs - 2*heads;
+    if(diff<0 || diff%2!==0) return {ok:false, reason:'no'};
+    const rabbits = diff/2;
+    const chickens = heads - rabbits;
+    if(rabbits<0 || chickens<0 || !Number.isInteger(rabbits)) return {ok:false, reason:'range'};
+    return {ok:true, chickens, rabbits, diff};
+  }
+  function solveRabbit(){
+    // 假设全兔 4*头，腿少则换成鸡：每换1只少2腿
+    const diff = 4*heads - legs; // 少了的腿
+    if(diff<0 || diff%2!==0) return {ok:false, reason:'no'};
+    const chickens = diff/2;
+    const rabbits = heads - chickens;
+    if(chickens<0 || rabbits<0) return {ok:false, reason:'range'};
+    return {ok:true, chickens, rabbits, diff};
+  }
+  function solve(){ return mode==='chicken' ? solveChicken() : solveRabbit(); }
+
+  function animal(x,y,type,extraLegs){
+    const g = document.createElementNS('http://www.w3.org/2000/svg','g');
+    // body
+    const body = document.createElementNS('http://www.w3.org/2000/svg','circle');
+    body.setAttribute('cx', x); body.setAttribute('cy', y);
+    body.setAttribute('r', 14);
+    body.setAttribute('fill', type==='rabbit' ? '#c4b5fd' : '#fde68a');
+    body.setAttribute('stroke', type==='rabbit' ? '#7c3aed' : '#d97706');
+    body.setAttribute('stroke-width', '2');
+    g.appendChild(body);
+    // head mark
+    const t = document.createElementNS('http://www.w3.org/2000/svg','text');
+    t.setAttribute('x', x); t.setAttribute('y', y+5);
+    t.setAttribute('text-anchor','middle'); t.setAttribute('font-size','14');
+    t.textContent = type==='rabbit' ? '🐰' : '🐔';
+    g.appendChild(t);
+    // legs as short lines
+    const n = type==='rabbit' ? 4 : 2;
+    for(let i=0;i<n;i++){
+      const leg = document.createElementNS('http://www.w3.org/2000/svg','line');
+      const ox = x - (n-1)*5 + i*10;
+      leg.setAttribute('x1', ox); leg.setAttribute('y1', y+14);
+      leg.setAttribute('x2', ox); leg.setAttribute('y2', y+28);
+      leg.setAttribute('stroke', extraLegs && i>=2 ? '#f97316' : '#57534e');
+      leg.setAttribute('stroke-width', extraLegs && i>=2 ? 3 : 2);
+      leg.setAttribute('stroke-linecap','round');
+      g.appendChild(leg);
+    }
+    return g;
+  }
+
+  function draw(){
+    $('headShow').textContent = heads;
+    $('legShow').textContent = legs;
+    $('hVal').textContent = heads;
+    $('lVal').textContent = legs;
+    svg.innerHTML = '';
+    const sol = solve();
+    const titles = mode==='chicken'
+      ? ['① 假设：全是鸡（每只 2 腿）','② 真实腿更多：多出的腿标橙','③ 每多 2 腿 → 1 只换成兔']
+      : ['① 假设：全是兔（每只 4 腿）','② 真实腿更少：少掉的腿','③ 每少 2 腿 → 1 只换成鸡'];
+    $('phaseTitle').textContent = titles[phase];
+
+    const maxShow = Math.min(heads, 10);
+    const startX = 30;
+    const gap = Math.min(32, 300/Math.max(maxShow,1));
+
+    if(phase===0){
+      for(let i=0;i<maxShow;i++){
+        const type = mode==='chicken' ? 'chicken' : 'rabbit';
+        svg.appendChild(animal(startX+i*gap, 70, type, false));
+      }
+      if(heads>maxShow){
+        const more = document.createElementNS('http://www.w3.org/2000/svg','text');
+        more.setAttribute('x', 330); more.setAttribute('y', 75);
+        more.setAttribute('font-size','16'); more.textContent = '+'+(heads-maxShow);
+        svg.appendChild(more);
+      }
+      const lab = document.createElementNS('http://www.w3.org/2000/svg','text');
+      lab.setAttribute('x', 180); lab.setAttribute('y', 130);
+      lab.setAttribute('text-anchor','middle'); lab.setAttribute('font-size','15'); lab.setAttribute('fill','#57534e');
+      const assumeLegs = mode==='chicken' ? 2*heads : 4*heads;
+      lab.textContent = '假设腿数 = ' + assumeLegs + '（真实 ' + legs + '）';
+      svg.appendChild(lab);
+    } else if(phase===1){
+      // 阶段②：先画假设动物，再在下方用橙色短线标「总腿差」，避免每只都加橙腿误导
+      for(let i=0;i<maxShow;i++){
+        svg.appendChild(animal(startX+i*gap, 55, mode==='chicken'?'chicken':'rabbit', false));
+      }
+      const lab = document.createElementNS('http://www.w3.org/2000/svg','text');
+      lab.setAttribute('x', 180); lab.setAttribute('y', 105);
+      lab.setAttribute('text-anchor','middle'); lab.setAttribute('font-size','14');
+      if(!sol.ok){
+        lab.setAttribute('fill','#dc2626');
+        lab.textContent = '腿数对不上（可能无解：奇数腿或越界）';
+      } else {
+        lab.setAttribute('fill','#c2410c');
+        lab.textContent = mode==='chicken'
+          ? '真实腿 − 全鸡腿 = 多出 ' + sol.diff + ' 条（橙色）'
+          : '全兔腿 − 真实腿 = 少了 ' + sol.diff + ' 条（橙色）';
+        // 总差可视化：一排橙色短线
+        const showDiff = Math.min(sol.diff, 16);
+        for(let d=0;d<showDiff;d++){
+          const line=document.createElementNS('http://www.w3.org/2000/svg','line');
+          const x=40+d*18;
+          line.setAttribute('x1',x); line.setAttribute('y1',120);
+          line.setAttribute('x2',x); line.setAttribute('y2',138);
+          line.setAttribute('stroke','#f97316'); line.setAttribute('stroke-width','4');
+          line.setAttribute('stroke-linecap','round');
+          svg.appendChild(line);
+        }
+        const lab2=document.createElementNS('http://www.w3.org/2000/svg','text');
+        lab2.setAttribute('x',180); lab2.setAttribute('y',155);
+        lab2.setAttribute('text-anchor','middle'); lab2.setAttribute('font-size','14');
+        lab2.setAttribute('fill','#9a3412');
+        lab2.textContent = mode==='chicken'
+          ? '每换成 1 只兔多 2 腿 → 兔 = '+sol.diff+'/2 = '+sol.rabbits
+          : '每换成 1 只鸡少 2 腿 → 鸡 = '+sol.diff+'/2 = '+sol.chickens;
+        svg.appendChild(lab2);
+      }
+      svg.appendChild(lab);
+    } else {
+      if(!sol.ok){
+        const lab = document.createElementNS('http://www.w3.org/2000/svg','text');
+        lab.setAttribute('x', 180); lab.setAttribute('y', 80);
+        lab.setAttribute('text-anchor','middle'); lab.setAttribute('font-size','16'); lab.setAttribute('fill','#dc2626');
+        lab.textContent = '无解：换个腿数试试（腿须与头匹配）';
+        svg.appendChild(lab);
+      } else {
+        let i=0;
+        for(let c=0;c<sol.chickens && i<maxShow;c++,i++){
+          svg.appendChild(animal(startX+i*gap, 70, 'chicken', false));
+        }
+        for(let r=0;r<sol.rabbits && i<maxShow;r++,i++){
+          svg.appendChild(animal(startX+i*gap, 70, 'rabbit', true));
+        }
+        const lab = document.createElementNS('http://www.w3.org/2000/svg','text');
+        lab.setAttribute('x', 180); lab.setAttribute('y', 130);
+        lab.setAttribute('text-anchor','middle'); lab.setAttribute('font-size','16'); lab.setAttribute('fill','#065f46');
+        lab.setAttribute('font-weight','700');
+        lab.textContent = '鸡 ' + sol.chickens + ' 只 · 兔 ' + sol.rabbits + ' 只';
+        svg.appendChild(lab);
+      }
+    }
+    updateText();
+    const d=$('phaseDots');
+    if(d) d.textContent = [0,1,2].map(i=> i===phase?'●':'○').join(' ');
+  }
+
+  function updateText(){
+    const sol = solve();
+    if(phase===0){
+      $('think').textContent = mode==='chicken'
+        ? '先假设 '+heads+' 只全是鸡，腿应有 '+(2*heads)+' 条。'
+        : '先假设 '+heads+' 只全是兔，腿应有 '+(4*heads)+' 条。';
+      $('fb').className='fb';
+      $('fb').textContent='点「下一步」比较真实腿数。';
+    } else if(phase===1){
+      if(!sol.ok){
+        $('fb').className='fb bad';
+        $('fb').textContent='腿数与头数对不上：可能是奇数腿，或超出「全鸡～全兔」范围。调滑块再试。';
+        $('think').textContent='无解也是学习：不是每个数字都有答案。';
+      } else {
+        $('fb').className='fb';
+        $('fb').textContent = mode==='chicken'
+          ? '真实腿比「全鸡」多 '+sol.diff+'。每把 1 只鸡换成兔，腿 +2。'
+          : '真实腿比「全兔」少 '+sol.diff+'。每把 1 只兔换成鸡，腿 −2。';
+        $('think').textContent='差 ÷ 2 = 需要替换的只数。';
+      }
+    } else {
+      if(sol.ok){
+        $('fb').className='fb ok';
+        $('fb').textContent='鸡 '+sol.chickens+'、兔 '+sol.rabbits+'。验算：头 '+(sol.chickens+sol.rabbits)+'，腿 '+(sol.chickens*2+sol.rabbits*4)+'。';
+        $('think').textContent = mode==='chicken'
+          ? '兔 = (腿−2×头)/2，鸡 = 头−兔。'
+          : '鸡 = (4×头−腿)/2，兔 = 头−鸡。';
+      }
+    }
+  }
+
+  function syncFromUI(){
+    heads = +$('heads').value;
+    legs = +$('legs').value;
+    draw();
+  }
+  function bind(m,p,r,d){
+    $(m).onclick=()=>{ r.value=Math.max(+r.min,+r.value-d); syncFromUI(); };
+    $(p).onclick=()=>{ r.value=Math.min(+r.max,+r.value+d); syncFromUI(); };
+    r.oninput=syncFromUI;
+  }
+  bind('hMinus','hPlus',$('heads'),1);
+  bind('lMinus','lPlus',$('legs'),1);
+
+  document.querySelectorAll('.tab').forEach(t=>{
+    t.onclick=()=>{
+      document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));
+      t.classList.add('on');
+      mode=t.dataset.mode;
+      phase=0;
+      draw();
+    };
+  });
+  $('btnStep').onclick=()=>{ phase = (phase+1)%3; draw(); };
+  $('btnJump').onclick=()=>{ phase=2; draw(); };
+  $('btnReset').onclick=()=>{
+    $('heads').value=8; $('legs').value=26; mode='chicken'; phase=0;
+    document.querySelectorAll('.tab').forEach((x,i)=>x.classList.toggle('on',i===0));
+    syncFromUI();
+  };
+  $('btnSay').onclick=()=>{
+    const sol=solve();
+    $('say').textContent = sol.ok
+      ? '我会说：假设全是鸡，多出的腿÷2得到兔，再算鸡。结果鸡'+sol.chickens+'兔'+sol.rabbits+'。'
+      : '我会说：这组头腿对不上，没有合理答案。';
+  };
+  $('staticMode').onchange=e=>document.body.classList.toggle('static', e.target.checked);
+  draw();
+})();
+</script>
+</body>
+</html>

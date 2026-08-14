@@ -1,0 +1,1144 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>小猪分果果 · 平均数</title>
+<!-- 题型：数学图解·平均数 / 核心认知动作：分组·均分·比较 / 年龄：5-9 岁（7-9 为主，触控≥52px） -->
+<style>
+:root{
+  --accent:#06b6d4; --accent2:#f59e0b; --ok:#10b981; --warn:#f59e0b; --bad:#ef4444;
+  --ink:#1f2a44; --muted:#667085; --line:#e6eef5; --card:#fff;
+  --bg1:#ecfeff; --bg2:#fff7ed;
+  --shadow:0 12px 30px rgba(15,80,100,.12); --radius:20px;
+  --ease:cubic-bezier(0.25,1,0.5,1);
+  --cell:28px;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  font-family:-apple-system,"PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+  color:var(--ink);
+  background:linear-gradient(160deg,var(--bg1),var(--bg2));
+  min-height:100vh; padding:14px 12px 28px;
+}
+.card{
+  max-width:780px; margin:0 auto; background:var(--card);
+  border:1px solid var(--line); border-radius:var(--radius);
+  box-shadow:var(--shadow); padding:18px 16px 22px;
+  animation:fadeInUp .55s ease both;
+}
+.topbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.topbar h1{margin:0;font-size:24px;font-weight:800;letter-spacing:-.02em}
+.badge{font-size:14px;font-weight:700;color:#0e7490;background:#cffafe;padding:5px 12px;border-radius:999px}
+.mode-toggle{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:14px;color:var(--muted);cursor:pointer;user-select:none}
+.mode-toggle input{width:18px;height:18px;accent-color:var(--accent)}
+
+.story{
+  background:linear-gradient(135deg,#ecfeff,#fff7ed);
+  border-left:5px solid var(--accent);
+  border-radius:0 14px 14px 0;
+  padding:12px 14px; margin-bottom:14px;
+  font-size:16px; line-height:1.7;
+  display:flex; gap:12px; align-items:flex-start;
+}
+.story .pig{font-size:42px; line-height:1; flex-shrink:0; transition:transform .3s var(--ease)}
+.story .pig.think{transform:rotate(-8deg)}
+.story .pig.happy{transform:scale(1.12) rotate(6deg)}
+.story .pig.work{animation:jello .55s ease}
+.story p{margin:0}
+.story strong{color:#0e7490}
+
+/* ===== stage: piles + plates + avg line ===== */
+.stage-wrap{
+  position:relative;
+  background:linear-gradient(180deg,#f0fdff,#fffaf0);
+  border:1px solid var(--line); border-radius:16px;
+  padding:14px 10px 10px; margin-bottom:14px;
+  overflow:hidden;
+}
+.stage-wrap.is-uneven{border-color:#fcd34d}
+.stage-wrap.is-animating{border-color:#67e8f9; box-shadow:0 0 0 3px rgba(6,182,212,.15)}
+.stage-wrap.is-even{border-color:#6ee7b7; box-shadow:0 0 0 3px rgba(16,185,129,.12)}
+
+.stage-label{
+  display:flex; justify-content:space-between; align-items:center;
+  font-size:14px; font-weight:700; color:var(--muted); margin-bottom:8px; padding:0 6px;
+}
+.stage-label .status-chip{
+  font-size:13px; padding:4px 10px; border-radius:999px; background:#f1f5f9; color:var(--muted);
+}
+.stage-wrap.is-uneven .status-chip{background:#fef3c7;color:#b45309}
+.stage-wrap.is-animating .status-chip{background:#cffafe;color:#0e7490}
+.stage-wrap.is-even .status-chip{background:#d1fae5;color:#065f46}
+
+.viz-row{
+  display:grid; grid-template-columns:1fr auto 1fr; gap:8px; align-items:end;
+  min-height:220px; position:relative;
+}
+.zone{display:flex; flex-direction:column; align-items:center; gap:6px; min-width:0}
+.zone-title{font-size:13px;font-weight:700;color:var(--muted)}
+.cols{display:flex; gap:10px; align-items:flex-end; justify-content:center; flex-wrap:wrap; min-height:180px; width:100%}
+
+.col{
+  display:flex; flex-direction:column; align-items:center; gap:4px;
+  min-width:56px; opacity:0; transform:scale(.5);
+  transition:opacity .3s var(--ease), transform .3s var(--ease);
+}
+.col.in{opacity:1; transform:scale(1)}
+
+.stack{
+  display:flex; flex-direction:column-reverse; align-items:center; gap:2px;
+  min-height: calc(12 * (var(--cell) + 2px));
+  justify-content:flex-start;
+  position:relative;
+  width:48px;
+  background:linear-gradient(180deg,transparent 0%, rgba(6,182,212,.06) 100%);
+  border-radius:10px 10px 4px 4px;
+  border:1px dashed transparent;
+  padding:2px;
+}
+.pile-col .stack{border-color:rgba(6,182,212,.25); background:linear-gradient(180deg,rgba(6,182,212,.02),rgba(6,182,212,.1))}
+.plate-col .stack{border-color:rgba(245,158,11,.3); background:linear-gradient(180deg,rgba(245,158,11,.02),rgba(245,158,11,.12))}
+
+.apple-cell{
+  width:var(--cell); height:var(--cell);
+  display:flex; align-items:center; justify-content:center;
+  font-size:22px; line-height:1;
+  transition: transform .25s var(--ease), opacity .25s var(--ease);
+  user-select:none;
+}
+.apple-cell.ghost{opacity:.25; filter:grayscale(.4)}
+.apple-cell.half{opacity:.85; transform:scale(.85)}
+.apple-cell.pop{animation:pop .35s var(--ease)}
+
+.col-label{font-size:13px;font-weight:700;color:var(--ink); text-align:center; line-height:1.2}
+.col-count{
+  font-size:18px; font-weight:800; color:var(--accent);
+  font-variant-numeric:tabular-nums; min-height:24px;
+  transition:color .2s;
+}
+.col-count.jello{animation:jello .45s ease}
+.plate-col .col-count{color:#d97706}
+.col-face{font-size:22px; line-height:1}
+
+/* avg bar chart (secondary diagram) */
+.bar-panel{
+  margin-top:10px; padding:10px 8px 6px;
+  background:#fff; border:1px solid var(--line); border-radius:12px;
+}
+.bar-panel .bar-title{font-size:13px;font-weight:700;color:var(--muted);margin-bottom:6px;padding:0 4px}
+.bars{
+  position:relative; display:flex; align-items:flex-end; justify-content:center;
+  gap:14px; height:100px; padding:0 8px 4px;
+}
+.bar{
+  width:36px; border-radius:8px 8px 3px 3px;
+  background:linear-gradient(180deg,#22d3ee,#0891b2);
+  transition:height .35s var(--ease), background .25s;
+  position:relative; min-height:4px;
+}
+.bar.plate-bar{background:linear-gradient(180deg,#fcd34d,#f59e0b)}
+.bar .bnum{
+  position:absolute; top:-18px; left:50%; transform:translateX(-50%);
+  font-size:12px; font-weight:800; color:var(--ink); white-space:nowrap;
+}
+.avg-line{
+  position:absolute; left:6px; right:6px; height:0;
+  border-top:2px dashed #10b981;
+  transition: bottom .4s var(--ease), border-color .25s, opacity .25s;
+  pointer-events:none; z-index:2;
+  opacity:.85;
+}
+.avg-line::after{
+  content:attr(data-label);
+  position:absolute; right:0; top:-18px;
+  font-size:12px; font-weight:800; color:#059669;
+  background:rgba(209,250,229,.9); padding:1px 6px; border-radius:6px;
+}
+.avg-line.dim{border-color:#94a3b8; opacity:.5}
+.avg-line.dim::after{color:#64748b; background:#f1f5f9}
+.avg-line.glow{border-color:#10b981; opacity:1; animation:pulse .6s ease}
+
+.arrow-mid{
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:4px; padding-bottom:40px; color:var(--muted); font-size:22px; font-weight:800;
+  min-width:36px;
+}
+.arrow-mid span{font-size:12px; font-weight:700}
+
+/* flying layer */
+.fly-layer{position:fixed; inset:0; pointer-events:none; z-index:100; overflow:hidden}
+.fly-apple{
+  position:fixed; font-size:22px; line-height:1;
+  will-change:transform, opacity;
+  transition: transform .55s var(--ease), opacity .55s var(--ease);
+  z-index:101;
+}
+
+/* controls */
+.controls{display:grid; gap:12px; margin-bottom:12px}
+.ctrl label{
+  display:flex; justify-content:space-between; align-items:baseline;
+  font-size:15px; font-weight:700; margin-bottom:6px;
+}
+.ctrl label .val{font-size:20px; font-weight:800; color:var(--accent); font-variant-numeric:tabular-nums}
+.ctrl .row{display:flex; align-items:center; gap:8px}
+.ctrl input[type=range]{
+  flex:1; height:8px; -webkit-appearance:none; appearance:none;
+  background:#e0f2fe; border-radius:8px; outline:none;
+}
+.ctrl input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none; width:28px; height:28px; border-radius:50%;
+  background:var(--accent); border:3px solid #fff;
+  box-shadow:0 2px 6px rgba(6,182,212,.45); cursor:pointer;
+}
+.ctrl input[type=range]::-moz-range-thumb{
+  width:28px; height:28px; border-radius:50%;
+  background:var(--accent); border:3px solid #fff; cursor:pointer;
+}
+.stepper{display:flex; flex-direction:column; gap:4px}
+.stepper button{
+  width:48px; min-height:48px; border:1px solid var(--line); border-radius:10px;
+  background:#fff; color:var(--ink); font-size:20px; font-weight:700; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+}
+.stepper button:hover{border-color:var(--accent); color:var(--accent); background:#ecfeff}
+.stepper button:active{transform:scale(.94)}
+.stepper button:disabled{opacity:.4; cursor:default}
+
+.n-row{display:flex; gap:8px; flex-wrap:wrap}
+.n-btn{
+  flex:1; min-width:90px; min-height:52px; padding:0 12px;
+  border:2px solid var(--line); border-radius:12px; background:#fff;
+  font-size:15px; font-weight:700; cursor:pointer;
+  display:inline-flex; align-items:center; justify-content:center; gap:6px;
+  transition: border-color .15s, background .15s, transform .1s;
+}
+.n-btn:hover{border-color:var(--accent); color:#0e7490}
+.n-btn.active{background:var(--accent); color:#fff; border-color:var(--accent)}
+.n-btn:disabled{opacity:.45; cursor:default}
+
+/* stats */
+.stats{
+  display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:12px;
+}
+.stat{
+  background:#f8fafc; border:1px solid var(--line); border-radius:12px;
+  padding:10px 8px; text-align:center;
+}
+.stat b{
+  display:block; font-size:22px; font-weight:800; color:var(--accent);
+  font-variant-numeric:tabular-nums; min-height:28px;
+}
+.stat b.pop{animation:pop .4s var(--ease)}
+.stat b.jello{animation:jello .45s ease}
+.stat span{font-size:13px; color:var(--muted); font-weight:600}
+.stat.warn b{color:var(--warn)}
+.stat.ok b{color:var(--ok)}
+
+.thinking{
+  font-size:16px; line-height:1.7; color:var(--ink);
+  background:#fff7e6; border-left:4px solid var(--warn);
+  border-radius:0 10px 10px 0; padding:11px 13px; margin-bottom:12px; min-height:28px;
+}
+.thinking .tag{font-weight:800; color:#b45309}
+
+.alert{
+  display:none; background:#fff7ed; border:1px solid #fed7aa;
+  border-radius:10px; padding:11px 13px; font-size:15px; color:#b45309; margin-bottom:12px;
+}
+.alert.show{display:block; animation:wobble .5s ease}
+
+.actions{display:flex; gap:10px; flex-wrap:wrap; margin-bottom:10px}
+.actions button{
+  flex:1; min-width:120px; min-height:52px; border:0; border-radius:12px;
+  font-size:16px; font-weight:700; cursor:pointer;
+  display:inline-flex; align-items:center; justify-content:center; gap:6px;
+  transition: transform .1s, filter .15s, opacity .15s;
+}
+.actions button:active{transform:scale(.97)}
+.actions button:disabled{opacity:.5; cursor:default}
+.btn-go{background:linear-gradient(135deg,var(--accent),#0891b2); color:#fff}
+.btn-go:hover:not(:disabled){filter:brightness(1.06)}
+.btn-say{background:#fff; color:var(--accent); border:2px solid var(--accent)}
+.btn-reset{background:#fff; color:var(--muted); border:2px solid var(--line)}
+.btn-reset:hover{border-color:var(--muted); color:var(--ink)}
+
+.sayout{
+  display:none; margin-bottom:12px; background:#ecfdf5; border:1px solid #a7f3d0;
+  border-radius:10px; padding:12px 14px; font-size:16px; line-height:1.7; color:#065f46;
+}
+.sayout.show{display:block; animation:pop .3s var(--ease)}
+.sayout .tag{font-weight:800}
+
+/* quiz */
+.quiz{
+  display:none; margin-top:4px; border:1px solid var(--line); border-radius:14px;
+  padding:14px; background:#fafcff;
+}
+.quiz.show{display:block; animation:fadeInUp .35s ease}
+.quiz h3{margin:0 0 10px; font-size:17px}
+.quiz .opts{display:flex; gap:10px; flex-wrap:wrap}
+.quiz .opts button{
+  flex:1; min-width:100px; min-height:52px; border:2px solid var(--line);
+  border-radius:12px; background:#fff; font-size:18px; font-weight:800; cursor:pointer;
+  transition: border-color .15s, background .15s, transform .1s;
+}
+.quiz .opts button:hover:not(:disabled){border-color:var(--accent)}
+.quiz .opts button.is-wrong{
+  border-color:var(--bad); background:#fef2f2; color:#991b1b;
+  animation:shake .4s ease;
+}
+.quiz .opts button.is-correct{
+  border-color:var(--ok); background:#ecfdf5; color:#065f46;
+  animation:pop .35s var(--ease);
+}
+.quiz .opts button:disabled{cursor:default; opacity:.7}
+.quiz .opts button.is-correct:disabled{opacity:1}
+.quiz .fb{
+  display:none; margin-top:10px; padding:10px 12px; border-radius:10px;
+  font-size:15px; line-height:1.6;
+}
+.quiz .fb.show{display:block}
+.quiz .fb.ok{background:#ecfdf5; border:1px solid #a7f3d0; color:#065f46}
+.quiz .fb.no{background:#fef2f2; border:1px solid #fecaca; color:#991b1b}
+
+.stars{display:inline-flex; gap:2px; margin-left:4px}
+.stars .s{display:inline-block; opacity:0; transform:scale(0); font-size:18px}
+.stars .s.in{opacity:1; transform:scale(1); transition: all .3s var(--ease)}
+
+@keyframes fadeInUp{0%{opacity:0;transform:translate3d(0,22px,0)}to{opacity:1;transform:translateZ(0)}}
+@keyframes jello{
+  0%,11.1%,to{transform:translateZ(0)}
+  22.2%{transform:skewX(-12.5deg) skewY(-12.5deg)}
+  33.3%{transform:skewX(6.25deg) skewY(6.25deg)}
+  44.4%{transform:skewX(-3.125deg) skewY(-3.125deg)}
+  55.5%{transform:skewX(1.56deg) skewY(1.56deg)}
+  66.6%{transform:skewX(-.78deg) skewY(-.78deg)}
+  77.7%{transform:skewX(.39deg) skewY(.39deg)}
+}
+@keyframes pop{0%{transform:scale(0)}70%{transform:scale(1.2)}to{transform:scale(1)}}
+@keyframes pulse{0%,100%{transform:scaleX(1)}50%{transform:scale3d(1.04,1.04,1.04)}}
+@keyframes wobble{
+  0%{transform:translateZ(0)}15%{transform:translate3d(-6%,0,0) rotate(-3deg)}
+  30%{transform:translate3d(5%,0,0) rotate(2deg)}45%{transform:translate3d(-3%,0,0) rotate(-2deg)}
+  60%{transform:translate3d(2%,0,0) rotate(1deg)}to{transform:translateZ(0)}
+}
+@keyframes shake{
+  0%,100%{transform:translateX(0)}
+  15%{transform:translateX(-8px)}30%{transform:translateX(8px)}
+  45%{transform:translateX(-6px)}60%{transform:translateX(6px)}
+  75%{transform:translateX(-3px)}
+}
+
+body.reduce-motion *, body.reduce-motion *::before, body.reduce-motion *::after{
+  animation-duration:.01ms !important;
+  animation-iteration-count:1 !important;
+  transition-duration:.01ms !important;
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{
+    animation-duration:.01ms !important;
+    animation-iteration-count:1 !important;
+    transition-duration:.01ms !important;
+  }
+}
+@media (max-width:560px){
+  .topbar h1{font-size:20px}
+  .viz-row{grid-template-columns:1fr; gap:12px}
+  .arrow-mid{flex-direction:row; padding:4px 0; transform:rotate(90deg); min-height:auto}
+  .stack{min-height:calc(8 * (var(--cell) + 2px))}
+  .stats{grid-template-columns:1fr 1fr 1fr}
+}
+</style>
+</head>
+<body>
+<main class="card">
+  <div class="topbar">
+    <h1>🐷 小猪分果果</h1>
+    <span class="badge">5–9 岁 · 平均数</span>
+    <label class="mode-toggle"><input type="checkbox" id="staticMode"> 静态模式</label>
+  </div>
+
+  <div class="story">
+    <div class="pig" id="pigFace" aria-hidden="true">🐷</div>
+    <p>
+      <strong>小猪佩宝摘了几堆苹果，想公平分给小伙伴！</strong><br>
+      先调每堆有多少、分给几个人，再点「公平分一分」，看苹果搬家～
+    </p>
+  </div>
+
+  <div class="stage-wrap is-uneven" id="stageWrap">
+    <div class="stage-label">
+      <span>果堆 → 小盘子（均分过程）</span>
+      <span class="status-chip" id="statusChip">还没公平哦</span>
+    </div>
+    <div class="viz-row">
+      <div class="zone">
+        <div class="zone-title">🍎 分之前的果堆</div>
+        <div class="cols" id="pileCols" aria-label="果堆"></div>
+      </div>
+      <div class="arrow-mid" aria-hidden="true">➡️<span>均分</span></div>
+      <div class="zone">
+        <div class="zone-title">🍽️ 分之后的盘子</div>
+        <div class="cols" id="plateCols" aria-label="盘子"></div>
+      </div>
+    </div>
+
+    <div class="bar-panel">
+      <div class="bar-title">柱状图 + 平均数标尺线</div>
+      <div class="bars" id="bars" aria-label="柱状图">
+        <div class="avg-line dim" id="avgLine" data-label="平均 ?" style="bottom:0"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <div class="ctrl">
+      <label>果堆 A <span class="val"><span id="p0V">3</span> 个</span></label>
+      <div class="row">
+        <div class="stepper">
+          <button type="button" data-pile="0" data-d="1" aria-label="A加1">+</button>
+          <button type="button" data-pile="0" data-d="-1" aria-label="A减1">−</button>
+        </div>
+        <input id="p0" type="range" min="1" max="12" step="1" value="3">
+      </div>
+    </div>
+    <div class="ctrl">
+      <label>果堆 B <span class="val"><span id="p1V">6</span> 个</span></label>
+      <div class="row">
+        <div class="stepper">
+          <button type="button" data-pile="1" data-d="1" aria-label="B加1">+</button>
+          <button type="button" data-pile="1" data-d="-1" aria-label="B减1">−</button>
+        </div>
+        <input id="p1" type="range" min="1" max="12" step="1" value="6">
+      </div>
+    </div>
+    <div class="ctrl">
+      <label>果堆 C <span class="val"><span id="p2V">9</span> 个</span></label>
+      <div class="row">
+        <div class="stepper">
+          <button type="button" data-pile="2" data-d="1" aria-label="C加1">+</button>
+          <button type="button" data-pile="2" data-d="-1" aria-label="C减1">−</button>
+        </div>
+        <input id="p2" type="range" min="1" max="12" step="1" value="9">
+      </div>
+    </div>
+    <div class="ctrl">
+      <label>分给几个朋友？ <span class="val"><span id="nV">3</span> 人</span></label>
+      <div class="n-row" id="nRow">
+        <button type="button" class="n-btn" data-n="2">🐰 2 人</button>
+        <button type="button" class="n-btn active" data-n="3">🐰🐥🐻 3 人</button>
+        <button type="button" class="n-btn" data-n="4">🐰🐥🐻🦊 4 人</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><b id="totalV">18</b><span>合计苹果</span></div>
+    <div class="stat" id="avgStat"><b id="avgV">6</b><span>平均数</span></div>
+    <div class="stat" id="remStat"><b id="remV">0</b><span>不好分的余数</span></div>
+  </div>
+
+  <p class="thinking" id="think">
+    <span class="tag">我怎么想：</span>
+    <span id="thinkText">先把 3+6+9=18 个苹果合起来，再平均分给 3 个朋友。点「公平分一分」看看苹果怎么搬家！</span>
+  </p>
+
+  <div class="alert" id="alert" role="status"></div>
+
+  <div class="actions">
+    <button type="button" class="btn-go" id="btnEqual">✨ 公平分一分</button>
+    <button type="button" class="btn-say" id="btnSay">🗣️ 我会说</button>
+    <button type="button" class="btn-reset" id="btnReset">↻ 重置</button>
+  </div>
+  <div class="sayout" id="sayout" aria-live="polite"></div>
+
+  <div class="quiz" id="quiz">
+    <h3>小问题：平均每人分到几个？ <span class="stars" id="stars" aria-hidden="true"><span class="s">⭐</span><span class="s">⭐</span><span class="s">⭐</span></span></h3>
+    <div class="opts" id="quizOpts"></div>
+    <div class="fb" id="quizFb"></div>
+  </div>
+</main>
+<div class="fly-layer" id="flyLayer" aria-hidden="true"></div>
+
+<script>
+/* ===== 独立纯函数：平均数（零容忍，自检 ≥3 例） =====
+   avg = sum(piles) / n
+   each = floor(total / n), rem = total % n
+   自检：
+     piles=[3,6,9], n=3 -> total=18, avg=6, each=6, rem=0 ✓
+     piles=[2,4,6], n=2 -> total=12, avg=6, each=6, rem=0 ✓
+     piles=[1,2,3], n=2 -> total=6,  avg=3, each=3, rem=0 ✓
+     piles=[5,5,5], n=4 -> total=15, avg=3.75, each=3, rem=3 ✓
+     piles=[1,1,1], n=2 -> total=3,  avg=1.5, each=1, rem=1 ✓
+*/
+function solveAverage(piles, n){
+  const total = piles.reduce((a,b)=>a+b, 0);
+  if(n <= 0) return { ok:false, total, avg:NaN, each:0, rem:total };
+  const avg = total / n;
+  const each = Math.floor(total / n);
+  const rem = total % n;
+  return { ok:true, total, avg, each, rem };
+}
+
+// self-check (console)
+(function selfCheck(){
+  const cases = [
+    {p:[3,6,9], n:3, t:18, a:6, e:6, r:0},
+    {p:[2,4,6], n:2, t:12, a:6, e:6, r:0},
+    {p:[5,5,5], n:4, t:15, a:3.75, e:3, r:3},
+  ];
+  cases.forEach((c,i)=>{
+    const s = solveAverage(c.p, c.n);
+    const pass = s.total===c.t && Math.abs(s.avg-c.a)<1e-9 && s.each===c.e && s.rem===c.r;
+    if(!pass) console.warn('[avg self-check fail]', i, s, c);
+  });
+})();
+
+const FRIENDS = ['🐰','🐥','🐻','🦊'];
+const PILE_FACES = ['🧺','🧺','🧺'];
+const DEFAULTS = { piles:[3,6,9], n:3 };
+
+const $ = id => document.getElementById(id);
+const state = {
+  piles: DEFAULTS.piles.slice(),
+  n: DEFAULTS.n,
+  mode: 'before', // before | animating | after
+  plateCounts: [],
+  reduced: false,
+};
+
+function preferReduced(){
+  return state.reduced ||
+    (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+}
+
+function fmtAvg(avg){
+  if(!isFinite(avg)) return '—';
+  return Number.isInteger(avg) ? String(avg) : avg.toFixed(1);
+}
+
+function setMode(mode){
+  state.mode = mode;
+  const wrap = $('stageWrap');
+  wrap.classList.remove('is-uneven','is-animating','is-even');
+  const chip = $('statusChip');
+  const pig = $('pigFace');
+  pig.classList.remove('think','happy','work');
+  if(mode === 'before'){
+    wrap.classList.add('is-uneven');
+    chip.textContent = '还没公平哦';
+    pig.classList.add('think');
+  } else if(mode === 'animating'){
+    wrap.classList.add('is-animating');
+    chip.textContent = '苹果搬家中…';
+    pig.classList.add('work');
+  } else {
+    wrap.classList.add('is-even');
+    chip.textContent = '每人一样多啦！';
+    pig.classList.add('happy');
+  }
+}
+
+function setControlsEnabled(on){
+  ['p0','p1','p2'].forEach(id => { $(id).disabled = !on; });
+  document.querySelectorAll('.stepper button').forEach(b => { b.disabled = !on; });
+  document.querySelectorAll('.n-btn').forEach(b => { b.disabled = !on; });
+  $('btnEqual').disabled = !on || state.mode === 'animating';
+}
+
+function readPilesFromUI(){
+  return [+$('p0').value, +$('p1').value, +$('p2').value];
+}
+
+function syncUIFromState(){
+  state.piles.forEach((v,i)=>{
+    $('p'+i).value = v;
+    $('p'+i+'V').textContent = v;
+  });
+  $('nV').textContent = state.n;
+  document.querySelectorAll('.n-btn').forEach(b=>{
+    b.classList.toggle('active', +b.dataset.n === state.n);
+  });
+}
+
+function buildStack(count, opts){
+  const stack = document.createElement('div');
+  stack.className = 'stack';
+  const show = Math.max(0, Math.min(12, count));
+  for(let i=0;i<show;i++){
+    const cell = document.createElement('div');
+    cell.className = 'apple-cell' + (opts && opts.ghost ? ' ghost' : '');
+    cell.textContent = '🍎';
+    cell.dataset.idx = String(i);
+    stack.appendChild(cell);
+  }
+  // half apple for visual remainder hint on plates when fractional display needed
+  if(opts && opts.half){
+    const cell = document.createElement('div');
+    cell.className = 'apple-cell half';
+    cell.textContent = '🍎';
+    cell.title = '半颗（余数）';
+    stack.appendChild(cell);
+  }
+  return stack;
+}
+
+function renderPiles(stagger){
+  const host = $('pileCols');
+  host.innerHTML = '';
+  state.piles.forEach((c,i)=>{
+    const col = document.createElement('div');
+    col.className = 'col pile-col';
+    col.dataset.pile = String(i);
+    const face = document.createElement('div');
+    face.className = 'col-face';
+    face.textContent = PILE_FACES[i];
+    const count = document.createElement('div');
+    count.className = 'col-count';
+    count.id = 'pileCount'+i;
+    count.textContent = c;
+    const stack = buildStack(c);
+    stack.id = 'pileStack'+i;
+    const label = document.createElement('div');
+    label.className = 'col-label';
+    label.textContent = '堆 ' + String.fromCharCode(65+i);
+    col.appendChild(face);
+    col.appendChild(count);
+    col.appendChild(stack);
+    col.appendChild(label);
+    host.appendChild(col);
+    if(stagger && !preferReduced()){
+      setTimeout(()=> col.classList.add('in'), i * 15);
+    } else {
+      col.classList.add('in');
+    }
+  });
+}
+
+function renderPlates(counts, stagger){
+  const host = $('plateCols');
+  host.innerHTML = '';
+  const n = state.n;
+  for(let i=0;i<n;i++){
+    const c = counts ? (counts[i]||0) : 0;
+    const col = document.createElement('div');
+    col.className = 'col plate-col';
+    col.dataset.plate = String(i);
+    const face = document.createElement('div');
+    face.className = 'col-face';
+    face.textContent = FRIENDS[i] || '🍽️';
+    const count = document.createElement('div');
+    count.className = 'col-count';
+    count.id = 'plateCount'+i;
+    count.textContent = state.mode === 'after' || state.mode === 'animating' ? c : '·';
+    const stack = buildStack(c);
+    stack.id = 'plateStack'+i;
+    const label = document.createElement('div');
+    label.className = 'col-label';
+    label.textContent = '盘 ' + (i+1);
+    col.appendChild(face);
+    col.appendChild(count);
+    col.appendChild(stack);
+    col.appendChild(label);
+    host.appendChild(col);
+    if(stagger && !preferReduced()){
+      setTimeout(()=> col.classList.add('in'), i * 15);
+    } else {
+      col.classList.add('in');
+    }
+  }
+}
+
+function renderBars(plateCounts){
+  const host = $('bars');
+  const line = $('avgLine');
+  // clear bars but keep avg line
+  Array.from(host.querySelectorAll('.bar')).forEach(el=>el.remove());
+
+  const s = solveAverage(state.piles, state.n);
+  const maxH = 90; // px
+  const maxVal = Math.max(12, s.total, ...state.piles, ...(plateCounts||[]));
+
+  // show pile bars when before; plate bars when after; both when animating? show current focus
+  const values = (state.mode === 'after' || state.mode === 'animating') && plateCounts
+    ? plateCounts
+    : state.piles.slice();
+  const isPlate = (state.mode === 'after' || state.mode === 'animating') && plateCounts;
+
+  values.forEach((v,i)=>{
+    const bar = document.createElement('div');
+    bar.className = 'bar' + (isPlate ? ' plate-bar' : '');
+    const h = Math.max(4, Math.round((v / maxVal) * maxH));
+    bar.style.height = h + 'px';
+    const num = document.createElement('span');
+    num.className = 'bnum';
+    num.textContent = v;
+    bar.appendChild(num);
+    host.insertBefore(bar, line);
+  });
+
+  // avg line position from bottom
+  if(s.ok){
+    const bottom = Math.max(0, Math.round((s.avg / maxVal) * maxH));
+    line.style.bottom = bottom + 'px';
+    line.dataset.label = '平均 ' + fmtAvg(s.avg);
+    line.classList.toggle('dim', state.mode === 'before');
+    line.classList.toggle('glow', state.mode === 'after');
+  } else {
+    line.style.bottom = '0px';
+    line.dataset.label = '平均 ?';
+    line.classList.add('dim');
+    line.classList.remove('glow');
+  }
+}
+
+function updateThinking(s){
+  const el = $('thinkText');
+  if(state.mode === 'animating'){
+    el.textContent = '苹果正在搬家：多的挪给少的，最后每人一样多～';
+    return;
+  }
+  if(state.mode === 'after'){
+    if(s.rem === 0){
+      el.textContent = '把总数 ' + s.total + ' 个苹果，平均分给 ' + state.n + ' 个朋友，每人 ' + s.each + ' 个。高低堆变成一样高，这个数就是平均数！';
+    } else {
+      el.textContent = '总数 ' + s.total + ' ÷ ' + state.n + ' = ' + fmtAvg(s.avg) + '。每人先分 ' + s.each + ' 个，还剩 ' + s.rem + ' 个不好正好分开。';
+    }
+    return;
+  }
+  // before
+  const parts = state.piles.join('+');
+  el.textContent = '先把 ' + parts + '=' + s.total + ' 个苹果合起来，再平均分给 ' + state.n + ' 个朋友。点「公平分一分」看看苹果怎么搬家！';
+}
+
+function updateAll(opts){
+  opts = opts || {};
+  state.piles = readPilesFromUI();
+  syncUIFromState();
+
+  // changing params resets equalized view
+  if(opts.fromUser && state.mode !== 'before' && state.mode !== 'animating'){
+    state.mode = 'before';
+    state.plateCounts = [];
+    hideQuiz();
+    $('sayout').classList.remove('show');
+  }
+  if(opts.fromUser && state.mode === 'after'){
+    // already handled
+  }
+
+  const s = solveAverage(state.piles, state.n);
+
+  // stats
+  const totalEl = $('totalV');
+  const avgEl = $('avgV');
+  const remEl = $('remV');
+  const oldT = totalEl.textContent, oldA = avgEl.textContent;
+  totalEl.textContent = s.total;
+  avgEl.textContent = fmtAvg(s.avg);
+  remEl.textContent = s.rem;
+  if(opts.fromUser){
+    if(oldT !== String(s.total)){ totalEl.classList.remove('jello'); void totalEl.offsetWidth; totalEl.classList.add('jello'); }
+    if(oldA !== fmtAvg(s.avg)){ avgEl.classList.remove('pop'); void avgEl.offsetWidth; avgEl.classList.add('pop'); }
+    state.piles.forEach((v,i)=>{
+      const el = $('p'+i+'V');
+      el.classList.remove('jello');
+      // value already set
+    });
+  }
+  $('avgStat').classList.toggle('ok', state.mode === 'after' && s.rem === 0);
+  $('remStat').classList.toggle('warn', s.rem > 0);
+
+  // alert remainder
+  const alert = $('alert');
+  if(s.rem > 0 && state.mode !== 'animating'){
+    alert.textContent = '还剩 ' + s.rem + ' 个不好正好分开，可以换一堆数量再试～ 均分时每人先分 ' + s.each + ' 个。';
+    alert.classList.add('show');
+  } else {
+    alert.classList.remove('show');
+    alert.textContent = '';
+  }
+
+  if(state.mode === 'before'){
+    setMode('before');
+    renderPiles(!!opts.staggerPiles);
+    renderPlates(null, !!opts.staggerPlates);
+    renderBars(null);
+  } else if(state.mode === 'after'){
+    setMode('after');
+    renderPiles(false);
+    // after equalize: piles visually emptied into conceptual total; show original as ghost? Spec says redistribute to plates.
+    // Show piles as original counts dimmed, plates as equalized.
+    // Better UX: piles show 0 after equalize (apples moved away)
+    renderPilesAfter();
+    renderPlates(state.plateCounts, !!opts.staggerPlates);
+    renderBars(state.plateCounts);
+  }
+
+  updateThinking(s);
+  setControlsEnabled(state.mode !== 'animating');
+  $('btnEqual').disabled = state.mode === 'animating' || state.mode === 'after';
+  if(state.mode === 'after'){
+    $('btnEqual').textContent = '✓ 已公平';
+  } else {
+    $('btnEqual').textContent = '✨ 公平分一分';
+  }
+}
+
+function renderPilesAfter(){
+  // After equalize: piles empty (apples moved); remainder stays on first pile
+  const host = $('pileCols');
+  host.innerHTML = '';
+  const s = solveAverage(state.piles, state.n);
+  const remLeft = Array(state.piles.length).fill(0);
+  for(let r=0;r<s.rem;r++) remLeft[r % remLeft.length] += 1;
+  state.piles.forEach((c,i)=>{
+    const col = document.createElement('div');
+    col.className = 'col pile-col in';
+    const face = document.createElement('div');
+    face.className = 'col-face';
+    face.textContent = PILE_FACES[i];
+    const count = document.createElement('div');
+    count.className = 'col-count';
+    count.textContent = remLeft[i];
+    const stack = buildStack(remLeft[i]);
+    stack.id = 'pileStack'+i;
+    if(remLeft[i]>0){
+      stack.querySelectorAll('.apple-cell').forEach(el=> el.classList.add('half'));
+    }
+    const label = document.createElement('div');
+    label.className = 'col-label';
+    label.textContent = '堆 ' + String.fromCharCode(65+i);
+    const hint = document.createElement('div');
+    hint.style.cssText = 'font-size:11px;color:#94a3b8;font-weight:600';
+    hint.textContent = remLeft[i] ? ('余'+remLeft[i]) : ('原'+c);
+    col.appendChild(face);
+    col.appendChild(count);
+    col.appendChild(stack);
+    col.appendChild(label);
+    col.appendChild(hint);
+    host.appendChild(col);
+  });
+}
+
+function getCenter(el){
+  const r = el.getBoundingClientRect();
+  return { x: r.left + r.width/2, y: r.top + r.height/2 };
+}
+
+function sleep(ms){
+  return new Promise(res => setTimeout(res, ms));
+}
+
+async function equalize(){
+  if(state.mode === 'animating') return;
+  const s = solveAverage(state.piles, state.n);
+  if(!s.ok) return;
+
+  // target: each plate gets `each` apples; rem leftover shown in alert
+  const targets = Array(state.n).fill(s.each);
+  state.plateCounts = targets.slice();
+
+  setMode('animating');
+  setControlsEnabled(false);
+  $('btnEqual').disabled = true;
+  $('btnEqual').textContent = '搬家中…';
+  hideQuiz();
+  $('sayout').classList.remove('show');
+  updateThinking(s);
+
+  // Ensure piles rendered with current apples, plates empty
+  renderPiles(false);
+  renderPlates(Array(state.n).fill(0), true);
+  renderBars(Array(state.n).fill(0));
+  await sleep(preferReduced() ? 30 : 120);
+
+  if(preferReduced()){
+    // skip flight: direct cross-fade to final
+    state.mode = 'after';
+    updateAll({staggerPlates:true});
+    finishEqualize(s);
+    return;
+  }
+
+  // Build flight plan: take apples from piles (highest first conceptually, but sequential)
+  // total flying = s.each * n = total - rem
+  const need = s.each * state.n;
+  const sources = []; // {pile, cellEl}
+  for(let pi=0; pi<state.piles.length; pi++){
+    const stack = $('pileStack'+pi);
+    if(!stack) continue;
+    const cells = Array.from(stack.querySelectorAll('.apple-cell'));
+    // take from top visually = end of column-reverse is last child at top... column-reverse so last child is top
+    // Actually column-reverse: first DOM child is at bottom. Topmost is last child.
+    // We'll take from the end (top) first.
+    for(let k=cells.length-1; k>=0; k--){
+      sources.push({ pile: pi, cell: cells[k] });
+    }
+  }
+  // only fly `need` apples; leftover rem stay then fade
+  const flyList = sources.slice(0, need);
+  const leftover = sources.slice(need);
+
+  // destination plates: each plate needs `each` slots
+  const destQueues = [];
+  for(let i=0;i<state.n;i++){
+    destQueues[i] = [];
+    for(let k=0;k<s.each;k++) destQueues[i].push(k);
+  }
+
+  // Pre-create empty plate stacks with placeholder slots for measuring destinations
+  // We'll animate to plate stack bottoms and stack upward
+  const plateStacks = [];
+  for(let i=0;i<state.n;i++){
+    plateStacks[i] = $('plateStack'+i);
+  }
+
+  // Running counts for live updates
+  const pileLeft = state.piles.slice();
+  const plateHave = Array(state.n).fill(0);
+
+  const layer = $('flyLayer');
+  layer.innerHTML = '';
+
+  let plateIdx = 0;
+  let slotInPlate = 0;
+
+  const flights = [];
+  for(let i=0;i<flyList.length;i++){
+    const src = flyList[i];
+    // assign destination round-robin for visual fairness
+    const di = i % state.n;
+    const slot = Math.floor(i / state.n); // 0..each-1
+    flights.push({ src, di, slot, delay: i * 16 });
+  }
+
+  // Start flights with stagger
+  const promises = flights.map((f, idx) => new Promise(resolve => {
+    setTimeout(()=>{
+      const cell = f.src.cell;
+      const from = getCenter(cell);
+      // ghost source
+      cell.classList.add('ghost');
+      cell.style.opacity = '0';
+
+      // update pile count live
+      const pi = f.src.pile;
+      pileLeft[pi] = Math.max(0, pileLeft[pi]-1);
+      const pc = $('pileCount'+pi);
+      if(pc){ pc.textContent = pileLeft[pi]; pc.classList.remove('jello'); void pc.offsetWidth; pc.classList.add('jello'); }
+
+      // create flyer
+      const fly = document.createElement('div');
+      fly.className = 'fly-apple';
+      fly.textContent = '🍎';
+      fly.style.left = '0px';
+      fly.style.top = '0px';
+      fly.style.transform = 'translate(' + (from.x - 11) + 'px,' + (from.y - 11) + 'px)';
+      layer.appendChild(fly);
+
+      // destination: plate stack center, offset by slot height
+      const pStack = plateStacks[f.di];
+      const base = pStack ? getCenter(pStack) : {x: from.x + 200, y: from.y};
+      // stack grows upward; slot 0 at bottom
+      const toY = base.y + (pStack ? pStack.getBoundingClientRect().height/2 : 40) - 14 - f.slot * (28+2);
+      const toX = base.x;
+
+      // force reflow then animate
+      void fly.offsetWidth;
+      fly.style.transform = 'translate(' + (toX - 11) + 'px,' + (toY - 11) + 'px) scale(1.05)';
+
+      setTimeout(()=>{
+        fly.style.opacity = '0';
+        // add apple to plate stack
+        plateHave[f.di] += 1;
+        const pCount = $('plateCount'+f.di);
+        if(pCount){
+          pCount.textContent = plateHave[f.di];
+          pCount.classList.remove('jello'); void pCount.offsetWidth; pCount.classList.add('jello');
+        }
+        if(pStack){
+          const apple = document.createElement('div');
+          apple.className = 'apple-cell pop';
+          apple.textContent = '🍎';
+          pStack.appendChild(apple);
+        }
+        // live bars
+        renderBars(plateHave.slice());
+        setTimeout(()=>{ fly.remove(); resolve(); }, 80);
+      }, 520);
+    }, f.delay);
+  }));
+
+  // leftover apples: fade out on piles (remainder)
+  leftover.forEach((src, i)=>{
+    setTimeout(()=>{
+      src.cell.style.opacity = '0.35';
+      src.cell.classList.add('half');
+    }, 80 + i * 12);
+  });
+
+  await Promise.all(promises);
+  await sleep(100);
+  layer.innerHTML = '';
+
+  state.mode = 'after';
+  state.plateCounts = targets.slice();
+  updateAll({staggerPlates:false});
+  finishEqualize(s);
+}
+
+function finishEqualize(s){
+  setControlsEnabled(true);
+  $('btnEqual').disabled = true;
+  $('btnEqual').textContent = '✓ 已公平';
+
+  // pop avg
+  const avgEl = $('avgV');
+  avgEl.classList.remove('pop'); void avgEl.offsetWidth; avgEl.classList.add('pop');
+  $('avgLine').classList.add('glow');
+
+  // show quiz only when rem==0 and each is sensible
+  if(s.rem === 0 && s.each >= 0){
+    showQuiz(s.each);
+  } else {
+    hideQuiz();
+  }
+}
+
+function hideQuiz(){
+  const q = $('quiz');
+  q.classList.remove('show');
+  $('quizFb').classList.remove('show','ok','no');
+  $('quizFb').textContent = '';
+  $('stars').querySelectorAll('.s').forEach(el=>el.classList.remove('in'));
+}
+
+function showQuiz(correct){
+  const q = $('quiz');
+  const opts = $('quizOpts');
+  opts.innerHTML = '';
+  $('quizFb').classList.remove('show','ok','no');
+  $('quizFb').textContent = '';
+  $('stars').querySelectorAll('.s').forEach(el=>el.classList.remove('in'));
+
+  // options: correct-1, correct, correct+1 (clamp >=0, unique)
+  let candidates = [correct-1, correct, correct+1].filter(v => v >= 0);
+  candidates = Array.from(new Set(candidates));
+  // if only one, add correct+2
+  while(candidates.length < 3){
+    candidates.push(candidates[candidates.length-1] + 1);
+  }
+  // shuffle
+  for(let i=candidates.length-1;i>0;i--){
+    const j = Math.floor(Math.random()* (i+1));
+    const t = candidates[i]; candidates[i]=candidates[j]; candidates[j]=t;
+  }
+
+  candidates.forEach(v=>{
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.textContent = v + ' 个';
+    btn.dataset.val = String(v);
+    btn.addEventListener('click', ()=> onQuizPick(btn, v, correct));
+    opts.appendChild(btn);
+  });
+  q.classList.add('show');
+}
+
+function onQuizPick(btn, val, correct){
+  if(btn.disabled && btn.classList.contains('is-wrong')) return;
+  const fb = $('quizFb');
+  if(val === correct){
+    btn.classList.add('is-correct');
+    // disable all
+    Array.from($('quizOpts').children).forEach(b => { b.disabled = true; });
+    fb.className = 'fb show ok';
+    fb.innerHTML = '答对啦！平均数就是每人一样多的那个数 <b>' + correct + '</b>。<br>把总数平均分给朋友，每人分到的就是平均数～';
+    // stars stagger
+    $('stars').querySelectorAll('.s').forEach((el,i)=>{
+      setTimeout(()=> el.classList.add('in'), i * 15);
+    });
+  } else {
+    btn.classList.remove('is-wrong');
+    void btn.offsetWidth;
+    btn.classList.add('is-wrong');
+    btn.disabled = true; // only wrong ones disabled; others remain
+    fb.className = 'fb show no';
+    fb.textContent = '差一点点～数数每个盘子是不是一样多？再选一次！';
+  }
+}
+
+function sayMethod(){
+  const s = solveAverage(state.piles, state.n);
+  const box = $('sayout');
+  let txt;
+  if(state.mode === 'after' && s.rem === 0){
+    txt = '我把 ' + s.total + ' 个苹果平均分给 ' + state.n + ' 个朋友，每人 ' + s.each + ' 个。高低变成一样高，这个数就是平均数。';
+  } else if(s.rem > 0){
+    txt = '一共 ' + s.total + ' 个苹果，分给 ' + state.n + ' 人，' + s.total + '÷' + state.n + '=' + fmtAvg(s.avg) + '。不能正好分完，还剩 ' + s.rem + ' 个。';
+  } else {
+    txt = '先加起来得 ' + s.total + '，再除以人数 ' + state.n + '，平均数是 ' + fmtAvg(s.avg) + '。点「公平分一分」就能看见苹果搬家！';
+  }
+  box.innerHTML = '<span class="tag">🗣️ 我会说：</span>' + txt;
+  box.classList.add('show');
+}
+
+function resetAll(){
+  state.piles = DEFAULTS.piles.slice();
+  state.n = DEFAULTS.n;
+  state.mode = 'before';
+  state.plateCounts = [];
+  $('p0').value = 3; $('p1').value = 6; $('p2').value = 9;
+  $('flyLayer').innerHTML = '';
+  hideQuiz();
+  $('sayout').classList.remove('show');
+  $('alert').classList.remove('show');
+  updateAll({staggerPiles:true, staggerPlates:true, fromUser:false});
+}
+
+// events
+['p0','p1','p2'].forEach(id=>{
+  $(id).addEventListener('input', ()=>{
+    if(state.mode === 'animating') return;
+    if(state.mode === 'after'){ state.mode = 'before'; state.plateCounts = []; hideQuiz(); }
+    updateAll({fromUser:true});
+  });
+});
+document.querySelectorAll('.stepper button').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    if(state.mode === 'animating') return;
+    const i = +btn.dataset.pile;
+    const d = +btn.dataset.d;
+    const input = $('p'+i);
+    let v = +input.value + d;
+    v = Math.max(1, Math.min(12, v));
+    input.value = v;
+    if(state.mode === 'after'){ state.mode = 'before'; state.plateCounts = []; hideQuiz(); }
+    updateAll({fromUser:true});
+  });
+});
+document.querySelectorAll('.n-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    if(state.mode === 'animating') return;
+    state.n = +btn.dataset.n;
+    if(state.mode === 'after'){ state.mode = 'before'; state.plateCounts = []; hideQuiz(); }
+    updateAll({fromUser:true, staggerPlates:true});
+  });
+});
+$('btnEqual').addEventListener('click', ()=> equalize());
+$('btnSay').addEventListener('click', ()=> sayMethod());
+$('btnReset').addEventListener('click', ()=> resetAll());
+$('staticMode').addEventListener('change', (e)=>{
+  state.reduced = !!e.target.checked;
+  document.body.classList.toggle('reduce-motion', state.reduced);
+});
+
+// init
+updateAll({staggerPiles:true, staggerPlates:true});
+</script>
+</body>
+</html>

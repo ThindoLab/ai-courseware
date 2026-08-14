@@ -1,0 +1,34 @@
+{
+  "title": "厨房着火怎么办",
+  "startId": "n0",
+  "nodes": [
+    {
+      "id": "n0",
+      "text": "炒菜时锅里突然起火了。你的第一反应是什么？",
+      "choices": [
+        { "id": "c1", "text": "赶紧端水泼上去灭火", "next": "n_water", "correct": false },
+        { "id": "c2", "text": "先关火，再盖上锅盖", "next": "n_cover", "correct": true }
+      ]
+    },
+    {
+      "id": "n_cover",
+      "text": "很好！关火并盖上锅盖，隔绝空气，火很快就灭了。接下来呢？",
+      "choices": [
+        { "id": "c3", "text": "打开门窗通风散烟", "next": "n_vent", "correct": true },
+        { "id": "c4", "text": "不管了，先跑出去", "next": "n_run", "correct": false }
+      ]
+    },
+    {
+      "id": "n_vent",
+      "text": "火灭了，烟雾还在。你打算怎么散烟？",
+      "choices": [
+        { "id": "c5", "text": "开窗形成对流，让烟自然散去", "next": "n_done", "correct": true },
+        { "id": "c6", "text": "打开抽油烟机 / 电风扇猛吹", "next": "n_fan", "correct": false }
+      ]
+    },
+    { "id": "n_water", "text": "油火遇水会瞬间汽化爆溅，火势反而冲满整个厨房！这是最危险的做法。", "ending": "fail" },
+    { "id": "n_run", "text": "火虽灭了，但烟雾和余火没处理，可能复燃。应先确认安全、散尽烟雾再离开。", "ending": "neutral" },
+    { "id": "n_fan", "text": "电气设备在油烟环境里启动有火花风险，可能引燃。散烟应优先开窗自然对流。", "ending": "fail" },
+    { "id": "n_done", "text": "处理得当。记住口诀：油锅起火，关火 + 盖锅盖，再开窗散烟。", "ending": "success" }
+  ]
+}

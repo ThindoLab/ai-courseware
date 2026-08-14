@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AI 原子教具 · 运行时架构图</title>
+  <style>
+    :root {
+      --bg: #0f1419;
+      --panel: #1a2332;
+      --panel2: #243044;
+      --line: #3d4f66;
+      --text: #e8eef7;
+      --muted: #8b9cb3;
+      --blue: #5b9fd4;
+      --green: #3dba8c;
+      --amber: #e6a23c;
+      --red: #e86a5c;
+      --purple: #9b7be8;
+      --cyan: #4ecdc4;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: "SF Pro Text", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.55;
+      min-height: 100vh;
+      padding: 28px 20px 48px;
+    }
+
+    .wrap { max-width: 1100px; margin: 0 auto; }
+
+    header {
+      text-align: center;
+      margin-bottom: 28px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    header h1 {
+      font-size: clamp(22px, 4vw, 30px);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 8px;
+    }
+
+    header h1 span { color: var(--cyan); }
+
+    header p {
+      color: var(--muted);
+      font-size: 14px;
+      max-width: 680px;
+      margin: 0 auto;
+    }
+
+    header a { color: var(--cyan); }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px 16px;
+      justify-content: center;
+      margin-top: 16px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .legend i {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 3px;
+      margin-right: 5px;
+      vertical-align: middle;
+    }
+
+    .flow {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .arrow {
+      color: var(--muted);
+      font-size: 18px;
+      padding: 6px 0;
+      user-select: none;
+    }
+
+    .arrow.down::after { content: "▼"; }
+
+    .node {
+      width: 100%;
+      max-width: 920px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 16px 18px;
+    }
+
+    .node.user {
+      border-color: var(--blue);
+      background: linear-gradient(135deg, #1a2838, var(--panel));
+    }
+
+    .node.orch {
+      border-color: var(--amber);
+      background: linear-gradient(135deg, #2a2418, var(--panel));
+      box-shadow: 0 0 0 1px rgba(230, 162, 60, 0.15);
+    }
+
+    .node.sample {
+      border-color: var(--green);
+      background: linear-gradient(135deg, #142820, var(--panel));
+    }
+
+    .node.agent {
+      border-color: var(--purple);
+      background: linear-gradient(135deg, #221a32, var(--panel));
+    }
+
+    .node.out {
+      border-color: var(--cyan);
+      background: linear-gradient(135deg, #142a2a, var(--panel));
+    }
+
+    .node.dim {
+      border-style: dashed;
+      opacity: 0.95;
+    }
+
+    .node-head {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+
+    .tag {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      padding: 3px 8px;
+      border-radius: 6px;
+      background: var(--panel2);
+      color: var(--muted);
+    }
+
+    .tag.blue { background: rgba(91, 159, 212, 0.2); color: var(--blue); }
+    .tag.amber { background: rgba(230, 162, 60, 0.2); color: var(--amber); }
+    .tag.green { background: rgba(61, 186, 140, 0.2); color: var(--green); }
+    .tag.purple { background: rgba(155, 123, 232, 0.2); color: var(--purple); }
+    .tag.cyan { background: rgba(78, 205, 196, 0.2); color: var(--cyan); }
+
+    .node-head h2 {
+      font-size: 16px;
+      font-weight: 650;
+      flex: 1;
+    }
+
+    .node p.desc {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 8px;
+    }
+
+    .chip {
+      background: var(--panel2);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 12.5px;
+    }
+
+    .chip b {
+      display: block;
+      font-size: 13px;
+      margin-bottom: 2px;
+      color: var(--text);
+    }
+
+    .chip span { color: var(--muted); font-size: 11.5px; }
+
+    .branch-row {
+      width: 100%;
+      max-width: 920px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      align-items: stretch;
+    }
+
+    @media (max-width: 720px) {
+      .branch-row { grid-template-columns: 1fr; }
+    }
+
+    .branch-label {
+      width: 100%;
+      max-width: 920px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 4px;
+    }
+
+    @media (max-width: 720px) {
+      .branch-label { display: none; }
+    }
+
+    .branch-label div {
+      text-align: center;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .branch-label .yes { color: var(--green); }
+    .branch-label .no { color: var(--purple); }
+
+    .stack {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    .stack-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 8px 10px;
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 8px;
+      border-left: 3px solid var(--line);
+      font-size: 12.5px;
+    }
+
+    .stack-item .role {
+      flex: none;
+      width: 72px;
+      font-weight: 700;
+      font-size: 11px;
+      color: var(--cyan);
+    }
+
+    .skills {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    @media (max-width: 640px) {
+      .skills { grid-template-columns: 1fr; }
+    }
+
+    .skill {
+      background: rgba(155, 123, 232, 0.08);
+      border: 1px dashed rgba(155, 123, 232, 0.4);
+      border-radius: 10px;
+      padding: 10px;
+      font-size: 12px;
+    }
+
+    .skill strong { color: var(--purple); display: block; margin-bottom: 4px; }
+    .skill code {
+      font-size: 10.5px;
+      color: var(--muted);
+      word-break: break-all;
+    }
+
+    .notes {
+      margin-top: 28px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    @media (max-width: 720px) {
+      .notes { grid-template-columns: 1fr; }
+    }
+
+    .note {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 14px 16px;
+      font-size: 13px;
+    }
+
+    .note h3 {
+      font-size: 13px;
+      margin-bottom: 8px;
+      color: var(--amber);
+    }
+
+    .note ul {
+      margin: 0;
+      padding-left: 18px;
+      color: var(--muted);
+    }
+
+    .note li { margin-bottom: 4px; }
+    .note li strong { color: var(--text); font-weight: 600; }
+
+    .compare {
+      width: 100%;
+      max-width: 920px;
+      margin: 20px auto 0;
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12.5px;
+      background: var(--panel);
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+    }
+
+    th, td {
+      padding: 10px 12px;
+      text-align: left;
+      border-bottom: 1px solid var(--line);
+    }
+
+    th {
+      background: var(--panel2);
+      color: var(--muted);
+      font-weight: 600;
+      font-size: 11px;
+    }
+
+    tr:last-child td { border-bottom: 0; }
+    td:first-child { color: var(--cyan); font-weight: 600; white-space: nowrap; }
+
+    footer {
+      text-align: center;
+      margin-top: 28px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .decision {
+      max-width: 280px;
+      margin: 0 auto;
+      text-align: center;
+      background: var(--panel2);
+      border: 2px solid var(--amber);
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 650;
+      color: var(--amber);
+      clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+      min-height: 72px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 22px 36px;
+    }
+
+    .decision-wrap {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      padding: 8px 0;
+    }
+
+    .sec-title {
+      width: 100%;
+      max-width: 920px;
+      margin: 28px 0 10px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--muted);
+      letter-spacing: 0.06em;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>AI 原子教具 · <span>运行时架构</span></h1>
+      <p>
+        面向<strong>中幼儿 / 家庭 / 教室 / 培训</strong>：用户<strong>只输入一句话</strong>。
+        教练手册 <code>pi/教练.md</code> 排程；岗位认定在 <code>pi/角色/</code>。
+        与 <a href="./04-architecture-design.md">04-architecture-design.md</a> 同步。
+      </p>
+      <div class="legend">
+        <span><i style="background:var(--blue)"></i>蓝 · 人只填主题</span>
+        <span><i style="background:var(--amber)"></i>琥珀 · 代码定路线</span>
+        <span><i style="background:var(--green)"></i>绿 · 样例秒回</span>
+        <span><i style="background:var(--purple)"></i>紫 · 模型写文件</span>
+        <span><i style="background:var(--cyan)"></i>青 · 下载离线打开</span>
+      </div>
+    </header>
+
+    <div class="flow">
+
+      <div class="node user">
+        <div class="node-head">
+          <span class="tag blue">① 前端 · 人</span>
+          <h2>创作台</h2>
+        </div>
+        <p class="desc">教师/家长只说一句话，点「生成教具」。不选模块、不选类型。</p>
+        <div class="grid">
+          <div class="chip"><b>一句话</b><span>如「鸡兔同笼」「影子为什么变长」</span></div>
+          <div class="chip"><b>提交生成</b><span>POST { text } · 最长大约等 5 分钟</span></div>
+        </div>
+      </div>
+
+      <div class="arrow down"></div>
+
+      <div class="node">
+        <div class="node-head">
+          <span class="tag">② 接入层 · 只转发</span>
+          <h2>本机网页服务 · 默认 3000 端口</h2>
+        </div>
+        <p class="desc">校验有没有主题和模块 → 交给总调度 → 把结果原样包成 JSON。不做教学规划。启动：<code>npm start</code></p>
+        <div class="grid">
+          <div class="chip"><b>打开首页</b><span>每次从磁盘读创作台，改完刷新即可</span></div>
+          <div class="chip"><b>健康检查</b><span>服务是否还活着</span></div>
+          <div class="chip"><b>工艺列表</b><span>给下拉框用</span></div>
+          <div class="chip"><b>样例清单 / 单页</b><span>约 30 份精品预览</span></div>
+          <div class="chip"><b>生成入口</b><span>唯一会写新教具的接口</span></div>
+        </div>
+      </div>
+
+      <div class="arrow down"></div>
+
+      <div class="node orch">
+        <div class="node-head">
+          <span class="tag amber">③ 总调度 · 确定性代码</span>
+          <h2>创作主循环</h2>
+        </div>
+        <p class="desc">
+          <strong style="color:var(--amber)">这里只做宿主：开会话、白名单、超时。</strong>
+          教练在 <code>pi/教练.md</code>：先派匹配员，再派写手或交付精品。
+        </p>
+        <div class="grid">
+          <div class="chip"><b>判定类型</b><span>参数图解 / 分支故事 / 拖拽槽位</span></div>
+          <div class="chip"><b>推断受众</b><span>3–6 / 7–9 / 10–12 · 中幼儿·家庭·教室·培训</span></div>
+          <div class="chip"><b>对照样例清单</b><span>分数 ≥ 85 才算命中；短词、泛词不中</span></div>
+          <div class="chip"><b>挑选模型</b><span>只要会真正「写文件」的；避开 fable</span></div>
+        </div>
+      </div>
+
+      <div class="arrow down"></div>
+
+      <div class="decision-wrap">
+        <div class="decision">样例库<br/>高置信命中？</div>
+      </div>
+
+      <div class="branch-label">
+        <div class="yes">✓ 是 · 快路径（秒回精品）</div>
+        <div class="no">✗ 否 · 慢路径（大约 30–180 秒）</div>
+      </div>
+
+      <div class="branch-row">
+        <div class="node sample">
+          <div class="node-head">
+            <span class="tag green">④a 快路径</span>
+            <h2>精品样例库 · 约 30 份</h2>
+          </div>
+          <p class="desc">只认：完全一致、强包含、或完整别名。禁止单字误中，禁止随便塞第一份。</p>
+          <div class="stack">
+            <div class="stack-item" style="border-left-color:var(--green)">
+              <span class="role" style="color:var(--green)">读盘</span>
+              <span>按清单取出对应精品 HTML</span>
+            </div>
+            <div class="stack-item" style="border-left-color:var(--green)">
+              <span class="role" style="color:var(--green)">归档</span>
+              <span>复制一份到 output/，方便对照</span>
+            </div>
+            <div class="stack-item" style="border-left-color:var(--green)">
+              <span class="role" style="color:var(--green)">标记</span>
+              <span>标明「来自样例库」，与样例库页内容一致</span>
+            </div>
+          </div>
+          <p class="desc" style="margin-top:10px;margin-bottom:0">
+            ⚠ <strong style="color:var(--green)">不调用模型</strong>
+          </p>
+        </div>
+
+        <div class="node agent">
+          <div class="node-head">
+            <span class="tag purple">④b 慢路径</span>
+            <h2>模型写文件</h2>
+          </div>
+          <p class="desc">未命中才上场。会话里<strong>只允许写文件</strong>；输出额度提到约 3.2 万，避免想太多写不出来。</p>
+          <div class="stack">
+            <div class="stack-item" style="border-left-color:var(--purple)">
+              <span class="role">模型</span>
+              <span>优先会调工具的；关掉长思考，先写完整页面</span>
+            </div>
+            <div class="stack-item" style="border-left-color:var(--purple)">
+              <span class="role">工具</span>
+              <span>只许写入事先定好的那一个路径</span>
+            </div>
+            <div class="stack-item" style="border-left-color:var(--amber)">
+              <span class="role">提示词</span>
+              <span>默认精简：受众 + 五硬核；全文工艺文要单独开开关</span>
+            </div>
+            <div class="stack-item" style="border-left-color:var(--amber)">
+              <span class="role">重试</span>
+              <span>最多两轮，每轮新开会话（避免「还在处理中」卡死）</span>
+            </div>
+            <div class="stack-item" style="border-left-color:var(--muted)">
+              <span class="role">失败</span>
+              <span>明确报错；绝不拿无关样例或旧文件冒充本次生成</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="arrow down"></div>
+
+      <div class="node out">
+        <div class="node-head">
+          <span class="tag cyan">⑤ 输出 · 浏览器</span>
+          <h2>单文件 HTML 教具</h2>
+        </div>
+        <p class="desc">去掉外链 → 五硬核轻量打分（不挡下载）→ 回创作台预览。家庭平板、教室白板、断网都能打开。</p>
+        <div class="grid">
+          <div class="chip"><b>教具页面</b><span>完整单文件，可离线打开</span></div>
+          <div class="chip"><b>受众信息</b><span>分龄 / 家庭·教室·培训</span></div>
+          <div class="chip"><b>五硬核分</b><span>理解难度 · 形象性 · 图解 · 逻辑 · 动态</span></div>
+          <div class="chip"><b>来源标记</b><span>样例秒回，还是模型新写</span></div>
+        </div>
+      </div>
+
+      <div class="sec-title">附属能力（默认不挡主路径）</div>
+
+      <div class="node agent dim" style="margin-bottom:14px">
+        <div class="node-head">
+          <span class="tag purple">工艺文</span>
+          <h2>有文件 · 默认弱注入 · 不负责调度模型</h2>
+        </div>
+        <p class="desc">
+          扫描内置目录与创作者目录。可选编号主要用于<strong>选定交互类型</strong>。
+          全文工艺文不会自动塞进生成会话。
+        </p>
+        <div class="skills">
+          <div class="skill">
+            <strong>参数图解</strong>
+            滑块 / 加减改参数，图解跟着变
+          </div>
+          <div class="skill">
+            <strong>分支故事</strong>
+            情境 → 选项 → 反馈（安全项不可模仿）
+          </div>
+          <div class="skill">
+            <strong>拖拽槽位</strong>
+            词块入句，预览句同步
+          </div>
+        </div>
+      </div>
+
+      <div class="branch-row">
+        <div class="node dim">
+          <div class="node-head">
+            <span class="tag">知识检索 · 已实现未挂上</span>
+            <h2>本地切片搜索</h2>
+          </div>
+          <p class="desc">按模块翻本地文稿，标题命中加分、正文命中加分。没有向量库，也没有外搜。</p>
+          <div class="stack">
+            <div class="stack-item">
+              <span class="role">数据</span>
+              <span>手写切片（鸡兔、分数等），不是整套教材 PDF</span>
+            </div>
+            <div class="stack-item">
+              <span class="role">现状</span>
+              <span>命令行可单独测；生成会话为保「写得出来」暂不调用</span>
+            </div>
+          </div>
+        </div>
+        <div class="node dim">
+          <div class="node-head">
+            <span class="tag">契约旁路 · 非线上主路</span>
+            <h2>手写内容填进模板壳</h2>
+          </div>
+          <p class="desc">给测试和手写 JSON 用。线上「生成教具」<strong>不再</strong>走这条。</p>
+          <div class="stack">
+            <div class="stack-item">
+              <span class="role">步骤</span>
+              <span>内容 JSON → 注入模板 → 校验 → 内联 → 落盘</span>
+            </div>
+            <div class="stack-item">
+              <span class="role">失败</span>
+              <span>校验不过就不写半成品</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="compare">
+      <table>
+        <thead>
+          <tr>
+            <th>角色</th>
+            <th>负责</th>
+            <th>不负责（当前）</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>总调度</td>
+            <td>定类型、受众、走样例还是模型、重试与报错</td>
+            <td>写页面里的每一句教学文案</td>
+          </tr>
+          <tr>
+            <td>样例库</td>
+            <td>对得上的主题秒回精品</td>
+            <td>新主题现场创作</td>
+          </tr>
+          <tr>
+            <td>模型写文件</td>
+            <td>未命中时写出完整 HTML</td>
+            <td>选类型、搜知识、编排一串工具</td>
+          </tr>
+          <tr>
+            <td>三类工艺文</td>
+            <td>类型规范；开全文开关才注入</td>
+            <td>当成自动工作流去调度模型</td>
+          </tr>
+          <tr>
+            <td>本地检索 / 质检工具</td>
+            <td>代码里已经写好</td>
+            <td>默认挂进「生成教具」会话</td>
+          </tr>
+          <tr>
+            <td>外搜 / 教材库</td>
+            <td>—</td>
+            <td>尚未接线，不要画进已实现图</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="notes">
+      <div class="note">
+        <h3>怎么读这张图</h3>
+        <ul>
+          <li><strong>人</strong>只填主题；<strong>代码</strong>决定走绿还是紫。</li>
+          <li><strong>绿路</strong>不调模型；<strong>紫路</strong>只负责把 HTML 写到磁盘。</li>
+          <li><strong>虚线框</strong>是附属能力：有代码，但不挡主路径。</li>
+        </ul>
+      </div>
+      <div class="note">
+        <h3>和文字版文档的关系</h3>
+        <ul>
+          <li><strong>本页</strong>：给人一眼看懂运行时。</li>
+          <li><strong>架构说明</strong>：接口、环境变量、阶段对照。</li>
+          <li><strong>生成 vs 样例</strong>：什么时候秒回、什么时候新写。</li>
+        </ul>
+      </div>
+      <div class="note">
+        <h3>踩过的坑（已写进代码）</h3>
+        <ul>
+          <li>有的模型不调「写文件」→ 永远没产物。</li>
+          <li>输出额度太小 → 只想不写。</li>
+          <li>弱匹配 / 复用旧文件 → 输什么都一样。</li>
+        </ul>
+      </div>
+      <div class="note">
+        <h3>对应源码</h3>
+        <ul>
+          <li><strong>server.ts</strong> — 接入与样例浏览</li>
+          <li><strong>agent.ts</strong> — 总调度与两条生成路</li>
+          <li><strong>samples/</strong> — 精品库与清单</li>
+          <li><strong>knowledge.ts / tools.ts</strong> — 已实现、默认未挂上</li>
+        </ul>
+      </div>
+    </div>
+
+    <footer>
+      与 docs/04-architecture-design.md 同步 · 以 src/agent.ts 为准 · 浏览器直接打开本页即可
+    </footer>
+  </div>
+</body>
+</html>

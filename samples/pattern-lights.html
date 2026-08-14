@@ -1,0 +1,337 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>小兔挂彩灯 · 找规律</title>
+<!-- 题型：数学图解·周期规律 / 核心认知动作：观察序列·预测下一项 / 年龄：5-8 岁 / 场景：家庭+教室 -->
+<style>
+:root{
+  --accent:#8b5cf6; --accent2:#f59e0b; --ok:#10b981; --warn:#f59e0b; --bad:#ef4444;
+  --ink:#1f2a44; --muted:#667085; --line:#e8e4f5; --card:#fff;
+  --ease:cubic-bezier(0.25,1,0.5,1);
+  --touch:56px;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  font-family:-apple-system,"PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+  color:var(--ink);
+  background:linear-gradient(160deg,#f5f3ff,#fff7ed);
+  min-height:100vh; padding:14px 12px 28px;
+}
+.card{
+  max-width:760px; margin:0 auto; background:var(--card);
+  border:1px solid var(--line); border-radius:20px;
+  box-shadow:0 12px 30px rgba(91,33,182,.1); padding:18px 16px 22px;
+  animation:fadeInUp .5s var(--ease) both;
+}
+.topbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.topbar h1{margin:0;font-size:24px;font-weight:800}
+.badge{font-size:14px;font-weight:700;color:#6d28d9;background:#ede9fe;padding:5px 12px;border-radius:999px}
+.mode{margin-left:auto;font-size:14px;color:var(--muted);display:flex;align-items:center;gap:6px;cursor:pointer}
+.mode input{width:18px;height:18px}
+.story{
+  background:linear-gradient(135deg,#ede9fe,#fff7ed);
+  border-left:5px solid var(--accent);
+  border-radius:0 14px 14px 0; padding:12px 14px; margin-bottom:14px;
+  font-size:16px; line-height:1.7; display:flex; gap:12px; align-items:flex-start;
+}
+.story .mascot{font-size:42px;line-height:1;flex-shrink:0;transition:transform .3s var(--ease)}
+.story .mascot.happy{transform:scale(1.12) rotate(6deg)}
+.story p{margin:0}
+.story strong{color:#6d28d9}
+.stage{
+  background:linear-gradient(180deg,#faf5ff,#fffbeb);
+  border:1px solid var(--line); border-radius:16px; padding:14px 12px; margin-bottom:14px;
+}
+.stage-label{font-size:14px;font-weight:700;color:var(--muted);margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
+.lights{
+  display:flex; flex-wrap:wrap; gap:10px; justify-content:center; align-items:center;
+  min-height:88px; padding:8px 0;
+}
+.bulb{
+  width:52px; height:52px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:28px; border:3px solid transparent;
+  transition:transform .35s var(--ease), box-shadow .35s var(--ease), opacity .35s var(--ease);
+  opacity:0; transform:scale(.4);
+}
+.bulb.in{opacity:1; transform:scale(1)}
+.bulb.pulse{animation:pulse .5s var(--ease)}
+.bulb.ask{
+  border-style:dashed; border-color:#a78bfa; background:#f5f3ff;
+  font-size:22px; font-weight:800; color:#6d28d9;
+}
+.bulb.ok{box-shadow:0 0 0 4px rgba(16,185,129,.35)}
+.bulb.bad{animation:wobble .45s ease}
+.period-bar{
+  margin-top:12px; display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap;
+  font-size:15px; color:var(--muted);
+}
+.period-bar .unit{
+  display:inline-flex; gap:4px; padding:6px 10px; border-radius:12px;
+  background:#ede9fe; border:2px solid #c4b5fd;
+}
+.period-bar .unit span{font-size:22px}
+.controls{display:flex;flex-direction:column;gap:12px;margin-bottom:14px}
+.choices{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+.btn{
+  min-height:var(--touch); min-width:var(--touch); padding:12px 18px;
+  border:2px solid var(--line); border-radius:14px; background:#fff;
+  font-size:22px; font-weight:700; cursor:pointer;
+  transition:transform .2s var(--ease), border-color .2s, background .2s;
+  font-family:inherit; color:var(--ink);
+}
+.btn:hover{transform:translateY(-1px)}
+.btn:active{transform:scale(.97)}
+.btn.pick{border-color:var(--accent); background:#f5f3ff}
+.btn.correct{border-color:var(--ok); background:#d1fae5}
+.btn.wrong{border-color:var(--bad); background:#fee2e2}
+.btn:disabled{opacity:.55; cursor:not-allowed}
+.btn-row{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+.btn.primary{background:linear-gradient(135deg,var(--accent),#6d28d9); color:#fff; border-color:transparent; font-size:16px}
+.btn.ghost{font-size:16px; color:var(--muted)}
+.feedback{
+  min-height:72px; border-radius:14px; padding:12px 14px; margin-bottom:12px;
+  background:#f8fafc; border:1px solid var(--line); font-size:16px; line-height:1.6;
+}
+.feedback.ok{background:#ecfdf5; border-color:#6ee7b7}
+.feedback.bad{background:#fff7ed; border-color:#fcd34d}
+.thinking{
+  background:#fffbeb; border-radius:12px; padding:10px 12px; margin-bottom:10px;
+  font-size:15px; line-height:1.6; border:1px dashed #fcd34d;
+}
+.thinking .tag{font-weight:800; color:#b45309}
+.say-box{font-size:15px; color:var(--ink); min-height:24px; margin-top:6px}
+.progress{font-size:14px; font-weight:700; color:var(--muted); text-align:center; margin-bottom:8px}
+@keyframes fadeInUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.12)}}
+@keyframes wobble{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+@keyframes tada{0%{transform:scale(1)}20%,40%{transform:scale(1.08) rotate(-3deg)}30%,50%{transform:scale(1.08) rotate(3deg)}to{transform:scale(1)}}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}
+}
+body.static *{animation:none!important; transition:none!important}
+body.static .bulb{opacity:1; transform:none}
+</style>
+</head>
+<body>
+<main class="card">
+  <div class="topbar">
+    <h1>小兔挂彩灯</h1>
+    <span class="badge">5–8 岁 · 找规律</span>
+    <label class="mode"><input type="checkbox" id="staticMode"> 静态模式</label>
+  </div>
+  <div class="story">
+    <div class="mascot" id="mascot" aria-hidden="true">🐰</div>
+    <p id="storyText">过年啦！小兔要按<strong>同样的顺序</strong>挂彩灯。请你先看灯串，再猜下一盏该挂什么颜色。</p>
+  </div>
+  <div class="progress" id="progress">第 1 / 4 题</div>
+  <div class="stage" role="img" aria-label="彩灯规律图解">
+    <div class="stage-label">
+      <span>灯串（？= 下一盏）</span>
+      <span id="levelChip">家庭练习</span>
+    </div>
+    <div class="lights" id="lights"></div>
+    <div class="period-bar" id="periodBar" aria-live="polite"></div>
+  </div>
+  <div class="controls">
+    <div class="choices" id="choices" role="group" aria-label="选择下一盏灯"></div>
+    <div class="btn-row">
+      <button type="button" class="btn primary" id="btnCheck">✓ 检查</button>
+      <button type="button" class="btn ghost" id="btnNext" hidden>下一题 →</button>
+      <button type="button" class="btn ghost" id="btnReset">↻ 重新开始</button>
+      <button type="button" class="btn ghost" id="btnSay">🗣️ 我会说</button>
+    </div>
+  </div>
+  <div class="feedback" id="feedback" aria-live="polite">先点选一盏灯的颜色，再点「检查」。</div>
+  <p class="thinking" id="think"><span class="tag">我怎么想：</span><span id="thinkText">我先找出重复的一小段，再数到问号的位置。</span></p>
+  <div class="say-box" id="sayBox"></div>
+</main>
+<script>
+(function(){
+  const COLORS = {
+    r:{emoji:'🔴', name:'红'},
+    y:{emoji:'🟡', name:'黄'},
+    b:{emoji:'🔵', name:'蓝'},
+    g:{emoji:'🟢', name:'绿'}
+  };
+  // pattern = repeating unit; show = how many bulbs before ?; answer = next color key
+  const LEVELS = [
+    { unit:['r','y'], show:5, scene:'家庭：阳台灯串', think:'红-黄 红-黄… 一小段是 2 个，第 6 个落在第 2 位 → 黄' },
+    { unit:['b','g','r'], show:4, scene:'教室：黑板旁装饰', think:'蓝-绿-红 为一组。第 5 个是组里第 2 个 → 绿' },
+    { unit:['y','y','b'], show:5, scene:'培训：找相同小段', think:'黄-黄-蓝。数到第 6：2 整组后第 0 位… 第 6=第 0 模 3 → 黄' },
+    { unit:['r','b','y','b'], show:6, scene:'家庭挑战', think:'红蓝黄蓝。周期 4。第 7 个位置 mod4=3 → 蓝' }
+  ];
+  let q = 0, pick = null, locked = false, reduced = false;
+
+  const $ = id => document.getElementById(id);
+  const lightsEl = $('lights'), choicesEl = $('choices'), feedback = $('feedback');
+  const periodBar = $('periodBar'), mascot = $('mascot');
+
+  function nextKey(level){
+    const i = level.show % level.unit.length;
+    return level.unit[i];
+  }
+
+  function renderLights(level, reveal){
+    lightsEl.innerHTML = '';
+    const seq = [];
+    for(let i=0;i<level.show;i++) seq.push(level.unit[i % level.unit.length]);
+    seq.forEach((k,i)=>{
+      const d = document.createElement('div');
+      d.className = 'bulb';
+      const posInUnit = (i % level.unit.length) + 1;
+      d.textContent = COLORS[k].emoji;
+      d.title = '第'+(i+1)+'盏 · 小段内第'+posInUnit+'位';
+      d.setAttribute('aria-label', COLORS[k].name + '灯，小段内第'+posInUnit);
+      // 小段内序号角标（帮助数周期）
+      const badge = document.createElement('span');
+      badge.style.cssText='position:absolute;bottom:-2px;right:-2px;font-size:10px;font-weight:800;background:#fff;border-radius:4px;padding:0 3px;color:#6d28d9';
+      badge.textContent = String(posInUnit);
+      d.style.position = 'relative';
+      d.appendChild(badge);
+      lightsEl.appendChild(d);
+      if(!reduced) setTimeout(()=> d.classList.add('in'), i*15);
+      else d.classList.add('in');
+    });
+    const ask = document.createElement('div');
+    ask.className = 'bulb ask in';
+    ask.id = 'askBulb';
+    ask.textContent = reveal ? COLORS[nextKey(level)].emoji : '?';
+    ask.setAttribute('aria-label', reveal ? '答案灯' : '下一盏未知');
+    lightsEl.appendChild(ask);
+
+    // period visualization
+    periodBar.innerHTML = '<span>重复小段：</span><span class="unit" role="img" aria-label="周期单元">' +
+      level.unit.map(k => '<span>'+COLORS[k].emoji+'</span>').join('') +
+      '</span><span>× 重复</span>';
+  }
+
+  function renderChoices(level){
+    choicesEl.innerHTML = '';
+    pick = null;
+    const opts = [...new Set([...level.unit, 'g','y','b','r'])].slice(0,4);
+    // ensure answer in options
+    const ans = nextKey(level);
+    if(!opts.includes(ans)) opts[0]=ans;
+    opts.sort(()=>Math.random()-0.5);
+    opts.forEach(k=>{
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'btn';
+      b.dataset.key = k;
+      b.textContent = COLORS[k].emoji + ' ' + COLORS[k].name;
+      b.setAttribute('aria-label', '选择'+COLORS[k].name);
+      b.addEventListener('click', ()=>{
+        if(locked) return;
+        pick = k;
+        [...choicesEl.children].forEach(c=>c.classList.remove('pick'));
+        b.classList.add('pick');
+        feedback.className = 'feedback';
+        feedback.textContent = '你选了 ' + COLORS[k].name + ' 灯。点「检查」看对不对。';
+        $('thinkText').textContent = level.think.split('→')[0] + '…';
+      });
+      choicesEl.appendChild(b);
+    });
+  }
+
+  function load(){
+    locked = false;
+    const level = LEVELS[q];
+    $('progress').textContent = '第 ' + (q+1) + ' / ' + LEVELS.length + ' 题';
+    $('levelChip').textContent = level.scene;
+    $('storyText').innerHTML = '小兔要按<strong>同样顺序</strong>挂灯。看清灯串，猜下一盏！';
+    $('thinkText').textContent = '我先圈出重复的一小段，再数问号落在第几位。';
+    $('sayBox').textContent = '';
+    $('btnNext').hidden = true;
+    $('btnCheck').disabled = false;
+    feedback.className = 'feedback';
+    feedback.textContent = '先点选一盏灯的颜色，再点「检查」。';
+    mascot.className = 'mascot';
+    renderLights(level, false);
+    renderChoices(level);
+  }
+
+  function check(){
+    if(locked) return;
+    if(!pick){
+      feedback.className = 'feedback bad';
+      feedback.textContent = '还没选颜色哦。先点下面一盏灯。';
+      return;
+    }
+    const level = LEVELS[q];
+    const ans = nextKey(level);
+    locked = true;
+    $('btnCheck').disabled = true;
+    [...choicesEl.children].forEach(c=>{
+      c.disabled = true;
+      if(c.dataset.key === ans) c.classList.add('correct');
+      if(c.dataset.key === pick && pick !== ans) c.classList.add('wrong');
+    });
+    const ask = $('askBulb');
+    if(pick === ans){
+      ask.textContent = COLORS[ans].emoji;
+      ask.classList.add('ok','pulse');
+      // 高亮周期：把灯串按 unit 长度分组闪一下
+      const bulbs = [...lightsEl.querySelectorAll('.bulb:not(.ask)')];
+      bulbs.forEach((b,i)=>{
+        if(i % level.unit.length === 0){
+          setTimeout(()=> b.classList.add('pulse'), i*15);
+        }
+      });
+      feedback.className = 'feedback ok';
+      feedback.textContent = '对啦！重复小段是「' + level.unit.map(k=>COLORS[k].name).join('-') +
+        '」。问号是第 ' + (level.show+1) + ' 盏，落在小段第 ' + ((level.show % level.unit.length)+1) + ' 位 → ' + COLORS[ans].name + '。';
+      $('thinkText').textContent = level.think;
+      mascot.className = 'mascot happy';
+      if(q < LEVELS.length-1) $('btnNext').hidden = false;
+      else {
+        feedback.textContent += ' 全部完成！你已经会「找重复小段」了。';
+        $('btnNext').hidden = true;
+      }
+    } else {
+      ask.classList.add('bad');
+      feedback.className = 'feedback bad';
+      feedback.innerHTML = '你选了 <strong>' + COLORS[pick].name + '</strong>。' +
+        '差异：周期小段是「' + level.unit.map(k=>COLORS[k].emoji).join('') +
+        '」，不是随便猜颜色。下一步：用手指点着灯，每 ' + level.unit.length + ' 个画一圈，再看问号在圈里第几。';
+      $('thinkText').textContent = '先别急着猜颜色——先找到「重复的一小段」有几个。';
+      // allow retry
+      setTimeout(()=>{
+        locked = false;
+        $('btnCheck').disabled = false;
+        ask.classList.remove('bad');
+        [...choicesEl.children].forEach(c=>{
+          c.disabled = false;
+          c.classList.remove('wrong','correct');
+        });
+      }, 1200);
+    }
+  }
+
+  $('btnCheck').addEventListener('click', check);
+  $('btnNext').addEventListener('click', ()=>{ if(q < LEVELS.length-1){ q++; load(); } });
+  $('btnReset').addEventListener('click', ()=>{ q=0; load(); });
+  $('btnSay').addEventListener('click', ()=>{
+    const level = LEVELS[q];
+    const ans = nextKey(level);
+    $('sayBox').textContent = '我会说：先找出重复小段「' +
+      level.unit.map(k=>COLORS[k].name).join('') + '」，再数到下一盏是 ' + COLORS[ans].name + '。';
+  });
+  $('staticMode').addEventListener('change', e=>{
+    reduced = e.target.checked;
+    document.body.classList.toggle('static', reduced);
+    load();
+  });
+  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+    $('staticMode').checked = true;
+    reduced = true;
+    document.body.classList.add('static');
+  }
+  load();
+})();
+</script>
+</body>
+</html>

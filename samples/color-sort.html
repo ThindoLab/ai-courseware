@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>小熊分积木 · 按颜色分类</title>
+<!-- 题型：拖拽槽位·分类 / 核心认知动作：匹配·归类 / 年龄：3-6 岁 / 场景：中幼儿+家庭 -->
+<style>
+:root{
+  --accent:#f97316; --ok:#10b981; --bad:#ef4444;
+  --ink:#1f2a44; --muted:#667085; --line:#fed7aa; --ease:cubic-bezier(0.25,1,0.5,1);
+  --touch:64px;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  font-family:-apple-system,"PingFang SC",system-ui,sans-serif;
+  color:var(--ink); background:linear-gradient(160deg,#fff7ed,#ecfeff);
+  min-height:100vh; padding:12px 10px 24px;
+}
+.card{
+  max-width:720px; margin:0 auto; background:#fff; border:1px solid var(--line);
+  border-radius:20px; box-shadow:0 12px 28px rgba(249,115,22,.12); padding:16px 14px 20px;
+}
+.topbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.topbar h1{margin:0;font-size:24px;font-weight:800}
+.badge{font-size:14px;font-weight:700;color:#c2410c;background:#ffedd5;padding:5px 12px;border-radius:999px}
+.mode{margin-left:auto;font-size:14px;color:var(--muted);display:flex;gap:6px;align-items:center}
+.mode input{width:18px;height:18px}
+.story{
+  background:linear-gradient(135deg,#ffedd5,#e0f2fe); border-left:5px solid var(--accent);
+  border-radius:0 14px 14px 0; padding:12px; margin-bottom:12px;
+  font-size:18px; line-height:1.6; display:flex; gap:10px; align-items:center;
+}
+.story .m{font-size:44px}
+.story p{margin:0}
+.bins{
+  display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:14px;
+}
+@media(max-width:480px){.bins{grid-template-columns:1fr}}
+.bin{
+  min-height:120px; border:3px dashed #fdba74; border-radius:16px; padding:10px;
+  background:#fff7ed; transition:border-color .25s var(--ease), background .25s;
+}
+.bin h3{margin:0 0 8px;font-size:16px;text-align:center;font-weight:800}
+.bin.red{border-color:#f87171; background:#fef2f2}
+.bin.blue{border-color:#60a5fa; background:#eff6ff}
+.bin.yellow{border-color:#fbbf24; background:#fffbeb}
+.bin.over{box-shadow:0 0 0 3px rgba(249,115,22,.25)}
+.bin.ok{border-style:solid; border-color:var(--ok)}
+.drop{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;min-height:56px}
+.tokens{
+  display:flex; flex-wrap:wrap; gap:10px; justify-content:center;
+  min-height:80px; margin-bottom:12px; padding:10px; background:#f8fafc; border-radius:14px;
+}
+.tok{
+  min-width:var(--touch); min-height:var(--touch); border-radius:16px;
+  display:flex; align-items:center; justify-content:center; font-size:32px;
+  background:#fff; border:2px solid #e2e8f0; cursor:pointer; user-select:none;
+  touch-action:none; transition:transform .2s var(--ease), box-shadow .2s;
+  font-family:inherit; color:var(--ink);
+}
+.tok:active,.tok.picked{transform:scale(1.06); box-shadow:0 6px 16px rgba(0,0,0,.12); border-color:var(--accent)}
+.tok.used{opacity:.35; pointer-events:none}
+.tok.wrong{animation:wobble .4s ease}
+.hint{text-align:center;font-size:16px;color:var(--muted);margin-bottom:10px;min-height:24px}
+.btn-row{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:12px}
+.btn{
+  min-height:var(--touch); padding:12px 20px; border-radius:16px; border:2px solid var(--line);
+  background:#fff; font-size:18px; font-weight:700; cursor:pointer; font-family:inherit;
+}
+.btn.primary{background:linear-gradient(135deg,var(--accent),#ea580c);color:#fff;border:none}
+.feedback{min-height:56px;border-radius:14px;padding:12px;background:#f8fafc;border:1px solid #e2e8f0;font-size:17px;line-height:1.5;margin-bottom:10px}
+.feedback.ok{background:#ecfdf5;border-color:#6ee7b7}
+.feedback.bad{background:#fff7ed;border-color:#fcd34d}
+.thinking{background:#fffbeb;border-radius:12px;padding:10px;font-size:16px;border:1px dashed #fcd34d}
+.thinking .tag{font-weight:800;color:#b45309}
+@keyframes wobble{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+body.static *{animation:none!important;transition:none!important}
+</style>
+</head>
+<body>
+<main class="card">
+  <div class="topbar">
+    <h1>小熊分积木</h1>
+    <span class="badge">3–6 岁 · 分类</span>
+    <label class="mode"><input type="checkbox" id="staticMode"> 静态</label>
+  </div>
+  <div class="story">
+    <div class="m">🐻</div>
+    <p>小熊的积木乱了。请把积木<strong>放进同颜色的盒子</strong>。可以拖，也可以先点积木再点盒子。</p>
+  </div>
+  <p class="hint" id="hint"><span id="hintMain">点一块积木，再点下面的盒子；或按住拖进去。</span> <span id="prog" style="font-weight:800;color:#c2410c">（0/6）</span></p>
+  <div class="bins" id="bins">
+    <div class="bin red" data-color="red" role="button" tabindex="0" aria-label="红色盒子">
+      <h3>🔴 红盒子</h3>
+      <div class="drop" data-drop="red"></div>
+    </div>
+    <div class="bin blue" data-color="blue" role="button" tabindex="0" aria-label="蓝色盒子">
+      <h3>🔵 蓝盒子</h3>
+      <div class="drop" data-drop="blue"></div>
+    </div>
+    <div class="bin yellow" data-color="yellow" role="button" tabindex="0" aria-label="黄色盒子">
+      <h3>🟡 黄盒子</h3>
+      <div class="drop" data-drop="yellow"></div>
+    </div>
+  </div>
+  <div class="tokens" id="tokens" aria-label="积木"></div>
+  <div class="btn-row">
+    <button type="button" class="btn primary" id="btnCheck">✓ 检查</button>
+    <button type="button" class="btn" id="btnReset">↻ 重新开始</button>
+    <button type="button" class="btn" id="btnSay">🗣️ 我会说</button>
+  </div>
+  <div class="feedback" id="feedback" aria-live="polite">把每块积木放进颜色一样的盒子。</div>
+  <p class="thinking"><span class="tag">我怎么想：</span><span id="thinkText">先看积木颜色，再找相同颜色的盒子。</span></p>
+</main>
+<script>
+(function(){
+  const ITEMS = [
+    {id:'r1', color:'red', emoji:'🟥'},
+    {id:'r2', color:'red', emoji:'🍎'},
+    {id:'b1', color:'blue', emoji:'🟦'},
+    {id:'b2', color:'blue', emoji:'🐟'},
+    {id:'y1', color:'yellow', emoji:'🟨'},
+    {id:'y2', color:'yellow', emoji:'⭐'}
+  ];
+  let placed = {}; // id -> color
+  let picked = null;
+  let dragId = null;
+
+  const tokensEl = document.getElementById('tokens');
+  const feedback = document.getElementById('feedback');
+
+  function remaining(){
+    return ITEMS.filter(it => !placed[it.id]);
+  }
+
+  function renderTokens(){
+    tokensEl.innerHTML = '';
+    remaining().forEach(it=>{
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'tok' + (picked===it.id ? ' picked' : '');
+      b.dataset.id = it.id;
+      b.textContent = it.emoji;
+      b.setAttribute('aria-label', it.color + '积木');
+      b.addEventListener('click', ()=>{
+        picked = it.id;
+        renderTokens();
+        document.getElementById('hint').textContent = '已选中积木，再点一个盒子放进去。';
+      });
+      // pointer drag
+      b.addEventListener('pointerdown', e=>{
+        dragId = it.id;
+        b.setPointerCapture(e.pointerId);
+        picked = it.id;
+        b.classList.add('picked');
+      });
+      b.addEventListener('pointerup', e=>{
+        const el = document.elementFromPoint(e.clientX, e.clientY);
+        const bin = el && el.closest('.bin');
+        if(bin && dragId){
+          place(dragId, bin.dataset.color);
+        }
+        dragId = null;
+      });
+      tokensEl.appendChild(b);
+    });
+  }
+
+  function renderBins(){
+    document.querySelectorAll('.drop').forEach(d=>{
+      d.innerHTML = '';
+      const col = d.dataset.drop;
+      ITEMS.filter(it => placed[it.id]===col).forEach(it=>{
+        const s = document.createElement('button');
+        s.type = 'button';
+        s.className = 'tok';
+        s.textContent = it.emoji;
+        s.title = '点一下拿回';
+        s.addEventListener('click', e=>{
+          e.stopPropagation();
+          delete placed[it.id];
+          renderAll();
+        });
+        d.appendChild(s);
+      });
+    });
+  }
+
+  function place(id, color){
+    placed[id] = color;
+    picked = null;
+    renderAll();
+    const it = ITEMS.find(x=>x.id===id);
+    if(it.color === color){
+      feedback.className = 'feedback ok';
+      feedback.textContent = '放进了' + name(color) + '盒子。继续分剩下的。';
+      document.getElementById('thinkText').textContent = it.emoji + ' 是' + name(it.color) + '的，和盒子一样。';
+    } else {
+      feedback.className = 'feedback bad';
+      feedback.textContent = '你把 ' + it.emoji + ' 放进了' + name(color) + '盒子。差异：积木是' + name(it.color) + '的。下一步：点积木拿回，放进' + name(it.color) + '盒子。';
+      document.getElementById('thinkText').textContent = '颜色要一样才算对。';
+    }
+  }
+
+  function name(c){ return {red:'红',blue:'蓝',yellow:'黄'}[c]; }
+
+  function renderAll(){
+    renderTokens();
+    renderBins();
+    const done = ITEMS.length - remaining().length;
+    const okCount = ITEMS.filter(it => placed[it.id] === it.color).length;
+    const prog = document.getElementById('prog');
+    if(prog) prog.textContent = '（已放 '+done+'/'+ITEMS.length+' · 颜色对 '+okCount+'）';
+    const hm = document.getElementById('hintMain');
+    if(hm) hm.textContent = remaining().length
+      ? '点一块积木，再点盒子；或按住拖进去。'
+      : '都放好了，点「检查」看看对不对。';
+  }
+
+  document.querySelectorAll('.bin').forEach(bin=>{
+    bin.addEventListener('click', ()=>{
+      if(picked) place(picked, bin.dataset.color);
+    });
+    bin.addEventListener('keydown', e=>{
+      if((e.key==='Enter'||e.key===' ') && picked){
+        e.preventDefault();
+        place(picked, bin.dataset.color);
+      }
+    });
+  });
+
+  document.getElementById('btnCheck').onclick = ()=>{
+    if(remaining().length){
+      feedback.className = 'feedback bad';
+      feedback.textContent = '还有积木没放完。先全部分完再检查。';
+      return;
+    }
+    const wrong = ITEMS.filter(it => placed[it.id] !== it.color);
+    if(!wrong.length){
+      feedback.className = 'feedback ok';
+      feedback.textContent = '全对！同颜色的东西放在一起，就是「分类」。';
+      document.getElementById('thinkText').textContent = '红进红盒，蓝进蓝盒，黄进黄盒。';
+      document.querySelectorAll('.bin').forEach(b=>b.classList.add('ok'));
+    } else {
+      feedback.className = 'feedback bad';
+      feedback.textContent = '有 ' + wrong.length + ' 块放错了。点错的积木可以拿回重放。找颜色一样的盒子。';
+    }
+  };
+  document.getElementById('btnReset').onclick = ()=>{
+    placed = {}; picked = null;
+    document.querySelectorAll('.bin').forEach(b=>b.classList.remove('ok'));
+    feedback.className = 'feedback';
+    feedback.textContent = '把每块积木放进颜色一样的盒子。';
+    renderAll();
+  };
+  document.getElementById('btnSay').onclick = ()=>{
+    feedback.textContent = '我会说：红色放红盒子，蓝色放蓝盒子，黄色放黄盒子。';
+  };
+  document.getElementById('staticMode').onchange = e=>{
+    document.body.classList.toggle('static', e.target.checked);
+  };
+  renderAll();
+})();
+</script>
+</body>
+</html>

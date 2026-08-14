@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>课堂上想说话 · 举手规则</title>
+<!-- 题型：选择分支·课堂常规 / 核心认知动作：情境决策·后果 / 年龄：5-8 岁 / 场景：教室 -->
+<style>
+:root{
+  --accent:#6366f1; --ok:#10b981; --warn:#f59e0b; --bad:#ef4444;
+  --ink:#1f2a44; --muted:#667085; --line:#e0e7ff; --ease:cubic-bezier(0.25,1,0.5,1);
+  --touch:52px;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  font-family:-apple-system,"PingFang SC",system-ui,sans-serif;
+  color:var(--ink); background:linear-gradient(160deg,#eef2ff,#fdf4ff);
+  min-height:100vh; padding:14px 12px 28px;
+}
+.card{
+  max-width:720px; margin:0 auto; background:#fff; border:1px solid var(--line);
+  border-radius:20px; box-shadow:0 12px 30px rgba(99,102,241,.12); padding:18px 16px 22px;
+}
+.topbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.topbar h1{margin:0;font-size:24px;font-weight:800}
+.badge{font-size:14px;font-weight:700;color:#4338ca;background:#e0e7ff;padding:5px 12px;border-radius:999px}
+.scene{
+  background:linear-gradient(180deg,#eef2ff,#faf5ff); border:1px solid var(--line);
+  border-radius:16px; padding:14px; margin-bottom:14px; text-align:center;
+}
+.scene svg{max-width:100%; height:auto}
+.scene p{font-size:17px; line-height:1.65; margin:10px 0 0; text-align:left}
+.choices{display:flex;flex-direction:column;gap:10px;margin-bottom:12px}
+.btn{
+  min-height:var(--touch); padding:14px 16px; border-radius:14px; border:2px solid var(--line);
+  background:#fff; font-size:16px; font-weight:700; cursor:pointer; font-family:inherit;
+  text-align:left; transition:border-color .2s, background .2s, transform .2s var(--ease);
+}
+.btn:hover{border-color:var(--accent)}
+.btn:disabled{opacity:.7; cursor:not-allowed}
+.btn.ok{border-color:var(--ok); background:#ecfdf5}
+.btn.bad{border-color:var(--bad); background:#fef2f2}
+.consequence{
+  min-height:100px; border-radius:14px; padding:12px; margin-bottom:12px;
+  background:#f8fafc; border:1px solid var(--line); display:none;
+}
+.consequence.show{display:block}
+.consequence.ok{background:#ecfdf5;border-color:#6ee7b7}
+.consequence.bad{background:#fff7ed;border-color:#fcd34d}
+.consequence .svg-wrap{text-align:center;margin-bottom:8px}
+.consequence .txt{font-size:16px;line-height:1.6}
+.btn-row{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+.btn.small{min-height:48px; font-size:15px; text-align:center}
+.btn.primary{background:linear-gradient(135deg,var(--accent),#4f46e5);color:#fff;border:none;text-align:center}
+.thinking{background:#fffbeb;border-radius:12px;padding:10px;font-size:15px;border:1px dashed #fcd34d;margin-top:10px}
+.thinking .tag{font-weight:800;color:#b45309}
+.progress{font-size:14px;font-weight:700;color:var(--muted);margin-bottom:8px}
+@keyframes wobble{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.shake{animation:wobble .4s ease}
+@media (prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+</head>
+<body>
+<main class="card">
+  <div class="topbar">
+    <h1>课堂上想说话</h1>
+    <span class="badge">5–8 岁 · 教室常规</span>
+  </div>
+  <div class="progress" id="progress">决策点 1</div>
+  <div class="scene">
+    <svg id="sceneSvg" viewBox="0 0 320 140" role="img" aria-label="教室场景">
+      <rect x="10" y="20" width="300" height="100" rx="12" fill="#e0e7ff"/>
+      <rect x="40" y="40" width="80" height="50" rx="6" fill="#c7d2fe"/>
+      <text x="80" y="70" text-anchor="middle" font-size="28">👩‍🏫</text>
+      <text x="200" y="85" text-anchor="middle" font-size="36">🧒</text>
+      <text x="260" y="85" text-anchor="middle" font-size="28">👧</text>
+      <text x="160" y="30" text-anchor="middle" font-size="14" fill="#4338ca" font-weight="700">教室</text>
+    </svg>
+    <p id="nodeText">老师正在讲故事。你突然想起一件好玩的事，很想说。你会怎么做？</p>
+  </div>
+  <div class="choices" id="choices"></div>
+  <div class="consequence" id="consequence">
+    <div class="svg-wrap" id="consSvg"></div>
+    <div class="txt" id="consTxt" aria-live="polite"></div>
+  </div>
+  <div class="btn-row">
+    <button type="button" class="btn small primary" id="btnNext" hidden>下一步 →</button>
+    <button type="button" class="btn small" id="btnReset">↻ 重新开始</button>
+    <button type="button" class="btn small" id="btnSay">🗣️ 我会说</button>
+  </div>
+  <p class="thinking"><span class="tag">我怎么想：</span><span id="thinkText">想说话可以，但要让老师和同学也能听清、不打断别人。</span></p>
+</main>
+<script>
+(function(){
+  const NODES = {
+    start:{
+      text:'老师正在讲故事。你突然想起一件好玩的事，很想说。你会怎么做？',
+      progress:'决策点 1 · 想发言',
+      choices:[
+        { text:'🙋 举手，等老师叫到我再说', next:'called', correct:true,
+          feedback:'你选择了举手等待。大家都听得见，老师也知道谁想说。',
+          svg:`<svg viewBox="0 0 200 100"><rect width="200" height="100" rx="10" fill="#ecfdf5"/><text x="100" y="55" text-anchor="middle" font-size="40">🙋</text><text x="100" y="88" text-anchor="middle" font-size="14" fill="#065f46">举手等待=尊重</text></svg>`},
+        { text:'有人会直接站起来大声讲自己的事，会怎样？', next:'shout', correct:false,
+          feedback:'你设想了插嘴大喊。后果：别人听不清老师，故事被打断。正确做法：先举手。',
+          svg:`<svg viewBox="0 0 200 100"><rect width="200" height="100" rx="10" fill="#fff7ed"/><text x="70" y="50" text-anchor="middle" font-size="28">👩‍🏫</text><text x="140" y="55" text-anchor="middle" font-size="32">🙉</text><text x="100" y="88" text-anchor="middle" font-size="13" fill="#b45309">声音挤在一起</text></svg>`},
+        { text:'有人趴在同桌耳边一直说悄悄话，行吗？', next:'whisper', correct:false,
+          feedback:'同桌也听不到老师了。想分享可以举手，课间或老师允许时再说。',
+          svg:`<svg viewBox="0 0 200 100"><rect width="200" height="100" rx="10" fill="#fef2f2"/><text x="80" y="55" text-anchor="middle" font-size="30">🧒</text><text x="130" y="55" text-anchor="middle" font-size="30">👧</text><text x="100" y="88" text-anchor="middle" font-size="13" fill="#991b1b">两人都漏听了</text></svg>`}
+      ]
+    },
+    shout:{ text:'大喊打断了故事。老师停下看向你。接下来？', progress:'决策点 2 · 打断之后', ending:false,
+      choices:[
+        { text:'🙋 小声说「对不起」，然后举手', next:'repair', correct:true,
+          feedback:'道歉 + 举手，是把错误修好。老师会重新请你发言。',
+          svg:`<svg viewBox="0 0 200 100"><rect width="200" height="100" rx="10" fill="#ecfdf5"/><text x="100" y="50" text-anchor="middle" font-size="36">🙏</text><text x="100" y="88" text-anchor="middle" font-size="14" fill="#065f46">修复：道歉→举手</text></svg>`},
+        { text:'有人会继续大声争辩「我有好玩的」，会怎样？', next:'worse', correct:false,
+          feedback:'继续争辩会让课堂更乱。先停下，道歉，再举手。',
+          svg:`<svg viewBox="0 0 200 100"><rect width="200" height="100" rx="10" fill="#fff7ed"/><text x="100" y="50" text-anchor="middle" font-size="36">😣</text><text x="100" y="88" text-anchor="middle" font-size="13" fill="#b45309">更难听清故事</text></svg>`}
+      ]},
+    whisper:{ text:'同桌皱眉，指了指老师。你想补救。', progress:'决策点 2 · 悄悄话之后',
+      choices:[
+        { text:'点点头，看回老师，有事稍后再举手说', next:'success', correct:true,
+          feedback:'马上停止打扰，回到听讲，是好补救。',
+          svg:`<svg viewBox="0 0 200 100"><rect width="200" height="100" rx="10" fill="#ecfdf5"/><text x="100" y="55" text-anchor="middle" font-size="40">👂</text></svg>`},
+        { text:'有人会拉着同桌到教室后面继续说，行吗？', next:'worse', correct:false,
+          feedback:'离开座位更不安全，也错过更多内容。应坐回原位听讲。',
+          svg:`<svg viewBox="0 0 200 100"><rect width="200" height="100" rx="10" fill="#fef2f2"/><text x="100" y="55" text-anchor="middle" font-size="36">🚫</text></svg>`}
+      ]},
+    called:{ text:'老师微笑说：「请说。」全班安静听你。', progress:'决策点 2 · 被点名后',
+      choices:[
+        { text:'声音清楚、说完关键句，不拖太久', next:'success', correct:true,
+          feedback:'发言清楚又简短，大家都能听完，故事也能继续。',
+          svg:`<svg viewBox="0 0 200 100"><rect width="200" height="100" rx="10" fill="#ecfdf5"/><text x="100" y="55" text-anchor="middle" font-size="40">⭐</text></svg>`},
+        { text:'有人会借机讲很久无关的事，会怎样？', next:'long', correct:false,
+          feedback:'说太久，后面同学等不及，老师也难继续课。说完要点就停。',
+          svg:`<svg viewBox="0 0 200 100"><rect width="200" height="100" rx="10" fill="#fff7ed"/><text x="100" y="50" text-anchor="middle" font-size="32">⏳</text><text x="100" y="88" text-anchor="middle" font-size="13" fill="#b45309">时间被占满</text></svg>`}
+      ]},
+    repair:{ text:'老师点头：「好，请举手后再说。」你已经回到规则。', progress:'修复成功', ending:true, success:true,
+      choices:[] },
+    long:{ text:'同学开始小声说话。怎样收场更好？', progress:'决策点 3',
+      choices:[
+        { text:'说「我说完了」，把话筒/机会还给老师', next:'success', correct:true,
+          feedback:'主动结束发言，课堂又能往下走。',
+          svg:`<svg viewBox="0 0 200 100"><rect width="200" height="100" rx="10" fill="#ecfdf5"/><text x="100" y="55" text-anchor="middle" font-size="36">✅</text></svg>`}
+      ]},
+    worse:{ text:'课堂乱了。记住：想说 → 举手 → 被请再说。', progress:'需重来', ending:true, success:false,
+      choices:[] },
+    success:{ text:'真棒！规则是：想说话 → 举手 → 等老师请你 → 说清楚。', progress:'成功', ending:true, success:true,
+      choices:[] }
+  };
+
+  let nodeId = 'start', answered = false;
+  const $ = id => document.getElementById(id);
+
+  function sceneEmoji(id){
+    // 主图随节点变，避免文案变图不变
+    const svg=$('sceneSvg'); if(!svg) return;
+    if(id==='success'||id==='repair'){
+      svg.innerHTML='<rect x="10" y="20" width="300" height="100" rx="12" fill="#d1fae5"/><text x="160" y="85" text-anchor="middle" font-size="48">🙋⭐</text>';
+    } else if(id==='shout'||id==='worse'){
+      svg.innerHTML='<rect x="10" y="20" width="300" height="100" rx="12" fill="#ffedd5"/><text x="100" y="80" text-anchor="middle" font-size="36">👩‍🏫</text><text x="200" y="85" text-anchor="middle" font-size="40">🙉</text>';
+    } else if(id==='whisper'){
+      svg.innerHTML='<rect x="10" y="20" width="300" height="100" rx="12" fill="#fef3c7"/><text x="120" y="85" text-anchor="middle" font-size="36">🧒</text><text x="200" y="85" text-anchor="middle" font-size="36">👧</text>';
+    } else {
+      svg.innerHTML='<rect x="10" y="20" width="300" height="100" rx="12" fill="#e0e7ff"/><rect x="40" y="40" width="80" height="50" rx="6" fill="#c7d2fe"/><text x="80" y="70" text-anchor="middle" font-size="28">👩‍🏫</text><text x="200" y="85" text-anchor="middle" font-size="36">🧒</text><text x="260" y="85" text-anchor="middle" font-size="28">👧</text><text x="160" y="30" text-anchor="middle" font-size="14" fill="#4338ca" font-weight="700">教室</text>';
+    }
+  }
+  function render(){
+    const n = NODES[nodeId];
+    answered = false;
+    $('progress').textContent = n.progress || '';
+    $('nodeText').textContent = n.text;
+    sceneEmoji(nodeId);
+    $('consequence').className = 'consequence';
+    $('btnNext').hidden = true;
+    const box = $('choices');
+    box.innerHTML = '';
+    if(n.ending){
+      $('thinkText').textContent = n.success
+        ? '举手等待 = 尊重老师和同学，大家都能听清。'
+        : '打断会让别人听不清。下次先举手。';
+      return;
+    }
+    n.choices.forEach((c,i)=>{
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'btn';
+      b.textContent = c.text;
+      b.addEventListener('click', ()=> onChoose(c, b, n.choices));
+      box.appendChild(b);
+    });
+    $('thinkText').textContent = '想说话可以，但要让老师和同学也能听清。';
+  }
+
+  function onChoose(c, btn, all){
+    if(answered) return;
+    answered = true;
+    all; // lock
+    [...$('choices').children].forEach(el=>{
+      el.disabled = true;
+    });
+    btn.classList.add(c.correct ? 'ok' : 'bad');
+    if(!c.correct) btn.classList.add('shake');
+    const cons = $('consequence');
+    cons.className = 'consequence show ' + (c.correct ? 'ok' : 'bad');
+    $('consSvg').innerHTML = c.svg || '';
+    $('consTxt').textContent = (c.correct ? '✓ ' : '⚠ 停下，换个做法。') + c.feedback;
+    $('thinkText').textContent = c.correct
+      ? '对：先举手，再发言。'
+      : '错的做法会打扰别人。看图里的后果，再选正确做法。';
+    nodeId = c.next;
+    $('btnNext').hidden = false;
+    // wrong: allow re-pick after reading
+    if(!c.correct){
+      setTimeout(()=>{
+        [...$('choices').children].forEach(el=>{
+          if(!el.classList.contains('bad')) el.disabled = false;
+        });
+        // keep wrong disabled; if all wrong tried, still can next
+        answered = false;
+      }, 800);
+    }
+  }
+
+  $('btnNext').onclick = ()=>{ render(); };
+  $('btnReset').onclick = ()=>{ nodeId='start'; render(); };
+  $('btnSay').onclick = ()=>{
+    $('consTxt').parentElement.classList.add('show');
+    $('consequence').className = 'consequence show ok';
+    $('consSvg').innerHTML = '';
+    $('consTxt').textContent = '我会说：想说话就举手，等老师叫到我再说。';
+  };
+  render();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>拖拽槽位 · 教具</title>
+<style>
+  :root{--bg1:#eef2ff;--bg2:#fdf2f8;--card:#fff;--line:#ece9f5;--ink:#2a2440;--muted:#7a7493;
+    --accent:#6d5efc;--accent2:#ff7ab6;--accent3:#22c1c3;--ok:#10b981;--bad:#ef4444;--shadow:0 12px 30px rgba(109,94,252,.12)}
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0}
+  body{min-height:100dvh;height:100dvh;overflow:hidden;background:linear-gradient(135deg,var(--bg1),var(--bg2));color:var(--ink);
+    font-family:-apple-system,"PingFang SC","Microsoft YaHei",system-ui,sans-serif;line-height:1.5;display:flex;flex-direction:column}
+  .deco{position:fixed;border-radius:50%;filter:blur(2px);opacity:.35;pointer-events:none;z-index:0;animation:float 9s ease-in-out infinite}
+  .deco1{width:120px;height:120px;background:radial-gradient(circle,#c4b5fd,#fff);top:8%;right:10%}
+  .deco2{width:90px;height:90px;background:radial-gradient(circle,#fbcfe8,#fff);bottom:12%;left:6%;animation-delay:1.5s}
+  @keyframes float{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-22px) rotate(8deg)}}
+  .card{position:relative;z-index:1;flex:1;min-height:0;width:100%;max-width:680px;margin:0 auto;padding:12px 14px;
+    display:flex;flex-direction:column;overflow:hidden}
+  .topbar{flex:none;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border-radius:16px;padding:12px 16px;box-shadow:var(--shadow);margin-bottom:10px;animation:fadeInUp .5s}
+  .topbar h1{margin:0;font-size:24px;font-weight:800}
+  .topbar .ins{margin:6px 0 0;opacity:.92;font-size:14px}
+  .sentence{flex:1;min-height:0;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px 16px;font-size:22px;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:10px;box-shadow:var(--shadow);animation:fadeInUp .55s;overflow:auto}
+  .prefix,.suffix{font-weight:800;color:var(--accent)}
+  .slot{min-width:72px;min-height:56px;border:2px dashed #c7bfe8;border-radius:12px;display:inline-flex;align-items:center;justify-content:center;padding:4px 12px;background:#faf8ff;transition:background .15s,border-color .15s}
+  .slot:hover{border-color:var(--accent)}
+  .slot.correct{border-color:var(--ok);background:linear-gradient(135deg,#d1fae5,#a7f3d0);animation:pulse .5s}
+  .slot.wrong{border-color:var(--bad);background:linear-gradient(135deg,#fee2e2,#fecaca);animation:wobble .5s}
+  .tray{flex:none;margin-top:10px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px;display:flex;flex-wrap:wrap;gap:12px;min-height:64px;box-shadow:var(--shadow);animation:fadeInUp .6s}
+  .token{min-width:64px;min-height:52px;display:inline-flex;align-items:center;justify-content:center;padding:0 16px;font-size:19px;font-weight:700;color:#fff;background:linear-gradient(135deg,var(--accent),var(--accent3));border:none;border-radius:12px;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;box-shadow:0 4px 10px rgba(109,94,252,.3);animation:bounceIn .4s both;transition:transform .12s,box-shadow .15s}
+  .token:hover{transform:translateY(-3px) scale(1.04);box-shadow:0 8px 16px rgba(109,94,252,.4)}
+  .token:active{cursor:grabbing;transform:scale(1.08)}
+  .token.dragging{z-index:999;position:fixed;box-shadow:0 12px 28px rgba(0,0,0,.25);transform:scale(1.1) rotate(3deg)}
+  #feedback{margin-top:16px;min-height:26px;font-size:15px;font-weight:600;animation:fadeInUp .3s}
+  #feedback.correct{color:#fff;background:linear-gradient(135deg,var(--ok),#34d399);padding:12px 16px;border-radius:12px;animation:tada .6s}
+  #feedback.wrong{color:#fff;background:linear-gradient(135deg,var(--bad),#f87171);padding:12px 16px;border-radius:12px;animation:wobble .5s}
+  .btns{flex:none;margin-top:10px;display:flex;gap:12px}
+  .btn{flex:1;min-height:52px;font-size:16px;font-weight:700;border:none;border-radius:14px;cursor:pointer;padding:0 24px;color:#fff;background:linear-gradient(135deg,var(--accent),var(--accent2));box-shadow:0 8px 18px rgba(109,94,252,.35);transition:transform .1s,box-shadow .15s}
+  .btn:hover{transform:translateY(-2px);box-shadow:0 12px 24px rgba(109,94,252,.45)}
+  .btn:active{transform:translateY(1px) scale(.97)}
+  .btn.ghost{background:#fff;color:var(--accent);border:2px solid var(--accent)}
+  @keyframes bounceIn{0%{opacity:0;transform:scale3d(.3,.3,.3)}60%{opacity:1;transform:scale3d(1.03,1.03,1.03)}to{transform:scaleX(1)}}
+  @keyframes fadeInUp{0%{opacity:0;transform:translate3d(0,30%,0)}to{opacity:1;transform:translateZ(0)}}
+  @keyframes pulse{0%,100%{transform:scaleX(1)}50%{transform:scale3d(1.06,1.06,1.06)}}
+  @keyframes tada{0%{transform:scaleX(1)}10%,20%{transform:scale3d(.9,.9,.9) rotate(-3deg)}30%,50%,70%,90%{transform:scale3d(1.1,1.1,1.1) rotate(3deg)}40%,60%,80%{transform:scale3d(1.1,1.1,1.1) rotate(-3deg)}to{transform:scaleX(1)}}
+  @keyframes wobble{0%{transform:translateZ(0)}15%{transform:translate3d(-25%,0,0) rotate(-5deg)}30%{transform:translate3d(20%,0,0) rotate(3deg)}45%{transform:translate3d(-15%,0,0) rotate(-3deg)}60%{transform:translate3d(10%,0,0) rotate(2deg)}75%{transform:translate3d(-5%,0,0) rotate(-1deg)}to{transform:translateZ(0)}}
+</style>
+</head>
+<body>
+<div class="deco deco1"></div><div class="deco deco2"></div>
+<main class="card">
+  <div class="topbar"><h1 id="title"></h1><p class="ins" id="instruction"></p></div>
+  <div class="sentence" id="sentence"></div>
+  <div class="tray" id="tray"></div>
+  <p id="feedback"></p>
+  <div class="btns">
+    <button id="btn-check" class="btn" data-action="check">✓ 检查</button>
+    <button id="btn-reset" class="btn ghost" data-action="reset">↻ 重置</button>
+  </div>
+</main>
+
+<script type="application/json" id="widget-config">
+{
+  "title": "There is / There are 句型",
+  "instruction": "把词块拖到空位，拼出正确的句子",
+  "prefix": "There",
+  "suffix": ".",
+  "slots": [ { "id": "s1" }, { "id": "s2" }, { "id": "s3" } ],
+  "tokens": [
+    { "id": "is", "text": "is" }, { "id": "are", "text": "are" },
+    { "id": "a", "text": "a" }, { "id": "an", "text": "an" },
+    { "id": "apple", "text": "apple" }, { "id": "apples", "text": "apples" }
+  ],
+  "solution": { "s1": "is", "s2": "an", "s3": "apple" },
+  "feedback": {
+    "correct": "对了！There is + 单数名词；apple 以元音音素开头，前面用 an。",
+    "wrong": "再想想：单数事物用 There is；apple 是元音音素开头的单数名词，前用 an。"
+  }
+}
+</script>
+
+<script>
+(function () {
+  "use strict";
+  var cfg = JSON.parse(document.getElementById("widget-config").textContent);
+  document.getElementById("title").textContent = cfg.title;
+  document.getElementById("instruction").textContent = cfg.instruction;
+  var sentenceEl = document.getElementById("sentence");
+  var trayEl = document.getElementById("tray");
+  var feedbackEl = document.getElementById("feedback");
+
+  if (cfg.prefix) { var p = document.createElement("span"); p.className = "prefix"; p.textContent = cfg.prefix; sentenceEl.appendChild(p); }
+  var slotEls = {};
+  cfg.slots.forEach(function (s, i) {
+    var slot = document.createElement("span"); slot.className = "slot"; slot.setAttribute("data-slot", s.id);
+    sentenceEl.appendChild(slot); slotEls[s.id] = slot;
+    if (i < cfg.slots.length - 1) { var sp = document.createElement("span"); sp.textContent = " "; sentenceEl.appendChild(sp); }
+  });
+  if (cfg.suffix) { var suf = document.createElement("span"); suf.className = "suffix"; suf.textContent = cfg.suffix; sentenceEl.appendChild(suf); }
+
+  var order = cfg.tokens.map(function (t, i) { return i; });
+  for (var i = order.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var tmp = order[i]; order[i] = order[j]; order[j] = tmp; }
+  var tokenEls = {};
+  order.forEach(function (idx, k) {
+    var t = cfg.tokens[idx]; var el = document.createElement("div"); el.className = "token";
+    el.style.animationDelay = (k * 0.06) + "s";
+    el.setAttribute("data-token", t.id); el.textContent = t.text;
+    trayEl.appendChild(el); tokenEls[t.id] = el; enableDrag(el);
+  });
+
+  function enableDrag(el) {
+    el.addEventListener("pointerdown", function (e) {
+      e.preventDefault();
+      var rect = el.getBoundingClientRect(); var offsetX = e.clientX - rect.left; var offsetY = e.clientY - rect.top;
+      el.classList.add("dragging"); el.setPointerCapture(e.pointerId); move(e);
+      function move(ev) { el.style.left = (ev.clientX - offsetX) + "px"; el.style.top = (ev.clientY - offsetY) + "px"; }
+      function up(ev) {
+        el.removeEventListener("pointermove", move); el.removeEventListener("pointerup", up); el.removeEventListener("pointercancel", up);
+        el.classList.remove("dragging"); el.style.left = ""; el.style.top = "";
+        el.style.pointerEvents = "none"; var target = document.elementFromPoint(ev.clientX, ev.clientY); el.style.pointerEvents = "";
+        var slot = target ? (target.closest ? target.closest("[data-slot]") : null) : null;
+        if (slot) { var occupant = slot.querySelector(".token"); if (occupant && occupant !== el) trayEl.appendChild(occupant); slot.appendChild(el); }
+        else { trayEl.appendChild(el); }
+        clearFeedback();
+      }
+      el.addEventListener("pointermove", move); el.addEventListener("pointerup", up); el.addEventListener("pointercancel", up);
+    });
+  }
+  function clearFeedback() {
+    feedbackEl.textContent = ""; feedbackEl.className = "";
+    Object.keys(slotEls).forEach(function (id) { slotEls[id].classList.remove("correct", "wrong"); });
+  }
+  document.getElementById("btn-check").addEventListener("click", function () {
+    var allCorrect = true;
+    Object.keys(slotEls).forEach(function (id) {
+      var slot = slotEls[id]; var token = slot.querySelector(".token");
+      var tokenId = token ? token.getAttribute("data-token") : null; var expect = cfg.solution[id];
+      var ok = tokenId === expect; slot.classList.toggle("correct", ok); slot.classList.toggle("wrong", !ok);
+      if (!ok) allCorrect = false;
+    });
+    feedbackEl.textContent = allCorrect ? cfg.feedback.correct : cfg.feedback.wrong;
+    feedbackEl.className = allCorrect ? "correct" : "wrong";
+  });
+  document.getElementById("btn-reset").addEventListener("click", function () {
+    Object.keys(tokenEls).forEach(function (id) { trayEl.appendChild(tokenEls[id]); }); clearFeedback();
+  });
+})();
+</script>
+</body>
+</html>

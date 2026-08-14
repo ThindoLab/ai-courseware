@@ -1,0 +1,34 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "drag-slot content",
+  "type": "object",
+  "required": ["title", "instruction", "slots", "tokens", "solution", "feedback"],
+  "properties": {
+    "title": { "type": "string" },
+    "instruction": { "type": "string" },
+    "prefix": { "type": "string" },
+    "suffix": { "type": "string" },
+    "slots": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id"],
+        "properties": { "id": { "type": "string" }, "label": { "type": "string" } }
+      }
+    },
+    "tokens": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "text"],
+        "properties": { "id": { "type": "string" }, "text": { "type": "string" } }
+      }
+    },
+    "solution": { "type": "object", "additionalProperties": { "type": "string" } },
+    "feedback": {
+      "type": "object",
+      "required": ["correct", "wrong"],
+      "properties": { "correct": { "type": "string" }, "wrong": { "type": "string" } }
+    }
+  }
+}

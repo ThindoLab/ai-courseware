@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>过马路 · 红绿灯</title>
+<!-- branch-story · 交通安全 / 5-8岁 · 教室+家庭 -->
+<style>
+:root{--accent:#22c55e;--ok:#10b981;--bad:#ef4444;--ink:#1f2a44;--muted:#667085;--line:#bbf7d0;--ease:cubic-bezier(0.25,1,0.5,1);--touch:52px}
+*{box-sizing:border-box}html,body{margin:0}
+body{font-family:-apple-system,"PingFang SC",system-ui,sans-serif;color:var(--ink);background:linear-gradient(160deg,#f0fdf4,#e0f2fe);min-height:100vh;padding:14px 12px 28px}
+.card{max-width:720px;margin:0 auto;background:#fff;border:1px solid var(--line);border-radius:20px;box-shadow:0 12px 28px rgba(34,197,94,.12);padding:18px 16px 22px}
+.top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.top h1{margin:0;font-size:22px;font-weight:800}
+.badge{font-size:14px;font-weight:700;color:#15803d;background:#dcfce7;padding:5px 12px;border-radius:999px}
+.progress{font-size:14px;font-weight:700;color:var(--muted);margin-bottom:8px}
+.scene{background:linear-gradient(180deg,#f0fdf4,#ecfeff);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:12px;text-align:center}
+.lights{display:inline-flex;flex-direction:column;gap:6px;padding:10px;background:#1f2937;border-radius:12px;margin-bottom:8px}
+.lights span{width:28px;height:28px;border-radius:50%;background:#374151;margin:0 auto}
+.lights.red .r{background:#ef4444;box-shadow:0 0 12px #ef4444}
+.lights.green .g{background:#22c55e;box-shadow:0 0 12px #22c55e}
+.lights.yellow .y{background:#fbbf24;box-shadow:0 0 12px #fbbf24}
+.scene p{font-size:17px;line-height:1.65;margin:10px 0 0;text-align:left}
+.choices{display:flex;flex-direction:column;gap:10px;margin-bottom:12px}
+.btn{min-height:var(--touch);padding:14px 16px;border-radius:14px;border:2px solid var(--line);background:#fff;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit;text-align:left}
+.btn:disabled{opacity:.75;cursor:not-allowed}
+.btn.ok{border-color:var(--ok);background:#ecfdf5}
+.btn.bad{border-color:var(--bad);background:#fef2f2}
+.consequence{display:none;border-radius:14px;padding:12px;margin-bottom:12px;border:1px solid var(--line)}
+.consequence.show{display:block}
+.consequence.ok{background:#ecfdf5;border-color:#6ee7b7}
+.consequence.bad{background:#fff7ed;border-color:#fcd34d}
+.consequence .txt{font-size:16px;line-height:1.6;margin-top:8px}
+.btn-row{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+.btn.small{min-height:48px;font-size:15px;text-align:center}
+.btn.primary{background:linear-gradient(135deg,#22c55e,#15803d);color:#fff;border:none;text-align:center}
+.thinking{background:#fffbeb;border-radius:12px;padding:10px;font-size:15px;border:1px dashed #fcd34d;margin-top:10px}
+.thinking .tag{font-weight:800;color:#b45309}
+@keyframes wobble{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.shake{animation:wobble .4s ease}
+@media (prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+</head>
+<body>
+<main class="card">
+  <div class="top"><h1>过马路</h1><span class="badge">5–8 岁 · 交通安全</span></div>
+  <div class="progress" id="progress">红绿灯</div>
+  <div class="scene">
+    <div class="lights red" id="tl"><span class="r"></span><span class="y"></span><span class="g"></span></div>
+    <p id="nodeText">你走到斑马线前。红灯亮着。你会怎么做？</p>
+  </div>
+  <div class="choices" id="choices"></div>
+  <div class="consequence" id="consequence">
+    <div id="consSvg"></div>
+    <div class="txt" id="consTxt" aria-live="polite"></div>
+  </div>
+  <div class="btn-row">
+    <button type="button" class="btn small primary" id="btnNext" hidden>下一步 →</button>
+    <button type="button" class="btn small" id="btnReset">↻ 重新开始</button>
+    <button type="button" class="btn small" id="btnSay">🗣️ 我会说</button>
+  </div>
+  <p class="thinking"><span class="tag">我怎么想：</span><span id="thinkText">红灯停，绿灯行；过马路要左右看。</span></p>
+</main>
+<script>
+(function(){
+  const NODES={
+    start:{
+      progress:'红灯 · 等待', light:'red',
+      text:'你走到斑马线前。红灯亮着。你会怎么做？',
+      choices:[
+        {text:'🛑 停在安全线后，等绿灯', next:'green', correct:true,
+          fb:'对：红灯停。站在人行道安全区域等。',
+          svg:`<svg viewBox="0 0 220 100"><rect width="220" height="100" rx="10" fill="#ecfdf5"/><circle cx="110" cy="40" r="18" fill="#ef4444"/><text x="110" y="85" text-anchor="middle" font-size="14" fill="#065f46">红灯 = 停</text></svg>`},
+        {text:'有人看附近没车就冲红灯，会怎样？', next:'rush', correct:false,
+          fb:'停下。车可能突然出现，很危险。红灯必须等。',
+          svg:`<svg viewBox="0 0 220 100"><rect width="220" height="100" rx="10" fill="#fff7ed"/><text x="80" y="50" font-size="32">🚗</text><text x="150" y="50" font-size="32">🧒</text><text x="110" y="85" text-anchor="middle" font-size="13" fill="#b45309">看不清就危险</text></svg>`},
+        {text:'有人在马路中间玩手机等变灯，行吗？', next:'phone', correct:false,
+          fb:'不要站在车道里。站在人行道后，眼睛看灯和车辆。',
+          svg:`<svg viewBox="0 0 220 100"><rect width="220" height="100" rx="10" fill="#fef2f2"/><text x="110" y="55" text-anchor="middle" font-size="36">📱🚫</text></svg>`}
+      ]
+    },
+    rush:{
+      progress:'后果 · 冲红灯', light:'red',
+      text:'喇叭响了。你退回人行道。接下来？',
+      choices:[
+        {text:'站好等绿灯，牵着大人的手（如果有）', next:'green', correct:true,
+          fb:'对：回到安全位置，重新按规则来。',
+          svg:`<svg viewBox="0 0 220 100"><rect width="220" height="100" rx="10" fill="#ecfdf5"/><text x="110" y="55" text-anchor="middle" font-size="36">✋</text></svg>`},
+        {text:'有人会生气地继续跑过去，会怎样？', next:'fail', correct:false,
+          fb:'更危险。过马路不能赌车。',
+          svg:`<svg viewBox="0 0 220 100"><rect width="220" height="100" rx="10" fill="#fff7ed"/><text x="110" y="55" text-anchor="middle" font-size="36">⚠️</text></svg>`}
+      ]
+    },
+    phone:{
+      progress:'纠正 · 站位', light:'red',
+      text:'老师提醒：眼睛要看灯。',
+      choices:[
+        {text:'收起分心的事，看灯、看车', next:'green', correct:true,
+          fb:'对：注意力放在安全和信号灯上。',
+          svg:`<svg viewBox="0 0 220 100"><rect width="220" height="100" rx="10" fill="#ecfdf5"/><text x="110" y="55" text-anchor="middle" font-size="36">👀</text></svg>`}
+      ]
+    },
+    green:{
+      progress:'绿灯 · 通行', light:'green',
+      text:'绿灯亮了！过斑马线时要注意什么？',
+      choices:[
+        {text:'🚶 左右看，走斑马线，尽快走过，不打闹', next:'success', correct:true,
+          fb:'完整规则：红灯停、绿灯行、走人行道、左右看。',
+          svg:`<svg viewBox="0 0 220 100"><rect width="220" height="100" rx="10" fill="#ecfdf5"/><circle cx="110" cy="40" r="18" fill="#22c55e"/><text x="110" y="85" text-anchor="middle" font-size="14" fill="#065f46">绿灯 = 小心通行</text></svg>`},
+        {text:'有人会低头玩，慢慢悠悠走在路中间，会怎样？', next:'fail', correct:false,
+          fb:'绿灯也会变。要专心、尽快安全通过。',
+          svg:`<svg viewBox="0 0 220 100"><rect width="220" height="100" rx="10" fill="#fff7ed"/><text x="110" y="55" text-anchor="middle" font-size="36">🐢</text></svg>`}
+      ]
+    },
+    success:{progress:'✓ 安全到达', ending:true, success:true, light:'green',
+      text:'记住：红灯停，绿灯行；走人行横道；过马路左右看，不追逐打闹。', choices:[]},
+    fail:{progress:'需重来', ending:true, success:false, light:'red',
+      text:'交通规则保护我们。点重新开始，从红灯等待练起。', choices:[]}
+  };
+  let nodeId='start', answered=false;
+  const $=id=>document.getElementById(id);
+  function setLight(mode){
+    const tl=$('tl');
+    tl.className='lights '+(mode||'red');
+  }
+  function render(){
+    const n=NODES[nodeId]; answered=false;
+    $('progress').textContent=n.progress;
+    $('nodeText').textContent=n.text;
+    setLight(n.light||'red');
+    $('consequence').className='consequence';
+    $('btnNext').hidden=true;
+    const box=$('choices'); box.innerHTML='';
+    if(n.ending){
+      $('thinkText').textContent=n.success?'红灯停、绿灯行、左右看。':'遵守信号灯，不冲红灯。';
+      return;
+    }
+    n.choices.forEach(c=>{
+      const b=document.createElement('button');
+      b.type='button'; b.className='btn'; b.textContent=c.text;
+      b.onclick=()=>choose(c,b);
+      box.appendChild(b);
+    });
+    $('thinkText').textContent='先看灯，再决定停还是走。';
+  }
+  function choose(c,btn){
+    if(answered) return; answered=true;
+    [...$('choices').children].forEach(el=>el.disabled=true);
+    btn.classList.add(c.correct?'ok':'bad');
+    if(!c.correct) btn.classList.add('shake');
+    const cons=$('consequence');
+    cons.className='consequence show '+(c.correct?'ok':'bad');
+    $('consSvg').innerHTML=c.svg;
+    $('consTxt').textContent=c.fb;
+    nodeId=c.next;
+    $('btnNext').hidden=false;
+    if(!c.correct){
+      setTimeout(()=>{
+        [...$('choices').children].forEach(el=>{ if(!el.classList.contains('bad')) el.disabled=false; });
+        answered=false;
+      }, 900);
+    }
+  }
+  $('btnNext').onclick=render;
+  $('btnReset').onclick=()=>{ nodeId='start'; render(); };
+  $('btnSay').onclick=()=>{
+    $('consequence').className='consequence show ok';
+    $('consSvg').innerHTML='';
+    $('consTxt').textContent='我会说：红灯停，绿灯行，过马路左右看。';
+  };
+  render();
+})();
+</script>
+</body>
+</html>

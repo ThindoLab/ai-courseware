@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>选择分支 · 教具</title>
+<style>
+  :root{--bg1:#eef2ff;--bg2:#fdf2f8;--card:#fff;--line:#ece9f5;--ink:#2a2440;--muted:#7a7493;
+    --accent:#6d5efc;--accent2:#ff7ab6;--ok:#10b981;--bad:#ef4444;--neutral:#f59e0b;--shadow:0 12px 30px rgba(109,94,252,.12)}
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0}
+  body{min-height:100dvh;height:100dvh;overflow:hidden;background:linear-gradient(135deg,var(--bg1),var(--bg2));color:var(--ink);
+    font-family:-apple-system,"PingFang SC","Microsoft YaHei",system-ui,sans-serif;line-height:1.5;display:flex;flex-direction:column}
+  .deco{position:fixed;border-radius:50%;filter:blur(2px);opacity:.35;pointer-events:none;z-index:0;animation:float 9s ease-in-out infinite}
+  .deco1{width:120px;height:120px;background:radial-gradient(circle,#c4b5fd,#fff);top:8%;right:10%}
+  .deco2{width:90px;height:90px;background:radial-gradient(circle,#fbcfe8,#fff);bottom:12%;left:6%;animation-delay:1.5s}
+  @keyframes float{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-22px) rotate(8deg)}}
+  .card{position:relative;z-index:1;flex:1;min-height:0;width:100%;max-width:680px;margin:0 auto;padding:12px 14px;
+    display:flex;flex-direction:column;overflow:hidden}
+  .topbar{flex:none;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border-radius:16px;padding:12px 16px;box-shadow:var(--shadow);margin-bottom:10px;animation:fadeInUp .5s}
+  .topbar h1{margin:0;font-size:22px;font-weight:800}
+  .scene{flex:1;min-height:0;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px 16px;box-shadow:var(--shadow);
+    animation:fadeInUp .5s;display:flex;flex-direction:column;overflow:hidden}
+  .scene.hidden{display:none}
+  .scene-text{flex:1;min-height:0;overflow:auto}
+  .choices{flex:none}
+  .scene-text{font-size:19px;margin:0 0 18px;font-weight:500}
+  .choices{display:flex;flex-direction:column;gap:12px}
+  .choice{min-height:56px;font-size:16px;text-align:left;border:2px solid var(--line);background:#fff;color:var(--ink);
+    border-radius:14px;padding:14px 18px;cursor:pointer;font-weight:500;transition:transform .12s,box-shadow .15s,border-color .15s;
+    animation:bounceIn .4s both}
+  .choice:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 8px 16px rgba(109,94,252,.18);border-color:var(--accent)}
+  .choice:active:not(:disabled){transform:scale(.98)}
+  .choice:disabled{cursor:default}
+  .choice.correct{border-color:var(--ok);background:linear-gradient(135deg,#d1fae5,#a7f3d0);animation:pulse .5s}
+  .choice.wrong{border-color:var(--bad);background:linear-gradient(135deg,#fee2e2,#fecaca);animation:wobble .5s}
+  #feedback{margin-top:16px;min-height:26px;font-size:15px;font-weight:600;animation:fadeInUp .3s}
+  #feedback.correct{color:var(--ok)} #feedback.wrong{color:var(--bad)}
+  .ending{font-size:20px;font-weight:800;padding:14px 16px;border-radius:14px;margin-top:8px;animation:fadeInUp .4s}
+  .ending.success{color:#fff;background:linear-gradient(135deg,var(--ok),#34d399);animation:tada .7s}
+  .ending.fail{color:#fff;background:linear-gradient(135deg,var(--bad),#f87171);animation:wobble .6s}
+  .ending.neutral{color:#fff;background:linear-gradient(135deg,var(--neutral),#fbbf24)}
+  .btn{margin-top:16px;min-height:52px;font-size:16px;font-weight:700;border:none;border-radius:14px;cursor:pointer;padding:0 24px;color:#fff;
+    background:linear-gradient(135deg,var(--accent),var(--accent2));box-shadow:0 8px 18px rgba(109,94,252,.35);transition:transform .1s,box-shadow .15s;animation:fadeInUp .3s}
+  .btn:hover{transform:translateY(-2px);box-shadow:0 12px 24px rgba(109,94,252,.45)}
+  .btn:active{transform:translateY(1px) scale(.97)}
+  .hidden{display:none}
+  @keyframes bounceIn{0%{opacity:0;transform:scale3d(.3,.3,.3)}60%{opacity:1;transform:scale3d(1.03,1.03,1.03)}to{transform:scaleX(1)}}
+  @keyframes fadeInUp{0%{opacity:0;transform:translate3d(0,30%,0)}to{opacity:1;transform:translateZ(0)}}
+  @keyframes pulse{0%,100%{transform:scaleX(1)}50%{transform:scale3d(1.05,1.05,1.05)}}
+  @keyframes tada{0%{transform:scaleX(1)}10%,20%{transform:scale3d(.9,.9,.9) rotate(-3deg)}30%,50%,70%,90%{transform:scale3d(1.1,1.1,1.1) rotate(3deg)}40%,60%,80%{transform:scale3d(1.1,1.1,1.1) rotate(-3deg)}to{transform:scaleX(1)}}
+  @keyframes wobble{0%{transform:translateZ(0)}15%{transform:translate3d(-25%,0,0) rotate(-5deg)}30%{transform:translate3d(20%,0,0) rotate(3deg)}45%{transform:translate3d(-15%,0,0) rotate(-3deg)}60%{transform:translate3d(10%,0,0) rotate(2deg)}75%{transform:translate3d(-5%,0,0) rotate(-1deg)}to{transform:translateZ(0)}}
+</style>
+</head>
+<body>
+<div class="deco deco1"></div><div class="deco deco2"></div>
+<main class="card">
+  <div class="topbar"><h1 id="title"></h1></div>
+  <div class="scene" id="scene"></div>
+  <p id="feedback" class="hidden"></p>
+  <button id="btn-continue" class="btn hidden" data-action="continue">继续 ▶</button>
+  <button id="btn-restart" class="btn hidden" data-action="restart">↻ 重新开始</button>
+</main>
+
+<script type="application/json" id="widget-config">
+{
+  "title": "厨房着火怎么办",
+  "startId": "n0",
+  "nodes": [
+    { "id": "n0", "text": "炒菜时锅里突然起火了。你的第一反应是什么？", "choices": [
+      { "id": "c1", "text": "赶紧端水泼上去灭火", "next": "n_water", "correct": false },
+      { "id": "c2", "text": "先关火，再盖上锅盖", "next": "n_cover", "correct": true } ] },
+    { "id": "n_cover", "text": "很好！关火并盖上锅盖，隔绝空气，火很快就灭了。接下来呢？", "choices": [
+      { "id": "c3", "text": "打开门窗通风散烟", "next": "n_vent", "correct": true },
+      { "id": "c4", "text": "不管了，先跑出去", "next": "n_run", "correct": false } ] },
+    { "id": "n_vent", "text": "火灭了，烟雾还在。你打算怎么散烟？", "choices": [
+      { "id": "c5", "text": "开窗形成对流，让烟自然散去", "next": "n_done", "correct": true },
+      { "id": "c6", "text": "打开抽油烟机 / 电风扇猛吹", "next": "n_fan", "correct": false } ] },
+    { "id": "n_water", "text": "油火遇水会瞬间汽化爆溅，火势反而冲满整个厨房！这是最危险的做法。", "ending": "fail" },
+    { "id": "n_run", "text": "火虽灭了，但烟雾和余火没处理，可能复燃。应先确认安全、散尽烟雾再离开。", "ending": "neutral" },
+    { "id": "n_fan", "text": "电气设备在油烟环境里启动有火花风险，可能引燃。散烟应优先开窗自然对流。", "ending": "fail" },
+    { "id": "n_done", "text": "处理得当。记住口诀：油锅起火，关火 + 盖锅盖，再开窗散烟。", "ending": "success" }
+  ]
+}
+</script>
+
+<script>
+(function () {
+  "use strict";
+  var cfg = JSON.parse(document.getElementById("widget-config").textContent);
+  var byId = {}; cfg.nodes.forEach(function (n) { byId[n.id] = n; });
+  document.getElementById("title").textContent = cfg.title;
+  var sceneEl = document.getElementById("scene");
+  var feedbackEl = document.getElementById("feedback");
+  var continueBtn = document.getElementById("btn-continue");
+  var restartBtn = document.getElementById("btn-restart");
+  var pendingNext = null;
+
+  function render(id) {
+    var node = byId[id]; if (!node) return;
+    sceneEl.innerHTML = ""; feedbackEl.className = "hidden"; feedbackEl.textContent = "";
+    continueBtn.classList.add("hidden"); restartBtn.classList.add("hidden");
+    var text = document.createElement("p"); text.className = "scene-text"; text.textContent = node.text;
+    sceneEl.appendChild(text);
+    if (node.ending) {
+      var end = document.createElement("p"); end.className = "ending " + node.ending;
+      end.textContent = node.ending === "success" ? "🎉 安全结局" : (node.ending === "fail" ? "💥 危险结局" : "⚠ 还可以更好");
+      sceneEl.appendChild(end); restartBtn.classList.remove("hidden"); return;
+    }
+    var choicesEl = document.createElement("div"); choicesEl.className = "choices";
+    node.choices.forEach(function (ch, i) {
+      var btn = document.createElement("button"); btn.className = "choice";
+      btn.style.animationDelay = (i * 0.07) + "s";
+      btn.setAttribute("data-choice", ch.id); btn.textContent = ch.text;
+      btn.addEventListener("click", function () { choose(node, ch, btn, choicesEl); });
+      choicesEl.appendChild(btn);
+    });
+    sceneEl.appendChild(choicesEl);
+  }
+  function choose(node, ch, btn, choicesEl) {
+    var all = choicesEl.querySelectorAll(".choice");
+    for (var i = 0; i < all.length; i++) all[i].disabled = true;
+    var correct = ch.correct === true;
+    btn.classList.add(correct ? "correct" : "wrong");
+    feedbackEl.className = correct ? "correct" : "wrong";
+    feedbackEl.textContent = correct ? "✅ 选对了！" : "❌ 这个选择有问题。";
+    feedbackEl.classList.remove("hidden"); pendingNext = ch.next;
+    continueBtn.classList.remove("hidden");
+  }
+  continueBtn.addEventListener("click", function () { if (pendingNext) { var nx = pendingNext; pendingNext = null; render(nx); } });
+  restartBtn.addEventListener("click", function () { render(cfg.startId); });
+  render(cfg.startId);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,24 @@
+{
+  "title": "There is / There are 句型",
+  "instruction": "把词块拖到空位，拼出正确的句子",
+  "prefix": "There",
+  "suffix": ".",
+  "slots": [
+    { "id": "s1" },
+    { "id": "s2" },
+    { "id": "s3" }
+  ],
+  "tokens": [
+    { "id": "is", "text": "is" },
+    { "id": "are", "text": "are" },
+    { "id": "a", "text": "a" },
+    { "id": "an", "text": "an" },
+    { "id": "apple", "text": "apple" },
+    { "id": "apples", "text": "apples" }
+  ],
+  "solution": { "s1": "is", "s2": "an", "s3": "apple" },
+  "feedback": {
+    "correct": "对了！There is + 单数名词；apple 以元音音素开头，前面用 an。",
+    "wrong": "再想想：单数事物用 There is；apple 是元音音素开头的单数名词，前用 an。"
+  }
+}

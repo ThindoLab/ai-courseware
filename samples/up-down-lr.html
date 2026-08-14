@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>上下左右 · 方位小火车</title>
+<!-- drag-slot · 方位词 / 4-7岁 · 学前 -->
+<style>
+:root{--accent:#3b82f6;--ok:#10b981;--ink:#1f2a44;--muted:#667085;--line:#bfdbfe;--ease:cubic-bezier(0.25,1,0.5,1);--touch:52px}
+*{box-sizing:border-box}html,body{margin:0}
+body{font-family:-apple-system,"PingFang SC",system-ui,sans-serif;color:var(--ink);background:linear-gradient(160deg,#eff6ff,#fef3c7);min-height:100vh;padding:14px 12px 28px}
+.card{max-width:720px;margin:0 auto;background:#fff;border:1px solid var(--line);border-radius:20px;box-shadow:0 12px 28px rgba(59,130,246,.12);padding:18px 16px 22px}
+.top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.top h1{margin:0;font-size:22px;font-weight:800}
+.badge{font-size:14px;font-weight:700;color:#1d4ed8;background:#dbeafe;padding:5px 12px;border-radius:999px}
+.story{background:linear-gradient(135deg,#dbeafe,#fef9c3);border-left:5px solid var(--accent);border-radius:0 14px 14px 0;padding:12px;margin-bottom:12px;font-size:16px;line-height:1.7}
+.board{position:relative;width:min(280px,80vw);height:min(280px,80vw);margin:0 auto 14px;background:#f8fafc;border:2px solid #93c5fd;border-radius:16px}
+.cell{position:absolute;width:28%;height:28%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:var(--muted);border:1px dashed #e2e8f0;border-radius:12px}
+.cell.c{left:36%;top:36%;background:#dbeafe;border-style:solid;font-size:36px;color:var(--ink)}
+.cell.u{left:36%;top:4%}.cell.d{left:36%;bottom:4%}.cell.l{left:4%;top:36%}.cell.r{right:4%;top:36%}
+.cell .mark{font-size:32px}
+.prompt{text-align:center;font-size:18px;font-weight:800;margin:10px 0}
+.dirs{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:12px}
+.dir{min-width:72px;min-height:var(--touch);padding:12px 16px;border-radius:14px;border:2px solid var(--line);background:#fff;font-size:18px;font-weight:800;cursor:pointer;font-family:inherit}
+.dir.ok{border-color:var(--ok);background:#ecfdf5}
+.dir.bad{border-color:#ef4444;background:#fef2f2}
+.btn-row{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+.btn{min-height:var(--touch);padding:12px 18px;border-radius:14px;border:2px solid var(--line);background:#fff;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit}
+.btn.primary{background:linear-gradient(135deg,var(--accent),#1d4ed8);color:#fff;border:none}
+.fb{min-height:52px;border-radius:14px;padding:12px;background:#f8fafc;border:1px solid #e2e8f0;font-size:16px;line-height:1.55;margin:10px 0}
+.thinking{background:#fffbeb;border-radius:12px;padding:10px;font-size:15px;border:1px dashed #fcd34d}
+.thinking .tag{font-weight:800;color:#b45309}
+.say{margin-top:8px;font-size:15px;min-height:22px}
+.prog{text-align:center;font-size:14px;font-weight:700;color:var(--muted)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main class="card">
+  <div class="top"><h1>上下左右</h1><span class="badge">4–7 岁 · 方位</span></div>
+  <div class="story">小火车 🚂 在正中间。听提示，点它该往哪边开。答对后，对应方位格会出现 ⭐，火车会「开过去」示意。</div>
+  <div class="prog" id="prog">第 1 / 6 题</div>
+  <div class="board" role="img" aria-label="方位图">
+    <div class="cell u" id="cu">上</div>
+    <div class="cell l" id="cl">左</div>
+    <div class="cell c" id="cc"><span class="mark">🚂</span></div>
+    <div class="cell r" id="cr">右</div>
+    <div class="cell d" id="cd">下</div>
+  </div>
+  <div class="prompt" id="prompt">火车开到「上面」</div>
+  <div class="dirs" id="dirs">
+    <button type="button" class="dir" data-d="up">上</button>
+    <button type="button" class="dir" data-d="down">下</button>
+    <button type="button" class="dir" data-d="left">左</button>
+    <button type="button" class="dir" data-d="right">右</button>
+  </div>
+  <div class="btn-row">
+    <button type="button" class="btn primary" id="btnNext" hidden>下一题 →</button>
+    <button type="button" class="btn" id="btnReset">↻ 重新开始</button>
+    <button type="button" class="btn" id="btnSay">🗣️ 我会说</button>
+  </div>
+  <div class="fb" id="fb" aria-live="polite">看中间的火车，点正确的方位。</div>
+  <p class="thinking"><span class="tag">我怎么想：</span><span id="think">上=头顶方向，下=脚底，左=写字那只手的对面（多数人），右=另一边。</span></p>
+  <div class="say" id="say"></div>
+</main>
+<script>
+(function(){
+  const Q=[
+    {ask:'火车开到「上面」', ans:'up', tip:'图上方那一格'},
+    {ask:'火车开到「下面」', ans:'down', tip:'图下方那一格'},
+    {ask:'火车开到「左边」', ans:'left', tip:'你的左手边（屏幕左侧）'},
+    {ask:'火车开到「右边」', ans:'right', tip:'你的右手边（屏幕右侧）'},
+    {ask:'星星应在火车的哪边？（先想象在上面）', ans:'up', tip:'「在…上面」= up'},
+    {ask:'小树在火车「下面」', ans:'down', tip:'下面 = down'}
+  ];
+  let qi=0, locked=false;
+  const $=id=>document.getElementById(id);
+  const map={up:'cu',down:'cd',left:'cl',right:'cr'};
+  function clearMarks(){
+    ['cu','cd','cl','cr'].forEach(id=>{
+      const el=$(id);
+      el.innerHTML = {cu:'上',cd:'下',cl:'左',cr:'右'}[id];
+      el.style.background='';
+    });
+    $('cc').innerHTML='<span class="mark">🚂</span>';
+  }
+  function load(){
+    locked=false; clearMarks();
+    $('prog').textContent='第 '+(qi+1)+' / '+Q.length+' 题';
+    $('prompt').textContent=Q[qi].ask;
+    $('btnNext').hidden=true;
+    document.querySelectorAll('.dir').forEach(b=>b.classList.remove('ok','bad'));
+    $('fb').style.background='';
+    $('fb').textContent='看中间的火车，点正确的方位。';
+    $('think').textContent=Q[qi].tip;
+    $('say').textContent='';
+  }
+  document.querySelector('.dirs').onclick=e=>{
+    const b=e.target.closest('.dir'); if(!b||locked) return;
+    locked=true;
+    const ans=Q[qi].ans;
+    document.querySelectorAll('.dir').forEach(x=>{
+      if(x.dataset.d===ans) x.classList.add('ok');
+      if(x===b && x.dataset.d!==ans) x.classList.add('bad');
+    });
+    const cell=$(map[ans]);
+    cell.innerHTML='<span class="mark">⭐</span>';
+    cell.style.background='#d1fae5';
+    // 火车移到正确方位格（形象：开过去）
+    const train=$('cc');
+    if(b.dataset.d===ans){
+      train.innerHTML='<span class="mark">·</span>';
+      cell.innerHTML='<span class="mark">🚂</span>';
+      $('fb').style.background='#ecfdf5';
+      $('fb').textContent='对！火车开到了「'+b.textContent+'」。';
+      if(qi<Q.length-1) $('btnNext').hidden=false;
+      else $('fb').textContent+=' 全部完成！';
+    } else {
+      $('fb').style.background='#fff7ed';
+      $('fb').textContent='你点了「'+b.textContent+'」。'+Q[qi].tip+'。绿钮/绿格是正确方位。';
+      setTimeout(()=>{ locked=false; document.querySelectorAll('.dir').forEach(x=>x.classList.remove('bad')); }, 900);
+    }
+  };
+  $('btnNext').onclick=()=>{ if(qi<Q.length-1){ qi++; load(); } };
+  $('btnReset').onclick=()=>{ qi=0; load(); };
+  $('btnSay').onclick=()=>{
+    const names={up:'上',down:'下',left:'左',right:'右'};
+    $('say').textContent='我会说：这一题答案是「'+names[Q[qi].ans]+'」。';
+  };
+  load();
+})();
+</script>
+</body>
+</html>

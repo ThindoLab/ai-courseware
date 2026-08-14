@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>There is / are · 有什么</title>
+<!-- 题型：拖拽槽位·英语 / 核心认知动作：单复数匹配 / 年龄：7-10 岁 / 场景：教室+培训 -->
+<style>
+:root{
+  --accent:#3b82f6; --ok:#10b981; --bad:#ef4444;
+  --ink:#1f2a44; --muted:#667085; --line:#bfdbfe; --ease:cubic-bezier(0.25,1,0.5,1);
+  --touch:48px;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  font-family:-apple-system,"PingFang SC",system-ui,sans-serif;
+  color:var(--ink); background:linear-gradient(160deg,#dbeafe,#f0fdf4);
+  min-height:100vh; padding:14px 12px 28px;
+}
+.card{
+  max-width:720px; margin:0 auto; background:#fff; border:1px solid var(--line);
+  border-radius:20px; box-shadow:0 12px 30px rgba(59,130,246,.12); padding:18px 16px 22px;
+}
+.topbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.topbar h1{margin:0;font-size:22px;font-weight:800}
+.badge{font-size:14px;font-weight:700;color:#1d4ed8;background:#dbeafe;padding:5px 12px;border-radius:999px}
+.progress{font-size:14px;font-weight:700;color:var(--muted);margin-bottom:8px}
+.story{font-size:16px;line-height:1.6;margin-bottom:12px;padding:10px 12px;background:#eff6ff;border-radius:12px;border-left:4px solid var(--accent)}
+.pic{
+  text-align:center; padding:12px; background:linear-gradient(180deg,#f0f9ff,#fff);
+  border:1px solid var(--line); border-radius:14px; margin-bottom:12px; min-height:100px;
+}
+.pic .emoji{font-size:42px;letter-spacing:6px}
+.pic .cap{font-size:14px;color:var(--muted);margin-top:6px}
+.sentence{
+  display:flex; flex-wrap:wrap; gap:8px; align-items:center; justify-content:center;
+  font-size:20px; font-weight:700; min-height:56px; margin-bottom:12px;
+  padding:12px; background:#f8fafc; border-radius:14px;
+}
+.slot{
+  min-width:72px; min-height:var(--touch); padding:8px 12px;
+  border:2px dashed #93c5fd; border-radius:12px; background:#fff;
+  display:inline-flex; align-items:center; justify-content:center;
+  cursor:pointer; transition:border-color .2s, background .2s;
+}
+.slot.filled{border-style:solid; border-color:var(--accent); background:#eff6ff}
+.slot.correct{border-color:var(--ok); background:#ecfdf5}
+.slot.wrong{border-color:var(--bad); background:#fef2f2; animation:wobble .4s ease}
+.slot.pick-target{box-shadow:0 0 0 3px rgba(59,130,246,.25)}
+.tokens{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:12px}
+.tok{
+  min-width:var(--touch); min-height:var(--touch); padding:10px 16px;
+  border-radius:14px; border:2px solid #e2e8f0; background:#fff;
+  font-size:18px; font-weight:700; cursor:pointer; font-family:inherit;
+  touch-action:none; user-select:none;
+}
+.tok.picked{border-color:var(--accent); background:#dbeafe}
+.tok.used{opacity:.35; pointer-events:none}
+.btn-row{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:10px}
+.btn{
+  min-height:var(--touch); padding:12px 18px; border-radius:14px; border:2px solid var(--line);
+  background:#fff; font-size:16px; font-weight:700; cursor:pointer; font-family:inherit;
+}
+.btn.primary{background:linear-gradient(135deg,var(--accent),#1d4ed8);color:#fff;border:none}
+.feedback{min-height:60px;border-radius:14px;padding:12px;background:#f8fafc;border:1px solid #e2e8f0;font-size:16px;line-height:1.55;margin-bottom:10px}
+.feedback.ok{background:#ecfdf5;border-color:#6ee7b7}
+.feedback.bad{background:#fff7ed;border-color:#fcd34d}
+.compare{display:none;text-align:center;margin:8px 0;font-size:15px}
+.compare.show{display:block}
+.thinking{background:#fffbeb;border-radius:12px;padding:10px;font-size:15px;border:1px dashed #fcd34d}
+.thinking .tag{font-weight:800;color:#b45309}
+@keyframes wobble{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+</head>
+<body>
+<main class="card">
+  <div class="topbar">
+    <h1>There is / There are</h1>
+    <span class="badge">7–10 岁 · 英语句型</span>
+  </div>
+  <div class="progress" id="progress">第 1 / 4 题</div>
+  <div class="story" id="story">看图：桌上有什么？把词放进空格，组成正确句子。</div>
+  <div class="pic" id="pic">
+    <div class="emoji" id="picEmoji">🍎</div>
+    <div class="cap" id="picCap">1 个苹果</div>
+  </div>
+  <div class="sentence" id="sentence" aria-label="句子槽位"></div>
+  <div class="compare" id="compare"></div>
+  <div class="tokens" id="tokens"></div>
+  <div class="btn-row">
+    <button type="button" class="btn primary" id="btnCheck">✓ 检查</button>
+    <button type="button" class="btn" id="btnNext" hidden>下一题 →</button>
+    <button type="button" class="btn" id="btnReset">↻ 重新开始</button>
+    <button type="button" class="btn" id="btnSay">🗣️ 我会说</button>
+  </div>
+  <div class="feedback" id="feedback" aria-live="polite">先点词块，再点空格；也可拖进空格。</div>
+  <p class="thinking"><span class="tag">我怎么想：</span><span id="thinkText">一个用 is，多个用 are。先数有几个。</span></p>
+</main>
+<script>
+(function(){
+  const Q = [
+    {
+      // 元音开头用 an，避免 There is a apple 的错误英语
+      emoji:'🍎', cap:'1 个苹果',
+      slots:[{id:'be', label:'is/are'},{id:'num', label:'a/an/two'},{id:'noun', label:'apple(s)'}],
+      fixed:['There', null, null, null, '.'],
+      slotAt:[1,2,3],
+      solution:{be:'is', num:'an', noun:'apple'},
+      tokens:['is','are','a','an','apple','apples'],
+      think:'1 个 + apple 以元音开头 → There is an apple.（不是 a apple）'
+    },
+    {
+      emoji:'🐶', cap:'1 只狗',
+      slots:[{id:'be', label:'is/are'},{id:'num', label:'a/an/two'},{id:'noun', label:'dog(s)'}],
+      fixed:['There', null, null, null, '.'],
+      slotAt:[1,2,3],
+      solution:{be:'is', num:'a', noun:'dog'},
+      tokens:['is','are','a','an','dog','dogs'],
+      think:'1 个 + dog 辅音开头 → There is a dog.'
+    },
+    {
+      emoji:'🍎🍎', cap:'2 个苹果',
+      slots:[{id:'be', label:'is/are'},{id:'num', label:'数量'},{id:'noun', label:'apple(s)'}],
+      fixed:['There', null, null, null, '.'],
+      slotAt:[1,2,3],
+      solution:{be:'are', num:'two', noun:'apples'},
+      tokens:['is','are','a','two','apple','apples'],
+      think:'2 个 → are + two + apples（复数）。'
+    },
+    {
+      emoji:'📚📚📚', cap:'3 本书',
+      slots:[{id:'be', label:'is/are'},{id:'num', label:'数量'},{id:'noun', label:'book(s)'}],
+      fixed:['There', null, null, null, '.'],
+      slotAt:[1,2,3],
+      solution:{be:'are', num:'three', noun:'books'},
+      tokens:['is','are','a','three','book','books'],
+      think:'多个 books → There are three books.'
+    }
+  ];
+
+  let qi=0, filled={}, picked=null, locked=false;
+  const $ = id => document.getElementById(id);
+
+  function slotIds(){ return Q[qi].slots.map(s=>s.id); }
+
+  function render(){
+    locked=false; filled={}; picked=null;
+    const q = Q[qi];
+    $('progress').textContent = '第 '+(qi+1)+' / '+Q.length+' 题';
+    $('story').textContent = '看图把词放进空格。一个用 is，多个用 are；a / an 看后面单词是否元音开头。';
+    $('picEmoji').textContent = q.emoji;
+    $('picCap').textContent = q.cap;
+    $('feedback').className = 'feedback';
+    $('feedback').textContent = '先点词块，再点空格；也可拖进空格。';
+    $('compare').className = 'compare';
+    $('btnNext').hidden = true;
+    $('btnCheck').disabled = false;
+    $('thinkText').textContent = q.think || '先数图里有几个，再选 is 还是 are。';
+    renderSentence();
+    renderTokens();
+  }
+
+  function renderSentence(){
+    const q = Q[qi];
+    const el = $('sentence');
+    el.innerHTML = '';
+    let si = 0;
+    q.fixed.forEach((part, idx)=>{
+      if(part!==null){
+        const sp = document.createElement('span');
+        sp.textContent = part;
+        el.appendChild(sp);
+      } else {
+        const id = q.slots[si++].id;
+        const slot = document.createElement('button');
+        slot.type = 'button';
+        slot.className = 'slot' + (filled[id] ? ' filled' : '');
+        slot.dataset.slot = id;
+        const labels={be:'be',num:'数量',noun:'名词'};
+        slot.textContent = filled[id] || ('('+(labels[id]||id)+')');
+        slot.setAttribute('aria-label', '槽位 '+id);
+        slot.onclick = ()=> onSlot(id);
+        // drop target via pointerup from token
+        slot.addEventListener('pointerup', e=>{
+          if(picked) onSlot(id);
+        });
+        el.appendChild(slot);
+      }
+    });
+  }
+
+  function renderTokens(){
+    const q = Q[qi];
+    const el = $('tokens');
+    el.innerHTML = '';
+    q.tokens.forEach(t=>{
+      const used = Object.values(filled).includes(t);
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'tok' + (picked===t ? ' picked' : '') + (used ? ' used' : '');
+      b.textContent = t;
+      b.disabled = used || locked;
+      b.onclick = ()=>{
+        if(locked||used) return;
+        picked = t;
+        renderTokens();
+        document.querySelectorAll('.slot').forEach(s=>s.classList.add('pick-target'));
+      };
+      el.appendChild(b);
+    });
+  }
+
+  function onSlot(id){
+    if(locked) return;
+    if(!picked){
+      // remove if filled
+      if(filled[id]){
+        delete filled[id];
+        document.querySelectorAll('.slot').forEach(s=>{
+          s.classList.remove('correct','wrong');
+        });
+        renderSentence(); renderTokens();
+      }
+      return;
+    }
+    // free previous token in slot
+    filled[id] = picked;
+    picked = null;
+    document.querySelectorAll('.slot').forEach(s=>s.classList.remove('pick-target','correct','wrong'));
+    renderSentence(); renderTokens();
+  }
+
+  $('btnCheck').onclick = ()=>{
+    const q = Q[qi];
+    const need = q.solution;
+    let miss = false;
+    for(const k of Object.keys(need)){
+      if(!filled[k]) miss = true;
+    }
+    if(miss){
+      $('feedback').className = 'feedback bad';
+      $('feedback').textContent = '还有空格没填完。';
+      return;
+    }
+    let allOk = true;
+    document.querySelectorAll('.slot').forEach(s=>{
+      const id = s.dataset.slot;
+      s.classList.remove('correct','wrong');
+      if(filled[id] === need[id]) s.classList.add('correct');
+      else { s.classList.add('wrong'); allOk = false; }
+    });
+    if(allOk){
+      locked = true;
+      $('btnCheck').disabled = true;
+      $('feedback').className = 'feedback ok';
+      $('feedback').textContent = '正确！There ' + need.be + ' ' + need.num + ' ' + need.noun + '. 图里数量决定 is/are。';
+      $('thinkText').textContent = q.think;
+      if(qi < Q.length-1) $('btnNext').hidden = false;
+      else $('feedback').textContent += ' 全部完成！';
+    } else {
+      const beOk = filled.be === need.be;
+      const numOk = filled.num === need.num;
+      const nounOk = filled.noun === need.noun;
+      $('feedback').className = 'feedback bad';
+      if(!beOk){
+        $('feedback').textContent = '【be 槽】你放了 “'+filled.be+'”。看图个数：1 个多用 is，2 个及以上多用 are。取出重放。';
+        $('compare').className = 'compare show';
+        $('compare').innerHTML = '对比：1 个 → is &nbsp;|&nbsp; 多个 → are';
+      } else if(!numOk){
+        $('feedback').textContent = '【数量槽】你放了 “'+filled.num+'”。再数图上有几个，选 a/an/two/three…（元音开头用 an）。';
+        $('compare').className = 'compare show';
+        $('compare').innerHTML = 'a/an 看后面单词，two/three 看个数';
+      } else if(!nounOk){
+        $('feedback').textContent = '【名词槽】你放了 “'+filled.noun+'”。单数名词 vs 复数加 s，要和数量一致。';
+        $('compare').className = 'compare show';
+        $('compare').innerHTML = '1 → apple/dog/book &nbsp;|&nbsp; 多个 → apples/dogs/books';
+      } else {
+        $('feedback').textContent = '再检查一遍三个槽位是否匹配。点槽位可取出重放。';
+      }
+      $('thinkText').textContent = '一个槽位一个线索：先 be，再数量，再名词。';
+    }
+  };
+
+  $('btnNext').onclick = ()=>{ if(qi<Q.length-1){ qi++; render(); } };
+  $('btnReset').onclick = ()=>{ qi=0; render(); };
+  $('btnSay').onclick = ()=>{
+    const q = Q[qi], n = q.solution;
+    $('feedback').textContent = '我会说：There ' + n.be + ' ' + n.num + ' ' + n.noun + '.';
+  };
+
+  render();
+})();
+</script>
+</body>
+</html>

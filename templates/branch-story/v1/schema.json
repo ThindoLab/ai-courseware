@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "branch-story content",
+  "type": "object",
+  "required": ["title", "startId", "nodes"],
+  "properties": {
+    "title": { "type": "string" },
+    "startId": { "type": "string" },
+    "nodes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "text"],
+        "properties": {
+          "id": { "type": "string" },
+          "text": { "type": "string" },
+          "choices": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["id", "text", "next"],
+              "properties": {
+                "id": { "type": "string" },
+                "text": { "type": "string" },
+                "next": { "type": "string" },
+                "correct": { "type": "boolean" }
+              }
+            }
+          },
+          "ending": { "type": "string", "enum": ["success", "fail", "neutral"] }
+        }
+      }
+    }
+  }
+}

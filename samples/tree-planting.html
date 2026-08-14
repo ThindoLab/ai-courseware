@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>小路种树 · 段与点</title>
+<!-- 题型：植树问题 / 核心：间隔(段) vs 树(点) / 年龄：7-10 / 场景：家庭+教室 -->
+<style>
+:root{
+  --accent:#22c55e; --ink:#1f2a44; --muted:#667085; --line:#bbf7d0;
+  --ease:cubic-bezier(0.25,1,0.5,1); --touch:52px;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  font-family:-apple-system,"PingFang SC",system-ui,sans-serif; color:var(--ink);
+  background:linear-gradient(160deg,#f0fdf4,#ecfeff); min-height:100vh; padding:14px 12px 28px;
+}
+.card{
+  max-width:760px; margin:0 auto; background:#fff; border:1px solid var(--line);
+  border-radius:20px; box-shadow:0 12px 28px rgba(34,197,94,.12); padding:18px 16px 22px;
+}
+.top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.top h1{margin:0;font-size:24px;font-weight:800}
+.badge{font-size:14px;font-weight:700;color:#166534;background:#dcfce7;padding:5px 12px;border-radius:999px}
+.story{
+  background:linear-gradient(135deg,#dcfce7,#e0f2fe); border-left:5px solid var(--accent);
+  border-radius:0 14px 14px 0; padding:12px; margin-bottom:12px; font-size:16px; line-height:1.7;
+}
+.stage{background:#f0fdf4;border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:12px}
+.road{
+  position:relative; height:90px; margin:20px 16px 10px;
+  border-bottom:6px solid #86efac; border-radius:2px;
+}
+.mark{
+  position:absolute; bottom:0; transform:translateX(-50%);
+  display:flex; flex-direction:column; align-items:center; gap:2px;
+  transition: left .45s var(--ease), opacity .3s var(--ease);
+}
+.mark .tree{font-size:28px; line-height:1; transition:transform .35s var(--ease)}
+.mark .tree.pop{transform:scale(1.15)}
+.mark .seg{
+  position:absolute; bottom:8px; left:0; height:4px; background:#fbbf24;
+  transform-origin:left center; border-radius:2px;
+}
+.mark .lbl{font-size:11px; color:var(--muted); font-weight:700}
+.ends{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);padding:0 8px;margin-bottom:8px}
+.formula{
+  text-align:center; font-size:16px; font-weight:700; padding:10px; border-radius:12px;
+  background:#fff; border:1px dashed #86efac; margin-top:8px;
+}
+.ctrl{display:flex;flex-direction:column;gap:12px}
+.row{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:10px}
+.row label{font-weight:700;font-size:15px}
+.step button{
+  min-width:var(--touch);min-height:var(--touch);border-radius:14px;border:2px solid var(--line);
+  background:#fff;font-size:22px;font-weight:800;cursor:pointer;font-family:inherit;
+}
+.step .v{min-width:40px;text-align:center;font-size:20px;font-weight:800;color:var(--accent)}
+input[type=range]{width:min(200px,45vw)}
+.modes{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.modebtn{
+  min-height:48px;padding:8px 12px;border-radius:12px;border:2px solid var(--line);
+  background:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;
+}
+.modebtn.on{background:#dcfce7;border-color:var(--accent)}
+.btn-row{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+.btn{
+  min-height:var(--touch);padding:12px 18px;border-radius:14px;border:2px solid var(--line);
+  background:#fff;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit;
+}
+.btn.primary{background:linear-gradient(135deg,var(--accent),#15803d);color:#fff;border:none}
+.fb{min-height:52px;border-radius:14px;padding:12px;background:#f8fafc;border:1px solid #e2e8f0;font-size:16px;line-height:1.55;margin:10px 0}
+.thinking{background:#fffbeb;border-radius:12px;padding:10px;font-size:15px;border:1px dashed #fcd34d}
+.thinking .tag{font-weight:800;color:#b45309}
+.say{margin-top:8px;font-size:15px;min-height:22px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main class="card">
+  <div class="top">
+    <h1>小路种树</h1>
+    <span class="badge">7–10 岁 · 段与点</span>
+  </div>
+  <div class="story">
+    路长 <strong id="lenShow">20</strong> 米，每隔 <strong id="gapShow">5</strong> 米种一棵。
+    关键的是：<strong>间隔（段）</strong>有几段、树上（点）有几棵——两端种不种，棵数会变！
+  </div>
+  <div class="stage" role="img" aria-label="植树段点图解">
+    <div class="ends"><span>起点</span><span>终点</span></div>
+    <div class="road" id="road"></div>
+    <div class="formula" id="formula">两端都种：棵数 = 段数 + 1</div>
+  </div>
+  <div class="ctrl">
+    <div class="modes">
+      <button type="button" class="modebtn on" data-m="both">两端都种</button>
+      <button type="button" class="modebtn" data-m="one">只种一端</button>
+      <button type="button" class="modebtn" data-m="none">两端不种</button>
+    </div>
+    <div class="row">
+      <label>路长</label>
+      <div class="step">
+        <button type="button" id="lenMinus">−</button>
+        <span class="v" id="lenVal">20</span>
+        <button type="button" id="lenPlus">+</button>
+      </div>
+      <input type="range" id="len" min="10" max="40" value="20" step="5" aria-label="路长">
+      <span>米</span>
+    </div>
+    <div class="row">
+      <label>间隔</label>
+      <div class="step">
+        <button type="button" id="gapMinus">−</button>
+        <span class="v" id="gapVal">5</span>
+        <button type="button" id="gapPlus">+</button>
+      </div>
+      <input type="range" id="gap" min="2" max="10" value="5" aria-label="间隔">
+      <span>米</span>
+    </div>
+    <div class="btn-row">
+      <button type="button" class="btn primary" id="btnReplay">▶ 重放种树</button>
+      <button type="button" class="btn" id="btnReset">↻ 重新开始</button>
+      <button type="button" class="btn" id="btnSay">🗣️ 我会说</button>
+    </div>
+  </div>
+  <div id="compare" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:8px 0 4px;font-size:12px;text-align:center"></div>
+  <p id="segBadge" style="text-align:center;font-size:18px;font-weight:800;color:#166534;margin:0 0 8px">段数 = ? · 棵数 = ?</p>
+  <div class="fb" id="fb" aria-live="polite">黄线是「段」，树上是「点」。先数段，再按模式算棵数。</div>
+  <p class="thinking"><span class="tag">我怎么想：</span><span id="think">段数 = 路长 ÷ 间隔。两端都种时，点比段多 1。</span></p>
+  <div class="say" id="say"></div>
+</main>
+<script>
+(function(){
+  let len=20, gap=5, mode='both';
+  const $ = id => document.getElementById(id);
+
+  function segs(){ return len / gap; }
+  function trees(){
+    const s = segs();
+    if(!Number.isInteger(s)) return null;
+    if(mode==='both') return s+1;
+    if(mode==='one') return s;
+    return Math.max(0, s-1); // none: 两端不种
+  }
+  function formulaText(s,t){
+    if(mode==='both') return '两端都种：棵数 = 段数 + 1 → '+s+' + 1 = '+t;
+    if(mode==='one') return '只种一端：棵数 = 段数 → '+t;
+    return '两端不种：棵数 = 段数 − 1 → '+s+' − 1 = '+t;
+  }
+
+  function draw(animate){
+    $('lenShow').textContent=len; $('gapShow').textContent=gap;
+    $('lenVal').textContent=len; $('gapVal').textContent=gap;
+    const road = $('road');
+    road.innerHTML = '';
+    const s = segs();
+    const t = trees();
+    if(!Number.isInteger(s) || t===null){
+      $('formula').textContent = '路长要能被间隔整除，否则种不齐。';
+      $('fb').textContent = '调路长或间隔，让路长 ÷ 间隔 是整数。';
+      $('think').textContent = '种不齐也是一种结果：先保证整段。';
+      return;
+    }
+    $('formula').textContent = formulaText(s,t);
+    // positions 0..s for points on line
+    const points = [];
+    for(let i=0;i<=s;i++) points.push(i);
+    // which plant
+    const plant = (i)=>{
+      if(mode==='both') return true;
+      if(mode==='one') return i < s; // 0..s-1 种，终点不种
+      return i>0 && i<s; // 两端不种
+    };
+    points.forEach((i,idx)=>{
+      const pct = (i/s)*100;
+      const m = document.createElement('div');
+      m.className = 'mark';
+      m.style.left = pct+'%';
+      if(plant(i)){
+        const tree = document.createElement('div');
+        tree.className = 'tree';
+        tree.textContent = '🌳';
+        tree.style.opacity = animate ? '0' : '1';
+        m.appendChild(tree);
+        if(animate){
+          setTimeout(()=>{
+            tree.style.opacity='1';
+            tree.classList.add('pop');
+          }, idx*15);
+        }
+      } else {
+        const hole = document.createElement('div');
+        hole.className = 'lbl';
+        hole.textContent = '○';
+        hole.style.marginBottom = '8px';
+        m.appendChild(hole);
+      }
+      // segment highlight from i to i+1
+      if(i < s){
+        const seg = document.createElement('div');
+        seg.className = 'seg';
+        seg.style.width = (100/s)+'%';
+        seg.style.left = '0';
+        seg.title = '第'+(i+1)+'段';
+        // attach to road as absolute segments
+      }
+      const lbl = document.createElement('div');
+      lbl.className = 'lbl';
+      lbl.textContent = (i*gap)+'m';
+      m.appendChild(lbl);
+      road.appendChild(m);
+    });
+    // yellow segments as separate layer
+    for(let i=0;i<s;i++){
+      const line = document.createElement('div');
+      line.style.cssText = 'position:absolute;bottom:6px;height:5px;background:#fbbf24;border-radius:2px;transition:width .4s var(--ease)';
+      line.style.left = 'calc('+(i/s*100)+'% )';
+      line.style.width = 'calc('+(100/s)+'% - 4px)';
+      line.style.marginLeft = '2px';
+      road.appendChild(line);
+    }
+    const sb=$('segBadge');
+    if(sb) sb.textContent = '段数 = '+s+' · 棵数 = '+t+'（'+({both:'两端都种',one:'只种一端',none:'两端不种'}[mode])+'）';
+    $('fb').textContent = '黄线='+s+' 段；树上='+t+' 棵。对照表可切换三种端点模式。';
+    $('think').textContent = mode==='both'
+      ? '段数 '+s+'，两端都有点，所以点 = 段 + 1。'
+      : mode==='one'
+        ? '只种一端时，点的个数等于段数。'
+        : '两端空着，中间才种，点 = 段 − 1。';
+    // 三种模式对照表（同一路长/间隔）
+    const cmp=$('compare');
+    if(cmp){
+      const both=s+1, one=s, none=Math.max(0,s-1);
+      cmp.innerHTML =
+        '<div style="padding:8px;border-radius:10px;border:2px solid '+(mode==='both'?'#22c55e':'#e2e8f0')+'"><b>两端都种</b><br>'+both+' 棵</div>'+
+        '<div style="padding:8px;border-radius:10px;border:2px solid '+(mode==='one'?'#22c55e':'#e2e8f0')+'"><b>只种一端</b><br>'+one+' 棵</div>'+
+        '<div style="padding:8px;border-radius:10px;border:2px solid '+(mode==='none'?'#22c55e':'#e2e8f0')+'"><b>两端不种</b><br>'+none+' 棵</div>';
+    }
+  }
+
+  function sync(){ len=+$('len').value; gap=+$('gap').value; draw(true); }
+  function bind(m,p,r){
+    $(m).onclick=()=>{ r.value=Math.max(+r.min,+r.value-(+r.step||1)); sync(); };
+    $(p).onclick=()=>{ r.value=Math.min(+r.max,+r.value+(+r.step||1)); sync(); };
+    r.oninput=sync;
+  }
+  bind('lenMinus','lenPlus',$('len'));
+  bind('gapMinus','gapPlus',$('gap'));
+  document.querySelectorAll('.modebtn').forEach(b=>{
+    b.onclick=()=>{
+      document.querySelectorAll('.modebtn').forEach(x=>x.classList.remove('on'));
+      b.classList.add('on'); mode=b.dataset.m; draw(true);
+    };
+  });
+  $('btnReplay').onclick=()=>draw(true);
+  $('btnReset').onclick=()=>{
+    $('len').value=20; $('gap').value=5; mode='both';
+    document.querySelectorAll('.modebtn').forEach((x,i)=>x.classList.toggle('on',i===0));
+    sync();
+  };
+  $('btnSay').onclick=()=>{
+    const s=segs(), t=trees();
+    if(!Number.isInteger(s)||t===null){ $('say').textContent='我会说：要先让路长能被间隔整除。'; return; }
+    $('say').textContent='我会说：段数是 '+s+'，这个模式下一共种 '+t+' 棵。';
+  };
+  draw(false);
+})();
+</script>
+</body>
+</html>

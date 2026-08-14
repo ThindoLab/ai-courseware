@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>小熊凑十 · 好朋友</title>
+<!-- 风格：学前·十框图 / 场景：中幼儿+家庭 / 核心：凑十互补 -->
+<style>
+:root{--accent:#f59e0b;--ok:#10b981;--ink:#1f2a44;--muted:#667085;--line:#fde68a;--ease:cubic-bezier(0.25,1,0.5,1);--touch:56px}
+*{box-sizing:border-box}html,body{margin:0}
+body{font-family:-apple-system,"PingFang SC",system-ui,sans-serif;color:var(--ink);background:linear-gradient(160deg,#fffbeb,#ecfdf5);min-height:100vh;padding:14px 12px 28px}
+.card{max-width:720px;margin:0 auto;background:#fff;border:1px solid var(--line);border-radius:20px;box-shadow:0 12px 28px rgba(245,158,11,.12);padding:18px 16px 22px}
+.top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.top h1{margin:0;font-size:22px;font-weight:800}
+.badge{font-size:14px;font-weight:700;color:#b45309;background:#fef3c7;padding:5px 12px;border-radius:999px}
+.story{background:linear-gradient(135deg,#fef3c3,#d1fae5);border-left:5px solid var(--accent);border-radius:0 14px 14px 0;padding:12px;margin-bottom:12px;font-size:17px;line-height:1.65}
+.ten{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;max-width:280px;margin:0 auto 14px;padding:12px;background:#fffbeb;border:2px solid #fcd34d;border-radius:16px}
+.cell{aspect-ratio:1;border-radius:12px;border:2px dashed #fbbf24;display:flex;align-items:center;justify-content:center;font-size:28px;background:#fff;transition:background .3s var(--ease),transform .3s var(--ease)}
+.cell.on{background:#fde68a;border-style:solid;transform:scale(1.04)}
+.cell.friend{background:#bbf7d0;border-color:#34d399}
+.big{text-align:center;font-size:32px;font-weight:800;color:#b45309;margin:8px 0}
+.big span{color:#059669}
+.row{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;align-items:center;margin:12px 0}
+.step button{min-width:var(--touch);min-height:var(--touch);border-radius:14px;border:2px solid var(--line);background:#fff;font-size:22px;font-weight:800;cursor:pointer;font-family:inherit}
+.step .v{min-width:48px;text-align:center;font-size:28px;font-weight:800;color:var(--accent)}
+.friends{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.fbub{min-width:64px;min-height:48px;padding:8px 12px;border-radius:999px;border:2px solid #e2e8f0;background:#f8fafc;font-weight:800;font-size:18px;cursor:pointer;font-family:inherit}
+.fbub.pick{border-color:var(--ok);background:#ecfdf5}
+.btn-row{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:10px}
+.btn{min-height:var(--touch);padding:12px 18px;border-radius:14px;border:2px solid var(--line);background:#fff;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit}
+.btn.primary{background:linear-gradient(135deg,var(--accent),#d97706);color:#fff;border:none}
+.fb{min-height:52px;border-radius:14px;padding:12px;background:#f8fafc;border:1px solid #e2e8f0;font-size:16px;line-height:1.55;margin:10px 0}
+.fb.ok{background:#ecfdf5;border-color:#6ee7b7}
+.fb.bad{background:#fff7ed;border-color:#fcd34d}
+.thinking{background:#fffbeb;border-radius:12px;padding:10px;font-size:15px;border:1px dashed #fcd34d}
+.thinking .tag{font-weight:800;color:#b45309}
+.say{margin-top:8px;font-size:15px;min-height:22px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main class="card">
+  <div class="top"><h1>小熊凑十</h1><span class="badge">4–7 岁 · 十框</span></div>
+  <div class="story" style="display:flex;gap:12px;align-items:flex-start">
+    <span style="font-size:42px;line-height:1" aria-hidden="true">🐻</span>
+    <span>小熊的十框里先放了几颗 ⭐。还要再放几颗，才能<strong>正好凑满 10</strong>？空格上有淡淡的数字，可以一格一格数。</span>
+  </div>
+  <div class="ten" id="ten" role="img" aria-label="十框图"></div>
+  <div class="big" id="eq">3 + <span>?</span> = 10</div>
+  <div class="row">
+    <label style="font-weight:700">已经有</label>
+    <div class="step">
+      <button type="button" id="m">−</button>
+      <span class="v" id="nVal">3</span>
+      <button type="button" id="p">+</button>
+    </div>
+    <input type="range" id="n" min="0" max="10" value="3" aria-label="已有数量">
+  </div>
+  <div class="friends" id="friends" role="group" aria-label="选择凑十的数"></div>
+  <div class="btn-row">
+    <button type="button" class="btn primary" id="btnCheck">✓ 检查</button>
+    <button type="button" class="btn" id="btnReset">↻ 重新开始</button>
+    <button type="button" class="btn" id="btnSay">🗣️ 我会说</button>
+  </div>
+  <div class="fb" id="fb" aria-live="polite">先调「已经有」几颗，再点还差几。</div>
+  <p class="thinking"><span class="tag">我怎么想：</span><span id="think">凑十：看十框空几格，空几就是好朋友。</span></p>
+  <div class="say" id="say"></div>
+</main>
+<script>
+(function(){
+  let n=3, pick=null;
+  const $=id=>document.getElementById(id);
+  function need(){ return 10-n; }
+  function draw(){
+    const ten=$('ten'); ten.innerHTML='';
+    for(let i=0;i<10;i++){
+      const c=document.createElement('div');
+      const isOn=i<n;
+      const isFriend=pick!==null && i>=n && i<n+pick;
+      c.className='cell'+(isOn?' on':'')+(isFriend?' friend':'');
+      if(isOn) c.textContent='⭐';
+      else if(isFriend) c.textContent='🟢';
+      else {
+        c.textContent=String(i+1);
+        c.style.fontSize='14px';
+        c.style.color='#d6d3d1';
+        c.style.fontWeight='700';
+      }
+      ten.appendChild(c);
+    }
+    $('nVal').textContent=n;
+    $('eq').innerHTML=n+' + <span>'+(pick===null?'?':pick)+'</span> = 10';
+    $('think').textContent='已经有 '+n+'，空着 '+(10-n)+' 格。';
+  }
+  function friends(){
+    const el=$('friends'); el.innerHTML='';
+    for(let k=0;k<=10;k++){
+      const b=document.createElement('button');
+      b.type='button'; b.className='fbub'+(pick===k?' pick':''); b.textContent=k;
+      b.onclick=()=>{ pick=k; draw(); friends(); $('fb').className='fb'; $('fb').textContent='你选了 +'+k+'。点检查。'; };
+      el.appendChild(b);
+    }
+  }
+  $('n').oninput=()=>{ n=+$('n').value; pick=null; draw(); friends(); };
+  $('m').onclick=()=>{ $('n').value=Math.max(0,n-1); n=+$('n').value; pick=null; draw(); friends(); };
+  $('p').onclick=()=>{ $('n').value=Math.min(10,n+1); n=+$('n').value; pick=null; draw(); friends(); };
+  $('btnCheck').onclick=()=>{
+    if(pick===null){ $('fb').className='fb bad'; $('fb').textContent='先点一个绿色数字（还差几）。'; return; }
+    if(pick===need()){
+      $('fb').className='fb ok';
+      $('fb').textContent='对！'+n+'+'+pick+'=10。⭐ 和 🟢 合起来正好一框。';
+      $('think').textContent=n+' 的凑十好朋友是 '+pick+'（空几格就补几）。';
+      // 闪一下满框
+      document.querySelectorAll('.cell').forEach((c,i)=> setTimeout(()=>c.classList.add('on'), i*15));
+    } else {
+      $('fb').className='fb bad';
+      const empty=10-n;
+      if(pick>empty) $('fb').textContent='你选了 +'+pick+'，可是空格只有 '+empty+' 个，装不下。数空格！';
+      else if(pick<empty) $('fb').textContent='你选了 +'+pick+'，空格还有 '+(empty-pick)+' 个没填满。再加点。';
+      else $('fb').textContent='再数一数空着的格子。';
+      $('think').textContent='不要背口诀，先数空格：空几 = 好朋友。';
+    }
+  };
+  $('btnReset').onclick=()=>{ $('n').value=3; n=3; pick=null; draw(); friends(); $('fb').className='fb'; $('fb').textContent='先调「已经有」几颗，再点还差几。'; $('say').textContent=''; };
+  $('btnSay').onclick=()=>{ $('say').textContent='我会说：'+n+' 和 '+need()+' 是凑十好朋友，因为 '+n+'+'+need()+'=10。'; };
+  draw(); friends();
+})();
+</script>
+</body>
+</html>

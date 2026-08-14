@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>小闹钟认时间 · 整点半点</title>
+<!-- 题型：生活数学·钟表 / 核心：时针分针位置 / 年龄：5-8 / 场景：家庭+学前 -->
+<style>
+:root{
+  --accent:#0ea5e9; --ok:#10b981; --ink:#1f2a44; --muted:#667085; --line:#bae6fd;
+  --ease:cubic-bezier(0.25,1,0.5,1); --touch:52px;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  font-family:-apple-system,"PingFang SC",system-ui,sans-serif;color:var(--ink);
+  background:linear-gradient(160deg,#e0f2fe,#fef9c3);min-height:100vh;padding:14px 12px 28px;
+}
+.card{
+  max-width:720px;margin:0 auto;background:#fff;border:1px solid var(--line);
+  border-radius:20px;box-shadow:0 12px 28px rgba(14,165,233,.12);padding:18px 16px 22px;
+}
+.top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.top h1{margin:0;font-size:22px;font-weight:800}
+.badge{font-size:14px;font-weight:700;color:#0369a1;background:#e0f2fe;padding:5px 12px;border-radius:999px}
+.story{
+  background:linear-gradient(135deg,#e0f2fe,#fef9c3);border-left:5px solid var(--accent);
+  border-radius:0 14px 14px 0;padding:12px;margin-bottom:12px;font-size:16px;line-height:1.7;
+}
+.stage{display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:center;margin-bottom:14px}
+.clock-wrap{position:relative;width:220px;height:220px}
+svg.clock{width:100%;height:100%}
+.digital{
+  font-size:36px;font-weight:800;color:#0369a1;font-variant-numeric:tabular-nums;
+  min-width:120px;text-align:center;
+}
+.hint-box{font-size:14px;color:var(--muted);text-align:center;max-width:200px}
+.ctrl{display:flex;flex-direction:column;gap:12px}
+.row{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:10px}
+.row label{font-weight:700;font-size:15px}
+.step button{
+  min-width:var(--touch);min-height:var(--touch);border-radius:14px;border:2px solid var(--line);
+  background:#fff;font-size:22px;font-weight:800;cursor:pointer;font-family:inherit;
+}
+.step .v{min-width:40px;text-align:center;font-size:22px;font-weight:800;color:var(--accent)}
+input[type=range]{width:min(200px,45vw)}
+.quiz{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+.qbtn{
+  min-height:var(--touch);padding:12px 16px;border-radius:14px;border:2px solid var(--line);
+  background:#fff;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit;
+}
+.qbtn.ok{border-color:var(--ok);background:#ecfdf5}
+.qbtn.bad{border-color:#ef4444;background:#fef2f2}
+.btn-row{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+.btn{
+  min-height:var(--touch);padding:12px 18px;border-radius:14px;border:2px solid var(--line);
+  background:#fff;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit;
+}
+.btn.primary{background:linear-gradient(135deg,var(--accent),#0284c7);color:#fff;border:none}
+.fb{min-height:52px;border-radius:14px;padding:12px;background:#f8fafc;border:1px solid #e2e8f0;font-size:16px;line-height:1.55;margin:10px 0}
+.fb.ok{background:#ecfdf5;border-color:#6ee7b7}
+.fb.bad{background:#fff7ed;border-color:#fcd34d}
+.thinking{background:#fffbeb;border-radius:12px;padding:10px;font-size:15px;border:1px dashed #fcd34d}
+.thinking .tag{font-weight:800;color:#b45309}
+.say{margin-top:8px;font-size:15px;min-height:22px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main class="card">
+  <div class="top">
+    <h1>小闹钟认时间</h1>
+    <span class="badge">5–8 岁 · 整点半点</span>
+  </div>
+  <div class="story">
+    <strong>短针</strong>指小时，<strong>长针</strong>指分钟。
+    长针在 12 → 整点；长针在 6 → 半点（30 分）。拖滑块看指针一起转。
+  </div>
+  <div class="stage" role="img" aria-label="钟面图解">
+    <div class="clock-wrap">
+      <svg class="clock" viewBox="0 0 200 200" id="clockSvg">
+        <circle cx="100" cy="100" r="92" fill="#fff" stroke="#0ea5e9" stroke-width="4"/>
+        <circle cx="100" cy="100" r="4" fill="#0f172a"/>
+        <!-- ticks and numbers via JS -->
+        <g id="ticks"></g>
+        <line id="hourHand" x1="100" y1="100" x2="100" y2="55" stroke="#0f172a" stroke-width="6" stroke-linecap="round"
+          style="transform-origin:100px 100px;transition:transform .4s var(--ease)"/>
+        <line id="minHand" x1="100" y1="100" x2="100" y2="30" stroke="#f43f5e" stroke-width="4" stroke-linecap="round"
+          style="transform-origin:100px 100px;transition:transform .4s var(--ease)"/>
+      </svg>
+    </div>
+    <div>
+      <div class="digital" id="digital">3:00</div>
+      <div class="hint-box" id="spoken">三点整</div>
+    </div>
+  </div>
+  <div class="ctrl">
+    <div class="row">
+      <label>小时</label>
+      <div class="step">
+        <button type="button" id="hMinus">−</button>
+        <span class="v" id="hVal">3</span>
+        <button type="button" id="hPlus">+</button>
+      </div>
+      <input type="range" id="hour" min="1" max="12" value="3" aria-label="小时">
+    </div>
+    <div class="row">
+      <label>分钟</label>
+      <div class="step">
+        <button type="button" id="mMinus">−</button>
+        <span class="v" id="mVal">0</span>
+        <button type="button" id="mPlus">+</button>
+      </div>
+      <input type="range" id="min" min="0" max="55" value="0" step="5" aria-label="分钟">
+    </div>
+    <div class="quiz" id="quiz"></div>
+    <div class="btn-row">
+      <button type="button" class="btn primary" id="btnQuiz">🎯 考一考</button>
+      <button type="button" class="btn" id="btnReset">↻ 重新开始</button>
+      <button type="button" class="btn" id="btnSay">🗣️ 我会说</button>
+    </div>
+  </div>
+  <div class="fb" id="fb" aria-live="polite">先拨到你想要的时间，再点「考一考」认读。</div>
+  <p class="thinking"><span class="tag">我怎么想：</span><span id="think">先看长针在哪（12 整点、6 半点），再看短针靠近几。</span></p>
+  <div class="say" id="say"></div>
+</main>
+<script>
+(function(){
+  let h=3, m=0, quizMode=false, answer=null;
+  const $ = id => document.getElementById(id);
+
+  // draw ticks
+  const ticks = $('ticks');
+  for(let i=1;i<=12;i++){
+    const a = (i/12)*Math.PI*2 - Math.PI/2;
+    const x = 100 + Math.cos(a)*72;
+    const y = 100 + Math.sin(a)*72;
+    const t = document.createElementNS('http://www.w3.org/2000/svg','text');
+    t.setAttribute('x', x); t.setAttribute('y', y+5);
+    t.setAttribute('text-anchor','middle'); t.setAttribute('font-size','14');
+    t.setAttribute('font-weight','700'); t.setAttribute('fill','#334155');
+    t.textContent = i;
+    ticks.appendChild(t);
+  }
+
+  function speak(){
+    if(m===0) return h + ' 点整';
+    if(m===30) return h + ' 点半';
+    return h + ' 点 ' + m + ' 分';
+  }
+  function digital(){
+    return h + ':' + String(m).padStart(2,'0');
+  }
+
+  function draw(){
+    $('hVal').textContent=h; $('mVal').textContent=m;
+    // hour hand: 30deg per hour + 0.5deg per minute
+    const ha = 30*h + 0.5*m;
+    const ma = 6*m;
+    $('hourHand').style.transform = 'rotate('+ha+'deg)';
+    $('minHand').style.transform = 'rotate('+ma+'deg)';
+    if(!quizMode){
+      $('digital').textContent = digital();
+      $('spoken').textContent = speak();
+      $('think').textContent = m===0
+        ? '长针在 12，短针正指 '+h+' → '+h+' 点整。'
+        : m===30
+          ? '长针在 6，短针在 '+h+' 和 '+(h%12+1)+' 中间 → '+h+' 点半。'
+          : '长针走过的格 ×5 是分钟。';
+    }
+  }
+
+  function sync(){
+    h=+$('hour').value; m=+$('min').value;
+    quizMode=false; $('quiz').innerHTML='';
+    $('fb').className='fb';
+    $('fb').textContent='指针和数字一起变。点「考一考」隐藏数字来认读。';
+    draw();
+  }
+
+  function bind(mi,pl,r,step){
+    step=step||1;
+    $(mi).onclick=()=>{ r.value=Math.max(+r.min,+r.value-step); sync(); };
+    $(pl).onclick=()=>{ r.value=Math.min(+r.max,+r.value+step); sync(); };
+    r.oninput=sync;
+  }
+  bind('hMinus','hPlus',$('hour'));
+  bind('mMinus','mPlus',$('min'),5);
+
+  $('btnQuiz').onclick=()=>{
+    // 5–8 岁本课只考整点/半点（与标题一致）；滑块仍可自由拨其他分钟供探索
+    h = 1+Math.floor(Math.random()*12);
+    m = Math.random() < 0.5 ? 0 : 30;
+    $('hour').value=h; $('min').value=m;
+    answer = speak();
+    quizMode=true;
+    draw();
+    $('digital').textContent = '?:??';
+    $('spoken').textContent = '这是几点？（整点或半点）';
+    const opts = new Set([answer]);
+    // 干扰：同点另一读法 + 邻点整/半
+    opts.add(m===0 ? (h + ' 点半') : (h + ' 点整'));
+    while(opts.size<3){
+      const hh = ((h - 1 + Math.floor(Math.random()*3) + 11) % 12) + 1;
+      const mm = Math.random() < 0.5 ? 0 : 30;
+      opts.add(mm===0 ? hh+' 点整' : hh+' 点半');
+    }
+    const arr=[...opts].sort(()=>Math.random()-0.5);
+    $('quiz').innerHTML = arr.map(o=>'<button type="button" class="qbtn" data-a="'+o+'">'+o+'</button>').join('');
+    $('fb').className='fb';
+    $('fb').textContent='看长针：在 12→整点，在 6→半点；再看短针指几。';
+    $('think').textContent='先长针（12 或 6），再短针。';
+  };
+
+  $('quiz').onclick=e=>{
+    const b=e.target.closest('.qbtn'); if(!b||!quizMode) return;
+    [...$('quiz').children].forEach(x=>x.disabled=true);
+    if(b.dataset.a===answer){
+      b.classList.add('ok');
+      $('fb').className='fb ok';
+      $('fb').textContent='对！'+answer+'。';
+      $('digital').textContent=digital();
+      $('spoken').textContent=answer;
+    } else {
+      b.classList.add('bad');
+      $('fb').className='fb bad';
+      $('fb').textContent='你选了「'+b.dataset.a+'」。长针在 '+(m===0?'12（整点）':'6（半点）')+'，短针靠近 '+h+' → 正确是 '+answer+'。';
+      $('digital').textContent=digital();
+      // 允许再考，不锁死
+      setTimeout(()=>{
+        [...$('quiz').children].forEach(x=>{ x.disabled=false; x.classList.remove('bad','ok'); });
+        quizMode=true;
+      }, 900);
+      return;
+    }
+    quizMode=false;
+  };
+
+  $('btnReset').onclick=()=>{ $('hour').value=3; $('min').value=0; sync(); };
+  $('btnSay').onclick=()=>{ $('say').textContent='我会说：'+speak()+'。'; };
+  sync();
+})();
+</script>
+</body>
+</html>
