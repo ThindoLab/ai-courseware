@@ -12,7 +12,9 @@ npm start          # http://localhost:3000
 npm test
 ```
 
-主分支 `main`。推代码用 PR；CI 跑 `npm test`。密钥放本机（`~/.config/ima/`、模型环境变量），不要入库。
+主分支 `main` 已保护（禁止直推删除/强推，走 PR）。CI 跑 `npm test`。密钥放本机（`~/.config/ima/`、模型环境变量），不要入库。
+
+免费账号下分支保护需仓库为 **public**；若改回 private 需 GitHub Pro 才能继续规则集。
 
 页面上只输入一句话。排程在 `pi/教练.md`，岗位在 `pi/角色/`，宿主在 `src/`。
 
