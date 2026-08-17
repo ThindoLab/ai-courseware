@@ -36,9 +36,40 @@ interface QaIssue {
   detail: string;
 }
 
+function quotedStrings(src: string): string[] {
+  const out: string[] = [];
+  const re = /["']([^"']+)["']/g;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(src))) out.push(m[1]);
+  return out;
+}
+
+function parseAidContract(html: string): { ok: true; data: unknown } | { ok: false; reason: string } | null {
+  const m = html.match(/<!--\s*aid-contract\s*([\s\S]*?)-->/i);
+  if (!m) return null;
+  try {
+    return { ok: true, data: JSON.parse(m[1].trim()) };
+  } catch {
+    return { ok: false, reason: "aid-contract JSON 无法解析" };
+  }
+}
+
+function contractLevels(data: unknown): Array<{ answers?: unknown; tiles?: unknown; options?: unknown }> {
+  if (!data || typeof data !== "object") return [];
+  const rec = data as { levels?: unknown; answers?: unknown; tiles?: unknown; options?: unknown };
+  if (Array.isArray(rec.levels)) return rec.levels as Array<{ answers?: unknown; tiles?: unknown; options?: unknown }>;
+  return [rec];
+}
+
+function asStringList(v: unknown): string[] {
+  if (!Array.isArray(v)) return [];
+  return v.map((x) => String(x));
+}
+
 /**
  * 自动化质检：对生成的 HTML 教具做合规检查。
- * 检查项：外链 / 触控尺寸 / 结构 / 外部库 / reduced-motion / 字号 / 体积 / 一屏 / 紫粉抢戏 / 底栏压主图。
+ * 检查项：外链 / 触控尺寸 / 结构 / 外部库 / reduced-motion / 字号 / 体积 / 一屏 / 紫粉抢戏 / 底栏压主图 /
+ * 可玩契约（死题、下一关、祝贺页、学前真演示）。
  * 返回 JSON { passed, issues:[{level,rule,detail}], stats }。
  */
 export const qaCheckTool = defineTool({
@@ -46,9 +77,10 @@ export const qaCheckTool = defineTool({
   label: "自动化质检",
   description:
     "对生成的单文件 HTML 教具做自动化合规检查：外链资源、触控尺寸(≥44px)、结构完整性、外部库引用、" +
-    "reduced-motion/静态模式、字号(≥16px)、体积(≤500KB)、一屏视口、紫粉抢戏、底栏压主图。" +
-    "返回 JSON 问题清单（passed/issues/stats）。" +
-    "写完 HTML 后用本工具自查，error 级问题必须用 edit 修正。",
+    "reduced-motion/静态模式、字号(≥16px)、体积(≤500KB)、一屏视口、紫粉抢戏、底栏压主图、" +
+    "可玩契约（多关必须有下一关和祝贺页；学前必须可跳过真演示；aid-contract 中答案必须出现在候选里）。" +
+    "返回 JSON 问题清单（passed/issues/stats）。error 级不通过，必须修正后再交。" +
+    "写完 HTML 后用本工具自查。现有精品锁在 pi/memory/keep.md，不要为过检去整页重写它们。",
   parameters: Type.Object({
     html: Type.String({ description: "待检查的完整 HTML 字符串" }),
     type: Type.Optional(
@@ -141,29 +173,112 @@ export const qaCheckTool = defineTool({
       });
     }
     const youngTopic = /3-6|4-7|学前|中幼儿|分类|凑十|翻牌|配对|比长短|比一比/i.test(html);
+    const multiLevel = /第一关|LEVELS\s*=|levelIndex|curLevel|关卡/i.test(html);
     if (youngTopic && !/跳过|skip/i.test(html)) {
       issues.push({
-        level: "warn",
+        level: "error",
         rule: "ux-intro",
         detail: "低龄题未检测到可跳过开场（跳过/skip），孩子可能不知道先干什么",
       });
     }
-    if (/第一关|LEVELS\s*=|levelIndex|curLevel/i.test(html) && !/下一关|nextBtn|nextLevel|next-level/i.test(html)) {
+    if (
+      youngTopic &&
+      /看一遍|id=["']demo|class=["'][^"']*demo/i.test(html) &&
+      !/@keyframes/i.test(html) &&
+      !/animate\s*\(/i.test(html)
+    ) {
       issues.push({
-        level: "warn",
+        level: "error",
+        rule: "demo-static",
+        detail: "低龄开场有演示壳，但没有 keyframes/WAAPI，可能是静图冒充「看一遍」",
+      });
+    }
+    if (multiLevel && !/下一关|nextBtn|nextLevel|next-level/i.test(html)) {
+      issues.push({
+        level: "error",
         rule: "ux-next",
         detail: "检测到多关，但没有「下一关」入口，第一关做完可能停死",
       });
     }
     if (
-      /第一关|LEVELS\s*=|关卡/i.test(html) &&
-      !/祝贺|庆祝|完成啦|通关|well-?done|celebrate|winScreen|endScreen/i.test(html)
+      multiLevel &&
+      !/祝贺|庆祝|完成啦|通关|well-?done|celebrate|winScreen|endScreen|id=["'](done|final|win)/i.test(html)
     ) {
       issues.push({
-        level: "warn",
+        level: "error",
         rule: "ux-end",
         detail: "多关题未检测到祝贺/完成页，通关可能无声循环回第一关",
       });
+    }
+    if (
+      multiLevel &&
+      /完成/.test(html) &&
+      /(?:stage|levelIndex|curLevel|level)\s*=\s*0/.test(html) &&
+      !/id=["'](done|final|win|end)|winScreen|endScreen|screen-done/i.test(html)
+    ) {
+      issues.push({
+        level: "error",
+        rule: "ux-end-loop",
+        detail: "文案有「完成」但下一关仍把关卡清零，且没有独立结束页（对照 there-be）",
+      });
+    }
+
+    const contract = parseAidContract(html);
+    if (contract && contract.ok === false) {
+      issues.push({ level: "error", rule: "aid-contract", detail: contract.reason });
+    } else if (contract && contract.ok) {
+      const levels = contractLevels(contract.data);
+      if (!levels.length) {
+        issues.push({ level: "error", rule: "aid-contract", detail: "aid-contract 缺少 levels 或 answers" });
+      }
+      levels.forEach((lv, i) => {
+        const answers = asStringList(lv.answers);
+        const pool = [...asStringList(lv.tiles), ...asStringList(lv.options)];
+        if (!answers.length) {
+          issues.push({
+            level: "error",
+            rule: "aid-contract",
+            detail: `第 ${i + 1} 关未声明 answers`,
+          });
+          return;
+        }
+        if (!pool.length) {
+          issues.push({
+            level: "error",
+            rule: "playable-dead",
+            detail: `第 ${i + 1} 关未声明 tiles/options，无法核对答案是否在候选里`,
+          });
+          return;
+        }
+        const missing = answers.filter((a) => !pool.includes(a));
+        if (missing.length) {
+          issues.push({
+            level: "error",
+            rule: "playable-dead",
+            detail: `第 ${i + 1} 关答案不在候选里：${missing.join("、")}`,
+          });
+        }
+      });
+    } else if (multiLevel) {
+      issues.push({
+        level: "error",
+        rule: "aid-contract",
+        detail: "多关题缺少 <!-- aid-contract -->，质检无法核对每关答案是否出现在候选里",
+      });
+    } else {
+      const slotAnswers = [...html.matchAll(/\{a:\s*["']([^"']+)["']\}/g)].map((x) => x[1]);
+      const tileBlocks = [...html.matchAll(/\btiles\s*:\s*\[([^\]]+)\]/g)].map((x) => quotedStrings(x[1]));
+      if (slotAnswers.length && tileBlocks.length) {
+        const allTiles = new Set(tileBlocks.flat());
+        const missing = slotAnswers.filter((a) => !allTiles.has(a));
+        if (missing.length) {
+          issues.push({
+            level: "error",
+            rule: "playable-dead",
+            detail: `空位答案未出现在任何 tiles 里：${[...new Set(missing)].join("、")}`,
+          });
+        }
+      }
     }
 
     // 4. 外部库：<script src="非空"> 且非 http（http 已由 external-link 捕获）
