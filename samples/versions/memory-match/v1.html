@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta name="aid-version" content="v1">
+<meta name="aid-version-at" content="2026-08-14">
+<meta name="aid-version-note" content="重跑前精品">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>翻牌配对 · 动物与家</title>
+<!-- 风格：游戏化记忆 / 场景：培训巩固+家庭 / 核心：配对记忆 -->
+<style>
+:root{--accent:#a855f7;--ok:#10b981;--ink:#1f2a44;--muted:#667085;--line:#e9d5ff;--ease:cubic-bezier(0.25,1,0.5,1);--touch:64px}
+*{box-sizing:border-box}html,body{margin:0}
+body{font-family:-apple-system,"PingFang SC",system-ui,sans-serif;color:var(--ink);background:linear-gradient(160deg,#faf5ff,#fdf2f8);min-height:100vh;padding:14px 12px 28px}
+.card{max-width:720px;margin:0 auto;background:#fff;border:1px solid var(--line);border-radius:20px;box-shadow:0 12px 28px rgba(168,85,247,.12);padding:18px 16px 22px}
+.top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.top h1{margin:0;font-size:22px;font-weight:800}
+.badge{font-size:14px;font-weight:700;color:#7e22ce;background:#f3e8ff;padding:5px 12px;border-radius:999px}
+.story{background:linear-gradient(135deg,#f3e8ff,#fce7f3);border-left:5px solid var(--accent);border-radius:0 14px 14px 0;padding:12px;margin-bottom:12px;font-size:16px;line-height:1.7}
+.stats{display:flex;gap:16px;justify-content:center;font-weight:700;font-size:14px;color:var(--muted);margin-bottom:10px}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;max-width:400px;margin:0 auto 14px}
+@media(max-width:420px){.grid{grid-template-columns:repeat(3,1fr)}}
+.card-btn{
+  aspect-ratio:1;border-radius:14px;border:2px solid #e9d5ff;background:linear-gradient(145deg,#a855f7,#7c3aed);
+  color:#fff;font-size:28px;cursor:pointer;font-family:inherit;transition:transform .25s var(--ease),background .25s;
+  display:flex;align-items:center;justify-content:center;min-height:var(--touch);
+}
+.card-btn.face{background:#fff;color:var(--ink);border-color:#c4b5fd;font-size:16px;font-weight:800;padding:6px;text-align:center;line-height:1.25}
+.card-btn.matched{opacity:.45;pointer-events:none;background:#ecfdf5;border-color:var(--ok);color:#065f46}
+.card-btn:disabled{cursor:default}
+.btn-row{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+.btn{min-height:48px;padding:12px 18px;border-radius:14px;border:2px solid var(--line);background:#fff;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit}
+.btn.primary{background:linear-gradient(135deg,var(--accent),#7c3aed);color:#fff;border:none}
+.fb{min-height:52px;border-radius:14px;padding:12px;background:#f8fafc;border:1px solid #e2e8f0;font-size:16px;line-height:1.55;margin:10px 0}
+.fb.ok{background:#ecfdf5;border-color:#6ee7b7}
+.thinking{background:#fffbeb;border-radius:12px;padding:10px;font-size:15px;border:1px dashed #fcd34d}
+.thinking .tag{font-weight:800;color:#b45309}
+.say{margin-top:8px;font-size:15px;min-height:22px}
+@media (prefers-reduced-motion:reduce){.card-btn{transition:none!important}}
+</style><style id="aid-fit">/* AID_FIT_V1 */
+html,body{height:100%!important;max-height:100dvh!important;overflow:hidden!important}
+body{
+  min-height:100dvh!important;height:100dvh!important;
+  display:flex!important;flex-direction:column!important;
+  padding:clamp(6px,1.2vh,14px) clamp(8px,1.5vw,18px)!important;
+  box-sizing:border-box!important;
+}
+body>.card,main.card{
+  flex:1 1 auto!important;min-height:0!important;width:100%!important;
+  max-width:min(1240px,100%)!important;margin:0 auto!important;
+  display:flex!important;flex-direction:column!important;
+  overflow:hidden!important;
+  padding:clamp(10px,1.5vh,20px) clamp(12px,1.8vw,24px) clamp(10px,1.3vh,16px)!important;
+}
+.stage,.scene,.stage-wrap,.viz{
+  flex:1 1 42%!important;min-height:min(280px,38vh)!important;overflow:hidden!important;
+  display:flex!important;flex-direction:column!important;justify-content:center!important;
+}
+.stage svg,.scene svg,#diagram{
+  flex:1 1 auto;width:100%!important;height:100%!important;max-height:100%!important;min-height:0;
+}
+.ctrl,.choices,.btn-row,.top,.topbar,.fb,.progress{flex:none}
+.slots,.grid,.bins,.pool,.ten{flex:1 1 auto!important;min-height:0}
+html.aid-compact .story,html.aid-compact .thinking,html.aid-compact .say{display:none!important}
+html.aid-compact .fb{min-height:0!important;padding:8px 10px!important;margin:6px 0!important;font-size:14px!important}
+html.aid-compact h1{font-size:clamp(18px,2.2vw,22px)!important}
+html.aid-compact .ctrl{gap:8px}
+html.aid-compact .btn{min-height:44px;padding:8px 14px}
+html.aid-compact .controls{display:grid!important;grid-template-columns:1fr 1fr;gap:6px 12px;max-height:30vh;overflow:auto}
+html.aid-tight .legend,html.aid-tight .hints,html.aid-tight .thinking{display:none!important}
+html.aid-tight .story{display:none!important}
+html.aid-tight .stage,html.aid-tight .scene{min-height:min(200px,32vh)!important}
+@media (min-width:960px) and (min-height:780px){
+  body{font-size:17px}
+  .top h1,.topbar h1{font-size:clamp(24px,2.1vw,30px)}
+}
+</style>
+</head>
+<body>
+<main class="card">
+  <div class="top"><h1>翻牌配对</h1><span class="badge">5–9 岁 · 记忆游戏</span></div>
+  <div class="story">翻开两张牌：一张是<strong>动物</strong>，一张是它的<strong>家</strong>。配对成功会留下；不对就盖上，靠记忆找回来。先扫一眼图例再开始。</div>
+  <div id="relation" style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:10px;font-size:13px;font-weight:700"></div>
+  <div class="stats"><span>配对 <b id="pairs">0</b>/6</span><span>翻开次数 <b id="tries">0</b></span><span>星级 <b id="stars">—</b></span></div>
+  <div class="grid" id="grid" role="group" aria-label="记忆牌"></div>
+  <p style="text-align:center;font-size:13px;color:var(--muted);margin:0 0 10px">图例：🐦↔🪺 · 🐟↔🌊 · 🐝↔🌸 · 🐶↔🏠 · 🐱↔🧶 · 🦆↔💧</p>
+  <div class="btn-row">
+    <button type="button" class="btn primary" id="btnReset">↻ 重新开始</button>
+    <button type="button" class="btn" id="btnSay">🗣️ 我会说</button>
+  </div>
+  <div class="fb" id="fb" aria-live="polite">点两张牌试试。先记住位置！</div>
+  <p class="thinking"><span class="tag">我怎么想：</span><span id="think">配对不是瞎点，要记住「刚翻开过什么、在哪」。 </span></p>
+  <div class="say" id="say"></div>
+</main>
+<script>
+(function(){
+  const PAIRS = [
+    {k:'bird', a:'🐦 小鸟', b:'🪺 鸟窝'},
+    {k:'fish', a:'🐟 小鱼', b:'🌊 水里'},
+    {k:'bee', a:'🐝 蜜蜂', b:'🌸 花丛'},
+    {k:'dog', a:'🐶 小狗', b:'🏠 狗窝'},
+    {k:'cat', a:'🐱 小猫', b:'🧶 毛线球'},
+    {k:'duck', a:'🦆 小鸭', b:'💧 池塘'}
+  ];
+  let cards=[], open=[], matched=new Set(), tries=0, lock=false;
+  const $=id=>document.getElementById(id);
+
+  function shuffle(a){
+    for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
+    return a;
+  }
+  function deal(){
+    cards=[];
+    PAIRS.forEach(p=>{
+      cards.push({id:p.k+'-a', pair:p.k, label:p.a});
+      cards.push({id:p.k+'-b', pair:p.k, label:p.b});
+    });
+    shuffle(cards);
+    open=[]; matched=new Set(); tries=0; lock=false;
+    $('pairs').textContent='0'; $('tries').textContent='0';
+    if($('stars')) $('stars').textContent='—';
+    const rel=$('relation');
+    if(rel) rel.innerHTML = PAIRS.map(p=>'<span style="background:#f5f3ff;padding:4px 8px;border-radius:8px;border:1px solid #e9d5ff">'+p.a+' ↔ '+p.b+'</span>').join('');
+    $('fb').className='fb'; $('fb').textContent='点两张牌试试。先记住位置！';
+    $('say').textContent='';
+    render();
+  }
+  function render(){
+    const g=$('grid'); g.innerHTML='';
+    cards.forEach((c,i)=>{
+      const b=document.createElement('button');
+      b.type='button';
+      const isOpen = open.includes(i) || matched.has(c.pair);
+      b.className='card-btn'+(isOpen?' face':'')+(matched.has(c.pair)?' matched':'');
+      b.textContent = isOpen ? c.label : '❓';
+      b.setAttribute('aria-label', isOpen?c.label:'未翻开');
+      b.disabled = matched.has(c.pair) || lock;
+      b.onclick=()=>flip(i);
+      g.appendChild(b);
+    });
+  }
+  function flip(i){
+    if(lock || matched.has(cards[i].pair) || open.includes(i)) return;
+    if(open.length>=2) return;
+    open.push(i);
+    render();
+    if(open.length===2){
+      tries++; $('tries').textContent=tries;
+      lock=true;
+      const [i1,i2]=open;
+      const c1=cards[i1], c2=cards[i2];
+      if(c1.pair===c2.pair){
+        matched.add(c1.pair);
+        $('pairs').textContent=matched.size;
+        $('fb').className='fb ok';
+        $('fb').textContent='配对成功：'+c1.label+' ↔ '+c2.label;
+        $('think').textContent='记住成功的位置，剩下更好找。';
+        open=[];
+        lock=false;
+        render();
+        if(matched.size===PAIRS.length){
+          // 理论最少 8 次翻开（4 对×2）；越少星越高
+          // 6 对理论最少 12 次
+          const star = tries<=16 ? '⭐⭐⭐' : tries<=22 ? '⭐⭐' : '⭐';
+          $('stars').textContent=star;
+          $('fb').textContent='全部配对！翻开 '+tries+' 次 → '+star+'。少翻几次说明记得更牢。';
+          $('think').textContent='记忆游戏：先观察，再行动，比瞎点更快。';
+        }
+      } else {
+        $('fb').className='fb';
+        $('fb').textContent='不是一对（'+c1.label+' / '+c2.label+'）。默默记住位置再盖上。';
+        setTimeout(()=>{ open=[]; lock=false; render(); }, 900);
+      }
+    }
+  }
+  $('btnReset').onclick=deal;
+  $('btnSay').onclick=()=>{
+    $('say').textContent='我会说：小鸟对鸟窝，小鱼对水里，蜜蜂对花，小狗对狗窝。';
+  };
+  deal();
+})();
+</script><script id="aid-fit-js">/* AID_FIT_V1 */
+(function(){
+  var html=document.documentElement;
+  function measure(){
+    var card=document.querySelector("main.card, body>.card");
+    if(!card) return;
+    html.classList.remove("aid-compact","aid-tight");
+    card.style.overflowY="hidden";
+    void card.offsetHeight;
+    var stage=card.querySelector(".stage,.scene,.stage-wrap,.viz");
+    var stageH=stage?stage.clientHeight:999;
+    if(card.scrollHeight>card.clientHeight+8 || stageH<240 || innerHeight<820) html.classList.add("aid-compact");
+    void card.offsetHeight;
+    stageH=stage?stage.clientHeight:999;
+    if(card.scrollHeight>card.clientHeight+8 || stageH<200) html.classList.add("aid-tight");
+    void card.offsetHeight;
+    if(card.scrollHeight>card.clientHeight+8) card.style.overflowY="auto";
+  }
+  addEventListener("resize",measure);
+  addEventListener("load",measure);
+  if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",measure);
+  else requestAnimationFrame(measure);
+  setTimeout(measure,80);
+  setTimeout(measure,400);
+  var card=document.querySelector("main.card, body>.card");
+  if(card && typeof MutationObserver==="function"){
+    var t;
+    new MutationObserver(function(){
+      clearTimeout(t); t=setTimeout(measure,40);
+    }).observe(card,{childList:true,subtree:true,characterData:true});
+  }
+})();
+</script>
+</body>
+</html>

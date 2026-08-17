@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta name="aid-version" content="v1">
+<meta name="aid-version-at" content="2026-08-14T08:25:39">
+<meta name="aid-version-note" content="当前稿">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>古诗填空 · 静夜思</title>
+<!-- 风格：中文文化·填空 / 场景：教室+家庭 / 核心：名句完形 -->
+<style>
+:root{--accent:#b45309;--ok:#10b981;--ink:#1f2a44;--muted:#667085;--line:#fde68a;--ease:cubic-bezier(0.25,1,0.5,1);--touch:48px}
+*{box-sizing:border-box}html,body{margin:0}
+body{font-family:-apple-system,"PingFang SC","Songti SC",serif;color:var(--ink);background:linear-gradient(160deg,#fffbeb,#fef3c7);min-height:100vh;padding:14px 12px 28px}
+.card{max-width:680px;margin:0 auto;background:#fffef8;border:1px solid var(--line);border-radius:20px;box-shadow:0 12px 28px rgba(180,83,9,.1);padding:18px 16px 22px}
+.top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.top h1{margin:0;font-size:22px;font-weight:800;font-family:"Songti SC",serif}
+.badge{font-size:14px;font-weight:700;color:#92400e;background:#fef3c7;padding:5px 12px;border-radius:999px;font-family:system-ui,sans-serif}
+.story{background:linear-gradient(135deg,#fef3c7,#ffedd5);border-left:5px solid var(--accent);border-radius:0 14px 14px 0;padding:12px;margin-bottom:12px;font-size:16px;line-height:1.7;font-family:system-ui,sans-serif}
+.poem{text-align:center;padding:18px 12px;background:#fff;border:1px dashed #fbbf24;border-radius:16px;margin-bottom:14px;font-size:22px;line-height:2.1;letter-spacing:.08em}
+.poem .title{font-size:18px;font-weight:800;margin-bottom:8px;letter-spacing:.2em}
+.poem .slot{
+  display:inline-flex;min-width:2.2em;min-height:1.6em;margin:0 2px;padding:0 6px;
+  border-bottom:2px solid var(--accent);justify-content:center;align-items:center;
+  cursor:pointer;font-weight:800;color:var(--accent);vertical-align:baseline;
+}
+.poem .slot.filled{color:#1f2a44;border-color:#d97706}
+.poem .slot.ok{color:#065f46;border-color:var(--ok)}
+.poem .slot.bad{color:#991b1b;border-color:#ef4444}
+.tokens{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:12px;font-family:system-ui,sans-serif}
+.tok{min-width:var(--touch);min-height:var(--touch);padding:10px 14px;border-radius:12px;border:2px solid #e7e5e4;background:#fff;font-size:18px;font-weight:700;cursor:pointer;font-family:"Songti SC",serif}
+.tok.picked{border-color:var(--accent);background:#fef3c7}
+.tok.used{opacity:.35;pointer-events:none}
+.btn-row{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;font-family:system-ui,sans-serif}
+.btn{min-height:var(--touch);padding:12px 18px;border-radius:14px;border:2px solid var(--line);background:#fff;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit}
+.btn.primary{background:linear-gradient(135deg,#d97706,#b45309);color:#fff;border:none}
+.fb{min-height:52px;border-radius:14px;padding:12px;background:#f8fafc;border:1px solid #e2e8f0;font-size:16px;line-height:1.55;margin:10px 0;font-family:system-ui,sans-serif}
+.fb.ok{background:#ecfdf5;border-color:#6ee7b7}
+.fb.bad{background:#fff7ed;border-color:#fcd34d}
+.thinking{background:#fffbeb;border-radius:12px;padding:10px;font-size:15px;border:1px dashed #fcd34d;font-family:system-ui,sans-serif}
+.thinking .tag{font-weight:800;color:#b45309}
+.say{margin-top:8px;font-size:15px;min-height:22px;font-family:system-ui,sans-serif}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style><style id="aid-fit">/* AID_FIT_V1 */
+html,body{height:100%!important;max-height:100dvh!important;overflow:hidden!important}
+body{
+  min-height:100dvh!important;height:100dvh!important;
+  display:flex!important;flex-direction:column!important;
+  padding:clamp(6px,1.2vh,14px) clamp(8px,1.5vw,18px)!important;
+  box-sizing:border-box!important;
+}
+body>.card,main.card{
+  flex:1 1 auto!important;min-height:0!important;width:100%!important;
+  max-width:min(1240px,100%)!important;margin:0 auto!important;
+  display:flex!important;flex-direction:column!important;
+  overflow:hidden!important;
+  padding:clamp(10px,1.5vh,20px) clamp(12px,1.8vw,24px) clamp(10px,1.3vh,16px)!important;
+}
+.stage,.scene,.stage-wrap,.viz{
+  flex:1 1 42%!important;min-height:min(280px,38vh)!important;overflow:hidden!important;
+  display:flex!important;flex-direction:column!important;justify-content:center!important;
+}
+.stage svg,.scene svg,#diagram{
+  flex:1 1 auto;width:100%!important;height:100%!important;max-height:100%!important;min-height:0;
+}
+.ctrl,.choices,.btn-row,.top,.topbar,.fb,.progress{flex:none}
+.slots,.grid,.bins,.pool,.ten{flex:1 1 auto!important;min-height:0}
+html.aid-compact .story,html.aid-compact .thinking,html.aid-compact .say{display:none!important}
+html.aid-compact .fb{min-height:0!important;padding:8px 10px!important;margin:6px 0!important;font-size:14px!important}
+html.aid-compact h1{font-size:clamp(18px,2.2vw,22px)!important}
+html.aid-compact .ctrl{gap:8px}
+html.aid-compact .btn{min-height:44px;padding:8px 14px}
+html.aid-compact .controls{display:grid!important;grid-template-columns:1fr 1fr;gap:6px 12px;max-height:30vh;overflow:auto}
+html.aid-tight .legend,html.aid-tight .hints,html.aid-tight .thinking{display:none!important}
+html.aid-tight .story{display:none!important}
+html.aid-tight .stage,html.aid-tight .scene{min-height:min(200px,32vh)!important}
+@media (min-width:960px) and (min-height:780px){
+  body{font-size:17px}
+  .top h1,.topbar h1{font-size:clamp(24px,2.1vw,30px)}
+}
+</style>
+</head>
+<body>
+<main class="card">
+  <div class="top"><h1>古诗填空</h1><span class="badge">7–10 岁 · 语文</span></div>
+  <div class="story">李白《静夜思》。把正确的字放进空缺处。先读整句的意思，再选字。<strong id="fillProg" style="color:#b45309">（0/4）</strong></div>
+  <div class="poem" id="poem">
+    <div class="title">静夜思 · 李白</div>
+    <div>床前明<span class="slot" data-k="1"></span>光，</div>
+    <div>疑是地<span class="slot" data-k="2"></span>霜。</div>
+    <div>举头望<span class="slot" data-k="3"></span>月，</div>
+    <div>低头思<span class="slot" data-k="4"></span>乡。</div>
+  </div>
+  <div class="tokens" id="tokens"></div>
+  <div class="btn-row">
+    <button type="button" class="btn primary" id="btnCheck">✓ 检查</button>
+    <button type="button" class="btn" id="btnReset">↻ 重新开始</button>
+    <button type="button" class="btn" id="btnSay">🗣️ 我会说</button>
+  </div>
+  <div class="fb" id="fb" aria-live="polite">点字再点空缺。想：地上的霜、明月、故乡……</div>
+  <p class="thinking"><span class="tag">我怎么想：</span><span id="think">先理解诗意：月光像霜，抬头看月，低头想家。</span></p>
+  <div class="say" id="say"></div>
+</main>
+<script>
+(function(){
+  const SOL = {1:'月',2:'上',3:'明',4:'故'};
+  const POOL = ['月','上','明','故','白','夜','家','霜'];
+  let filled={}, picked=null, locked=false;
+  const $=id=>document.getElementById(id);
+
+  function renderSlots(){
+    document.querySelectorAll('.slot').forEach(s=>{
+      const k=s.dataset.k;
+      s.textContent = filled[k] || '　';
+      s.classList.toggle('filled', !!filled[k]);
+      s.classList.remove('ok','bad');
+    });
+    const n=Object.keys(filled).length;
+    const fp=document.getElementById('fillProg');
+    if(fp) fp.textContent='（已填 '+n+'/4）';
+  }
+  function renderTokens(){
+    const el=$('tokens'); el.innerHTML='';
+    const used=Object.values(filled);
+    POOL.forEach(w=>{
+      const b=document.createElement('button');
+      b.type='button';
+      b.className='tok'+(picked===w?' picked':'')+(used.includes(w)?' used':'');
+      b.textContent=w;
+      b.disabled=used.includes(w)||locked;
+      b.onclick=()=>{ if(locked||used.includes(w))return; picked=w; renderTokens(); };
+      el.appendChild(b);
+    });
+  }
+  document.querySelectorAll('.slot').forEach(s=>{
+    s.onclick=()=>{
+      if(locked) return;
+      const k=s.dataset.k;
+      if(!picked){
+        if(filled[k]){ delete filled[k]; renderSlots(); renderTokens(); }
+        return;
+      }
+      filled[k]=picked; picked=null;
+      renderSlots(); renderTokens();
+    };
+  });
+  $('btnCheck').onclick=()=>{
+    if(Object.keys(filled).length<4){ $('fb').className='fb bad'; $('fb').textContent='还有空没填。'; return; }
+    let all=true;
+    document.querySelectorAll('.slot').forEach(s=>{
+      const k=s.dataset.k;
+      s.classList.remove('ok','bad');
+      if(filled[k]===SOL[k]) s.classList.add('ok');
+      else { s.classList.add('bad'); all=false; }
+    });
+    if(all){
+      locked=true;
+      $('fb').className='fb ok';
+      $('fb').textContent='全对！床前明月光，疑是地上霜。举头望明月，低头思故乡。';
+      $('think').textContent='名句记熟后，填空会越来越顺。';
+    } else {
+      $('fb').className='fb bad';
+      const hints={1:'第1空：床前明□光 → 月亮的「月」',2:'第2空：疑是地□霜 → 「上」',3:'第3空：举头望□月 → 「明」',4:'第4空：低头思□乡 → 「故」'};
+      const first=Object.keys(SOL).find(k=>filled[k]!==SOL[k]);
+      $('fb').textContent=(hints[first]||'有空不对')+'。点错的空可取出重放。';
+      $('think').textContent='一句一句对：光、霜、月、乡前面是哪一个字？';
+    }
+  };
+  $('btnReset').onclick=()=>{
+    filled={}; picked=null; locked=false;
+    renderSlots(); renderTokens();
+    $('fb').className='fb'; $('fb').textContent='点字再点空缺。想：地上的霜、明月、故乡……';
+    $('say').textContent='';
+  };
+  $('btnSay').onclick=()=>{
+    $('say').textContent='我会说：床前明月光，疑是地上霜。举头望明月，低头思故乡。';
+  };
+  renderSlots(); renderTokens();
+})();
+</script><script id="aid-fit-js">/* AID_FIT_V1 */
+(function(){
+  var html=document.documentElement;
+  function measure(){
+    var card=document.querySelector("main.card, body>.card");
+    if(!card) return;
+    html.classList.remove("aid-compact","aid-tight");
+    card.style.overflowY="hidden";
+    void card.offsetHeight;
+    var stage=card.querySelector(".stage,.scene,.stage-wrap,.viz");
+    var stageH=stage?stage.clientHeight:999;
+    if(card.scrollHeight>card.clientHeight+8 || stageH<240 || innerHeight<820) html.classList.add("aid-compact");
+    void card.offsetHeight;
+    stageH=stage?stage.clientHeight:999;
+    if(card.scrollHeight>card.clientHeight+8 || stageH<200) html.classList.add("aid-tight");
+    void card.offsetHeight;
+    if(card.scrollHeight>card.clientHeight+8) card.style.overflowY="auto";
+  }
+  addEventListener("resize",measure);
+  addEventListener("load",measure);
+  if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",measure);
+  else requestAnimationFrame(measure);
+  setTimeout(measure,80);
+  setTimeout(measure,400);
+  var card=document.querySelector("main.card, body>.card");
+  if(card && typeof MutationObserver==="function"){
+    var t;
+    new MutationObserver(function(){
+      clearTimeout(t); t=setTimeout(measure,40);
+    }).observe(card,{childList:true,subtree:true,characterData:true});
+  }
+})();
+</script>
+</body>
+</html>

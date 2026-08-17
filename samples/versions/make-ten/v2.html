@@ -1,0 +1,397 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta name="aid-version" content="v2">
+<meta name="aid-version-at" content="2026-08-14T07-37-00">
+<meta name="aid-version-note" content="整库重跑前的当时当前稿">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>小熊凑十 · 凑满十格</title>
+<style>
+:root{
+  --ink:#1e3a5f; --accent:#2f6fbf; --ok:#2fbf71; --bad:#e85d5d;
+  --card:#fff; --gold:#f59e0b; --goldline:#fde68a; --bgsoft:#f0f6ff;
+  --ease:cubic-bezier(0.25,1,0.5,1); --r:16px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;margin:0}
+body{
+  font-family:-apple-system,"PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+  color:var(--ink); background:linear-gradient(165deg,#fff8e7 0%,#eaf4ff 60%,#e9f9f0 100%);
+  height:100dvh; overflow:hidden;
+  display:flex; flex-direction:column;
+  padding:clamp(6px,1.2vh,14px) clamp(8px,1.5vw,18px);
+}
+.card{
+  flex:1 1 auto; min-height:0; width:100%; max-width:min(1240px,100%); margin:0 auto;
+  background:var(--card); border:1px solid var(--goldline); border-radius:20px;
+  box-shadow:0 14px 32px rgba(245,158,11,.14);
+  display:flex; flex-direction:column; overflow:hidden;
+  padding:clamp(10px,1.6vh,20px) clamp(12px,2vw,26px);
+}
+.top{flex:none; display:flex; align-items:center; gap:12px; flex-wrap:wrap}
+.top h1{margin:0; font-size:clamp(26px,3.2vw,34px); font-weight:900; letter-spacing:.5px}
+.badge{font-size:20px; font-weight:800; color:#b45309; background:#fef3c7; padding:6px 16px; border-radius:999px; white-space:nowrap}
+.story{flex:none; display:flex; gap:12px; align-items:flex-start; background:linear-gradient(135deg,#fef3c3,#d9eefc); border-left:6px solid var(--gold); border-radius:0 16px 16px 0; padding:12px 14px; margin:12px 0 6px; font-size:24px; line-height:1.5}
+.story .hero{font-size:44px; line-height:1}
+.stage{flex:1 1 auto; min-height:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:clamp(6px,1.2vh,14px)}
+/* 十框 */
+.ten{flex:none; display:grid; grid-template-columns:repeat(5,1fr); gap:8px; width:min(400px,88vw); padding:12px; background:#fffbeb; border:3px solid #fcd34d; border-radius:18px; box-shadow:inset 0 2px 10px rgba(245,158,11,.12)}
+.cell{aspect-ratio:1; min-width:56px; border-radius:14px; border:3px dashed #fbbf24; background:#fff; display:flex; align-items:center; justify-content:center; font-size:clamp(30px,4.6vw,44px); transition:background .3s var(--ease),transform .3s var(--ease),border-color .3s var(--ease)}
+.cell.init{background:#fdf3d8; border-style:solid; border-color:#f0c24b}
+.cell.filled{background:#eafaf0; border-style:solid; border-color:var(--ok)}
+.cell.pop{animation:pop .4s var(--ease)}
+@keyframes pop{0%{transform:scale(.4)}70%{transform:scale(1.12)}100%{transform:scale(1)}}
+@keyframes glow{0%,100%{box-shadow:0 0 0 0 rgba(47,191,113,.5)}50%{box-shadow:0 0 0 10px rgba(47,191,113,.25)}}
+.cell.win{animation:glow .8s ease 2}
+/* 等式 */
+.eq{flex:none; font-size:clamp(30px,4.6vw,42px); font-weight:900; color:var(--ink); text-align:center}
+.eq .q{color:var(--accent)}
+.eq .ok{color:var(--ok)}
+.eq .pop2{display:inline-block; animation:pop .45s var(--ease)}
+/* 罐子池 */
+.pool{flex:none; display:flex; flex-wrap:wrap; gap:10px; justify-content:center; max-width:min(520px,94vw); background:var(--bgsoft); border:2px solid #d3e4f7; border-radius:18px; padding:10px 12px}
+.item{width:clamp(60px,8vw,76px); height:clamp(60px,8vw,76px); min-width:60px; min-height:60px; border-radius:18px; border:3px solid #c9dcf3; background:#fff; font-size:clamp(32px,4.8vw,44px); display:flex; align-items:center; justify-content:center; cursor:pointer; touch-action:none; user-select:none; transition:transform .15s var(--ease),opacity .25s var(--ease),border-color .25s var(--ease); box-shadow:0 4px 10px rgba(31,42,68,.10)}
+.item:active{transform:scale(.92)}
+.item.used{opacity:.22; pointer-events:none; border-style:dashed}
+.item.drag{opacity:.3}
+.drag-clone{position:fixed; z-index:50; width:clamp(60px,8vw,76px); height:clamp(60px,8vw,76px); border-radius:18px; border:3px solid var(--ok); background:#fff; font-size:clamp(32px,4.8vw,44px); display:flex; align-items:center; justify-content:center; pointer-events:none; box-shadow:0 10px 22px rgba(31,42,68,.25); transform:translate(-50%,-50%)}
+/* 按钮 */
+.btns{flex:none; display:flex; flex-wrap:wrap; gap:12px; justify-content:center; align-items:center; padding-top:4px}
+.btn{min-height:64px; min-width:64px; padding:12px 26px; border-radius:16px; border:3px solid var(--goldline); background:#fff; font-size:24px; font-weight:800; color:var(--ink); cursor:pointer; font-family:inherit; transition:transform .15s var(--ease),box-shadow .2s var(--ease)}
+.btn:active{transform:scale(.95)}
+.btn.primary{background:linear-gradient(135deg,#fbbf24,#f59e0b); color:#fff; border:none; box-shadow:0 8px 18px rgba(245,158,11,.35)}
+.btn.go{background:linear-gradient(135deg,#34d399,#059669); color:#fff; border:none; box-shadow:0 8px 18px rgba(16,185,129,.35)}
+/* 反馈 */
+.fb{flex:none; min-height:60px; border-radius:16px; padding:12px 16px; background:#f4f8ff; border:2px solid #d3e4f7; font-size:24px; line-height:1.5; margin-top:8px; font-weight:600}
+.fb.ok{background:#eafaf0; border-color:#6ee7b7; color:#065f46}
+.fb.bad{background:#fff1f0; border-color:#f8b4a8; color:#9f2b23}
+.fb.warn{background:#fff7ed; border-color:#fcd34d; color:#92400e}
+.shake{animation:shake .4s var(--ease)}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+/* 开场演示 */
+.intro{position:fixed; inset:0; z-index:60; background:linear-gradient(165deg,#fff8e7,#eaf4ff); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px; padding:20px; transition:opacity .5s var(--ease)}
+.intro.hide{opacity:0; pointer-events:none}
+.intro .ititle{font-size:clamp(28px,4vw,40px); font-weight:900; text-align:center}
+.intro .isub{font-size:clamp(24px,3.2vw,32px); font-weight:700; color:#b45309; text-align:center; min-height:1.5em}
+.iten{display:grid; grid-template-columns:repeat(5,1fr); gap:6px; width:min(330px,80vw); padding:10px; background:#fffbeb; border:3px solid #fcd34d; border-radius:16px}
+.icell{aspect-ratio:1; border-radius:10px; border:2px dashed #fbbf24; background:#fff; display:flex; align-items:center; justify-content:center; font-size:30px}
+.icell.init{background:#fdf3d8; border-style:solid; border-color:#f0c24b}
+.icell.filled{background:#eafaf0; border-style:solid; border-color:var(--ok); animation:pop .4s var(--ease)}
+.ifly{position:absolute; font-size:40px; opacity:0; transition:transform .55s var(--ease),opacity .3s var(--ease)}
+.iskip{position:fixed; top:18px; right:18px; min-height:64px; padding:10px 22px; border-radius:16px; border:3px solid var(--goldline); background:#fff; font-size:24px; font-weight:800; color:var(--ink); cursor:pointer; font-family:inherit; z-index:61}
+.iskip:active{transform:scale(.94)}
+.ifinal{font-size:clamp(26px,3.6vw,36px); font-weight:900; color:#059669; text-align:center}
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important; transition:none!important}
+  .cell.win{animation:none!important; background:#eafaf0}
+}
+@media (max-height:680px){
+  .story{display:none}
+  .fb{font-size:20px; min-height:48px; padding:8px 12px; margin-top:4px}
+  .item,.drag-clone{width:56px;height:56px;min-width:56px;min-height:56px;font-size:30px}
+  .ten{gap:6px;padding:8px}
+}
+</style>
+</head>
+<body>
+
+<!-- 开场演示（可跳过，只播一次） -->
+<div class="intro" id="intro" role="dialog" aria-label="开场演示">
+  <button type="button" class="iskip" id="btnSkip">跳过 ›</button>
+  <div class="ititle">🐻 小熊数蜂蜜</div>
+  <div class="isub" id="iSub">小熊有 6 罐蜂蜜，空 4 格，再放几罐凑满 10？</div>
+  <div class="iten" id="iTen" aria-hidden="true"></div>
+  <div class="ifinal" id="iFinal" style="display:none">6 和 4 是好朋友！6+4=10</div>
+</div>
+
+<main class="card" id="card">
+  <header class="top">
+    <h1>🐻 小熊凑十</h1>
+    <span class="badge" id="badge">第 1 关</span>
+  </header>
+
+  <p class="story" id="story">
+    <span class="hero" id="hero">🐻</span>
+    <span id="storyTxt">把蜂蜜罐放进空格里，凑满 10 格就赢啦！</span>
+  </p>
+
+  <section class="stage" aria-label="游戏区">
+    <div class="ten" id="ten" role="img" aria-label="十框图"></div>
+    <div class="eq" id="eq">8 + <span class="q">?</span> = 10</div>
+    <div class="pool" id="pool" role="group" aria-label="蜂蜜罐材料池"></div>
+  </section>
+
+  <div class="btns">
+    <button type="button" class="btn primary" id="btnCheck">✓ 检查</button>
+    <button type="button" class="btn" id="btnReset">↻ 重来</button>
+    <button type="button" class="btn go" id="btnNext" style="display:none">下一关 ›</button>
+  </div>
+
+  <div class="fb" id="fb" aria-live="polite">把蜂蜜罐拖进空格，或点一下罐子。凑满 10 格再检查。</div>
+</main>
+
+<script>
+(function(){
+  'use strict';
+  var $=function(id){return document.getElementById(id);};
+  var LEVELS=[
+    {n:8, hero:'🐻', item:'🍯', name:'蜂蜜', who:'小熊', story:'小熊有 8 罐蜂蜜，再放几罐凑满 10 格？'},
+    {n:6, hero:'🐻', item:'🍯', name:'蜂蜜', who:'小熊', story:'小熊又拿来 6 罐，空几格？补满它！'},
+    {n:3, hero:'🐻', item:'🍯', name:'蜂蜜', who:'小熊', story:'这次只有 3 罐，数数空几格，全放满！'},
+    {n:4, hero:'🐰', item:'🥕', name:'胡萝卜', who:'小兔', story:'小兔有 4 根胡萝卜，再放几根凑满 10？'}
+  ];
+  var level=0, placed=[], itemState=[], flying=false;
+  var tenEl=$('ten'), poolEl=$('pool'), eqEl=$('eq'), fbEl=$('fb');
+  var cellEls=[], poolItems=[];
+
+  function L(){return LEVELS[level];}
+  function need(){return 10-L().n;}
+  function placedCount(){return placed.length;}
+
+  /* ---------- 开场演示 ---------- */
+  function buildIntro(){
+    var ten=$('iTen'); ten.innerHTML='';
+    for(var i=0;i<10;i++){
+      var c=document.createElement('div');
+      c.className='icell'+(i<6?' init':'');
+      if(i<6)c.textContent='🍯';
+      c.dataset.i=i;
+      ten.appendChild(c);
+    }
+  }
+  function playIntro(){
+    var reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if(reduce){
+      fillIntro(4);
+      $('iSub').textContent='小熊有 6 罐，空 4 格，补 4 罐就满。';
+      $('iFinal').style.display='block';
+      setTimeout(function(){endIntro();},2600);
+      return;
+    }
+    var step=0;
+    var t1=setTimeout(function(){$('iSub').textContent='数一数：空 4 格 → 补 4 罐';},700);
+    var iv=setInterval(function(){
+      step++;
+      if(step>4){clearInterval(iv); 
+        $('iSub').textContent='6 和 4 是好朋友！';
+        $('iFinal').style.display='block';
+        setTimeout(endIntro,1800);
+        return;
+      }
+      fillIntro(step);
+    },950);
+  }
+  function fillIntro(k){
+    var cells=$('iTen').children;
+    for(var j=0;j<k;j++){
+      var idx=6+j;
+      cells[idx].textContent='🍯';
+      cells[idx].className='icell filled';
+    }
+  }
+  function endIntro(){
+    var el=$('intro');
+    el.classList.add('hide');
+    setTimeout(function(){el.style.display='none';},600);
+  }
+  $('btnSkip').onclick=endIntro;
+
+  /* ---------- 关卡构建 ---------- */
+  function buildTen(){
+    tenEl.innerHTML=''; cellEls=[];
+    var lv=L();
+    for(var i=0;i<10;i++){
+      var c=document.createElement('div');
+      c.className='cell';
+      if(i<lv.n){c.classList.add('init'); c.textContent=lv.item;}
+      c.dataset.i=i;
+      c.setAttribute('aria-label','第'+(i+1)+'格');
+      tenEl.appendChild(c); cellEls.push(c);
+    }
+  }
+  function buildPool(){
+    poolEl.innerHTML=''; poolItems=[];
+    var lv=L();
+    for(var i=0;i<10;i++){
+      var b=document.createElement('div');
+      b.className='item';
+      b.textContent=lv.item;
+      b.dataset.idx=i;
+      b.setAttribute('role','button');
+      b.setAttribute('aria-label','一个'+lv.name);
+      b.setAttribute('tabindex','0');
+      poolEl.appendChild(b); poolItems.push(b);
+      b.addEventListener('pointerdown',onPointerDown);
+      b.addEventListener('keydown',function(e){
+        if(e.key==='Enter'||e.key===' '){e.preventDefault(); putOne();}
+      });
+    }
+    /* 乱着开始：视觉位置打乱 */
+    var arr=Array.from(poolEl.children);
+    for(var k=arr.length-1;k>0;k--){var j=Math.floor(Math.random()*(k+1));poolEl.appendChild(arr[j]);}
+  }
+
+  /* ---------- 放入 / 收回 ---------- */
+  function putOne(){
+    if(flying)return;
+    var lv=L();
+    if(placedCount()>=need()){
+      fbWarn('格子全满啦，不能再放啦！');
+      shakeTen();
+      return;
+    }
+    var first=poolItems.find(function(it){return !it.classList.contains('used');});
+    if(!first)return;
+    first.classList.add('used');
+    placed.push(first.dataset.idx);
+    var idx=lv.n+placedCount()-1;
+    var cell=cellEls[idx];
+    cell.textContent=lv.item;
+    cell.classList.add('filled','pop');
+    setTimeout(function(){cell.classList.remove('pop');},450);
+    fbMsg('放了 '+placedCount()+' 个，还差 '+(need()-placedCount())+' 个。',false,'');
+    updateEq(false);
+  }
+  function takeBack(){
+    var lv=L();
+    var idx=lv.n+placedCount()-1;
+    var cell=cellEls[idx];
+    cell.textContent=''; cell.classList.remove('filled','win');
+    var id=placed.pop();
+    var item=poolItems[+id];
+    if(item)item.classList.remove('used');
+    updateEq(false);
+    fbMsg('收回 1 个。空着 '+(need()-placedCount())+' 格。',false,'');
+  }
+  function onCellClick(e){
+    var cell=e.currentTarget;
+    if(cell.classList.contains('filled')){
+      takeBack();
+    }
+  }
+
+  /* ---------- 拖拽跟手 ---------- */
+  function onPointerDown(e){
+    e.preventDefault();
+    var item=e.currentTarget;
+    if(item.classList.contains('used'))return;
+    var startX=e.clientX, startY=e.clientY, moved=false;
+    var clone=document.createElement('div');
+    clone.className='drag-clone';
+    clone.textContent=L().item;
+    document.body.appendChild(clone);
+    positionClone(e.clientX,e.clientY);
+    item.classList.add('drag');
+
+    function positionClone(x,y){
+      clone.style.left=x+'px'; clone.style.top=y+'px';
+    }
+    function onMove(ev){
+      moved=true;
+      positionClone(ev.clientX,ev.clientY);
+    }
+    function onUp(ev){
+      document.removeEventListener('pointermove',onMove);
+      document.removeEventListener('pointerup',onUp);
+      item.classList.remove('drag');
+      if(!moved){
+        clone.remove();
+        putOne();
+        return;
+      }
+      var r=tenEl.getBoundingClientRect();
+      var inside=ev.clientX>=r.left&&ev.clientX<=r.right&&ev.clientY>=r.top&&ev.clientY<=r.bottom;
+      clone.remove();
+      if(inside){
+        putOne();
+      }else{
+        fbMsg('罐子要放进十框里哦。',false,'warn');
+      }
+    }
+    document.addEventListener('pointermove',onMove);
+    document.addEventListener('pointerup',onUp);
+  }
+
+  /* ---------- 更新等式 ---------- */
+  function updateEq(done){
+    var lv=L();
+    var p=placedCount();
+    var right=(done)?p:L().n;
+    var q=(done)?(p===0?'?':p):(p>0?p+'':'?');
+    var colorClass=(done)?'ok':'q';
+    eqEl.innerHTML=right+' + <span class="'+colorClass+' pop2">'+q+'</span> = 10';
+  }
+
+  /* ---------- 反馈 ---------- */
+  function fbMsg(t,ok,warn){
+    fbEl.className='fb'+(ok?' ok':(warn?' warn':''));
+    fbEl.textContent=t;
+  }
+  function fbWarn(t){fbMsg(t,false,'warn');}
+  function shakeTen(){
+    tenEl.classList.remove('shake'); void tenEl.offsetWidth; tenEl.classList.add('shake');
+  }
+
+  /* ---------- 检查 ---------- */
+  function check(){
+    var lv=L(); var nd=need(); var pc=placedCount();
+    if(pc===nd){
+      flying=true;
+      fbMsg('对！'+lv.n+' 和 '+nd+' 是凑十好朋友：'+lv.n+'+'+nd+'=10 🎉',true,'');
+      cellEls.forEach(function(c,i){setTimeout(function(){c.classList.add('win');},i*90);});
+      updateEq(true);
+      setTimeout(function(){
+        if(level<LEVELS.length-1){
+          $('btnNext').style.display='inline-block';
+          fbMsg('太棒啦！'+lv.n+' 的好朋友是 '+nd+'。点「下一关」继续！',true,'');
+        }else{
+          finishAll();
+        }
+        flying=false;
+      },1000);
+    }else if(pc<nd){
+      fbMsg('还差 '+(nd-pc)+' 个：空格有 '+nd+' 格，你放了 '+pc+' 个。数一数空格！',false,'');
+      shakeTen();
+    }else{
+      fbMsg('放不下啦，收回几个再检查。',false,'warn');
+      shakeTen();
+    }
+  }
+  function finishAll(){
+    $('btnNext').style.display='none';
+    $('btnCheck').style.display='none';
+    $('btnReset').style.display='none';
+    fbMsg('你真棒！凑十好朋友：1和9、2和8、3和7、4和6、5和5！🐻 想一想：如果小熊有 5 罐蜂蜜，好朋友是几？',true,'');
+    $('badge').textContent='全通关';
+    $('storyTxt').textContent='凑十好朋友你都认识啦！';
+    $('hero').textContent='🏆';
+  }
+
+  /* ---------- 关卡切换 ---------- */
+  function loadLevel(){
+    var lv=L();
+    placed=[]; flying=false;
+    $('badge').textContent=(level<LEVELS.length-1)?'第 '+(level+1)+' 关':'换一换';
+    $('hero').textContent=lv.hero;
+    $('storyTxt').textContent=lv.story;
+    buildTen(); buildPool();
+    for(var i=0;i<10;i++){cellEls[i].onclick=onCellClick;}
+    updateEq(false);
+    $('btnNext').style.display='none';
+    $('btnCheck').style.display='';
+    $('btnReset').style.display='';
+    fbMsg('把'+lv.name+'放进空格，凑满 10 格再检查。',false,'');
+  }
+  $('btnCheck').onclick=check;
+  $('btnReset').onclick=loadLevel;
+  $('btnNext').onclick=function(){level++; loadLevel();};
+
+  /* ---------- 启动 ---------- */
+  buildIntro();
+  loadLevel();
+  playIntro();
+})();
+</script>
+</body>
+</html>

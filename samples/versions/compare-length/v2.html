@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta name="aid-version" content="v2">
+<meta name="aid-version-at" content="2026-08-14T07-37-00">
+<meta name="aid-version-note" content="整库重跑前的当时当前稿">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>谁更长·比一比</title>
+<style>
+  :root{
+    --ink:#1e3a5f; --accent:#2f6fbf; --ok:#2fbf71; --bad:#e85d5d;
+    --card:#ffffff; --bg:#eef4fb; --line:#c9d9ec; --soft:#6b87a8;
+    --r:18px;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{height:100dvh; margin:0; overflow:hidden; background:var(--bg);
+    font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif; color:var(--ink);}
+  .app{height:100dvh; max-width:min(1240px,100%); margin:0 auto; padding:10px 16px 14px;
+    display:flex; flex-direction:column; gap:6px;}
+  header{display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;}
+  .titleWrap{display:flex; align-items:baseline; gap:12px; flex-wrap:wrap;}
+  h1{font-size:clamp(22px,3.4vw,34px); margin:0; letter-spacing:.5px;}
+  .sub{color:var(--soft); font-size:clamp(16px,2.2vw,22px); font-weight:600;}
+  .headRight{display:flex; align-items:center; gap:12px;}
+  .dots{display:flex; gap:8px; align-items:center;}
+  .dot{width:14px; height:14px; border-radius:50%; background:#d6e3f2; transition:background .3s;}
+  .dot.on{background:var(--ok);}
+  .resetBtn{border:none; background:#fff; color:var(--ink); font-size:22px; font-weight:800;
+    width:54px; height:54px; border-radius:50%; cursor:pointer; box-shadow:0 3px 0 #b9c8da;
+    display:flex; align-items:center; justify-content:center;}
+  .resetBtn:active{transform:translateY(2px); box-shadow:0 1px 0 #b9c8da;}
+  .stage{flex:1; min-height:0; display:flex; align-items:center; justify-content:center;}
+  .stage svg{width:100%; max-height:100%; height:auto; display:block;}
+  .panel{flex:0 0 auto; text-align:center; padding:6px 4px 0;}
+  .q{font-size:clamp(22px,3.4vw,34px); font-weight:800; margin:2px 0 4px; line-height:1.3;}
+  .fb{min-height:54px; font-size:clamp(19px,2.6vw,26px); font-weight:600; line-height:1.45;
+    padding:6px 10px; border-radius:var(--r); display:none;}
+  .fb.show{display:block;}
+  .fb.ok{background:#e5f8ee; color:#1d7a4d;}
+  .fb.bad{background:#fdecec; color:#b23c3c;}
+  .btnrow{display:flex; justify-content:center; gap:14px; margin-top:8px; min-height:62px;}
+  .btn{border:none; border-radius:var(--r); font-size:clamp(20px,2.8vw,28px); font-weight:800;
+    color:#fff; background:var(--accent); padding:12px 30px; min-height:56px; cursor:pointer;
+    box-shadow:0 4px 0 #1c4f8d; transition:transform .12s, box-shadow .12s; display:none;}
+  .btn.show{display:inline-block;}
+  .btn:active{transform:translateY(3px); box-shadow:0 1px 0 #1c4f8d;}
+  .btn.green{background:var(--ok); box-shadow:0 4px 0 #1d8a55;}
+  .btn.green:active{box-shadow:0 1px 0 #1d8a55;}
+
+  /* SVG 内部元素 */
+  .cr{cursor:pointer;}
+  .cr .head{stroke:#17324d; stroke-width:1.5;}
+  .baseline{stroke-dasharray:8 8;}
+  .probe{stroke-width:4; stroke-linecap:round;}
+  .nm{font-size:24px; font-weight:800; fill:var(--ink);}
+
+  .cr.dim{opacity:.4; pointer-events:none; filter:saturate(.6);}
+  .cr.win .head{stroke:var(--ok); stroke-width:4;}
+  .cr.shake{animation:shake .45s;}
+  .cr.hop{animation:hop .6s cubic-bezier(.25,1,.5,1) 1;}
+  @keyframes shake{0%,100%{transform:translate(0,0)}20%{transform:translate(-9px,0)}40%{transform:translate(8px,0)}60%{transform:translate(-6px,0)}80%{transform:translate(5px,0)}}
+  @keyframes hop{0%{transform:translate(0,0)}35%{transform:translate(0,-20px)}70%{transform:translate(0,2px)}100%{transform:translate(0,0)}}
+  @keyframes pulse{0%,100%{transform:translate(0,0)}50%{transform:translate(0,-6px)}}
+  .pulse{animation:pulse 1s ease-in-out infinite;}
+  .marker{animation:pop .4s cubic-bezier(.25,1,.5,1) 1;}
+  @keyframes pop{0%{transform:scale(.3); opacity:0}70%{transform:scale(1.15)}100%{transform:scale(1); opacity:1}}
+  .spark{animation:spark .9s ease-out forwards;}
+  @keyframes spark{0%{transform:scale(.4) rotate(0); opacity:1}100%{transform:scale(1.6) rotate(90deg); opacity:0}}
+
+  /* 开场演示 */
+  .demo{position:fixed; inset:0; z-index:50; background:rgba(20,42,70,.55);
+    display:flex; align-items:center; justify-content:center; padding:18px;}
+  .demo.hide{display:none;}
+  .demoCard{background:var(--card); border-radius:22px; max-width:720px; width:100%;
+    padding:20px 22px 18px; box-shadow:0 16px 40px rgba(15,40,80,.35); text-align:center;}
+  .demoCard .dt{font-size:clamp(20px,3vw,28px); font-weight:800; min-height:76px;
+    display:flex; align-items:center; justify-content:center; line-height:1.4;}
+  .demoSvg{width:100%; max-width:640px; margin:6px auto 0;}
+  .skip{position:absolute; top:14px; right:14px; border:none; background:#fff; color:var(--ink);
+    font-size:20px; font-weight:700; padding:10px 18px; border-radius:999px; cursor:pointer;
+    box-shadow:0 3px 0 #b9c8da;}
+  .skip:active{transform:translateY(2px); box-shadow:0 1px 0 #b9c8da;}
+  .dragHint{display:inline-flex; align-items:center; gap:8px; background:#fff7e6; color:#9a6a00;
+    border:2px dashed #f0b84b; border-radius:14px; padding:8px 16px; font-size:20px; font-weight:700;}
+
+  @media (prefers-reduced-motion:reduce){
+    *{animation:none!important; transition:none!important;}
+  }
+  @media (max-height:620px){
+    .sub{display:none;}
+    .demoCard .dt{min-height:56px;}
+    .demoCard{padding:12px 16px 10px;}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="titleWrap">
+      <h1>🐛 谁更长 · 比一比</h1>
+      <span class="sub">尾巴对齐，比脑袋！</span>
+    </div>
+    <div class="headRight">
+      <span class="dots" id="dots"></span>
+      <button class="resetBtn" id="resetBtn" type="button" aria-label="重新开始">↻</button>
+    </div>
+  </header>
+  <main class="stage">
+    <svg id="stage" viewBox="0 0 640 340" role="img" aria-label="比长短主图"></svg>
+  </main>
+  <section class="panel">
+    <p class="q" id="qText">谁更长？点一点更长的那根！</p>
+    <div class="fb" id="fb" role="status"></div>
+    <div class="btnrow">
+      <button class="btn green" id="nextBtn" type="button">下一关 ▶</button>
+      <button class="btn green" id="againBtn" type="button" style="display:none">再玩一次 🔄</button>
+    </div>
+  </section>
+</div>
+
+<!-- 开场演示 overlay -->
+<div class="demo" id="demo">
+  <button class="skip" id="skipBtn" type="button">跳过 ▶</button>
+  <div class="demoCard">
+    <p class="dt" id="demoText">小蓝的尾巴没和起点对齐，这样比，眼睛会骗人哦！</p>
+    <svg id="demoSvg" class="demoSvg" viewBox="0 0 640 230" role="img" aria-label="开场演示"></svg>
+    <div class="btnrow" style="min-height:58px; justify-content:center;">
+      <button class="btn show" id="demoBtn" type="button">把小蓝拖到起点线 ➜</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var SVGNS="http://www.w3.org/2000/svg";
+  var stage=document.getElementById("stage");
+  var demo=document.getElementById("demo");
+  var demoText=document.getElementById("demoText");
+  var demoSvg=document.getElementById("demoSvg");
+  var demoBtn=document.getElementById("demoBtn");
+  var skipBtn=document.getElementById("skipBtn");
+  var qText=document.getElementById("qText");
+  var fb=document.getElementById("fb");
+  var nextBtn=document.getElementById("nextBtn");
+  var againBtn=document.getElementById("againBtn");
+  var resetBtn=document.getElementById("resetBtn");
+  var dotsBox=document.getElementById("dots");
+
+  var ALIGN=48; /* 起点线 x */
+
+  /* ---------- 画毛毛虫 ---------- */
+  function worm(len,color,name,tx,ty){
+    var g='<g class="cr" data-idx="0" transform="translate('+tx+','+ty+')">';
+    g+='<rect x="0" y="18" width="'+(len-26)+'" height="46" rx="23" fill="'+color+'"/>';
+    g+='<circle cx="24" cy="41" r="21" fill="'+color+'"/>';
+    g+='<circle class="head" cx="'+(len-12)+'" cy="41" r="25" fill="'+color+'"/>';
+    g+='<circle cx="'+(len-3)+'" cy="33" r="4" fill="#17324d"/>';
+    g+='<path d="M '+(len-14)+' 50 Q '+(len-3)+' 58 '+(len+8)+' 50" stroke="#17324d" stroke-width="3" fill="none" stroke-linecap="round"/>';
+    g+='<line x1="'+(len-4)+'" y1="22" x2="'+(len+16)+'" y2="5" stroke="'+color+'" stroke-width="5" stroke-linecap="round"/>';
+    g+='<circle cx="'+(len+16)+'" cy="5" r="5.5" fill="'+color+'"/>';
+    g+='<circle cx="'+(len-42)+'" cy="47" r="4" fill="#ffffff" opacity=".55"/>';
+    g+='<circle cx="'+(len-70)+'" cy="33" r="4" fill="#ffffff" opacity=".55"/>';
+    g+='<text x="'+(len/2-10)+'" y="98" text-anchor="middle" class="nm">'+name+'</text>';
+    g+='</g>';
+    return g;
+  }
+  /* ---------- 画面条（举一反三） ---------- */
+  function noodle(len,color,name,tx,ty){
+    var g='<g class="cr" data-idx="0" transform="translate('+tx+','+ty+')">';
+    g+='<rect x="0" y="24" width="'+len+'" height="36" rx="18" fill="'+color+'"/>';
+    g+='<rect x="12" y="20" width="'+(len-60)+'" height="8" rx="4" fill="#ffffff" opacity=".4"/>';
+    g+='<rect x="30" y="56" width="'+(len-80)+'" height="8" rx="4" fill="#ffffff" opacity=".35"/>';
+    g+='<text x="'+(len/2)+'" y="94" text-anchor="middle" class="nm">'+name+'</text>';
+    g+='</g>';
+    return g;
+  }
+  function maker(type){ return type==="noodle" ? noodle : worm; }
+
+  /* ---------- 关卡数据 ---------- */
+  var ROUNDS=[
+    {q:"小绿和小紫，谁更长？点一点更长的那根！",
+     items:[{name:"小绿",color:"#4caf7d",len:260,type:"worm"},{name:"小紫",color:"#9b6de0",len:175,type:"worm"}]},
+    {q:"它俩长得真像！仔细看，谁更长？",
+     items:[{name:"小绿",color:"#4caf7d",len:242,type:"worm"},{name:"小紫",color:"#9b6de0",len:218,type:"worm"}]},
+    {q:"三只排队比长短，谁最长？",
+     items:[{name:"小橙",color:"#f59e0b",len:285,type:"worm"},{name:"小绿",color:"#4caf7d",len:205,type:"worm"},{name:"小紫",color:"#9b6de0",len:150,type:"worm"}]},
+    {q:"两根面条，谁更长？（还是老办法！）",
+     items:[{name:"面条甲",color:"#fbbf24",len:265,type:"noodle"},{name:"面条乙",color:"#fb923c",len:190,type:"noodle"}]}
+  ];
+
+  var rIdx=0, done=false, cur=null, longerName="";
+
+  function shuffle(arr){
+    var a=arr.slice();
+    for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1)); var t=a[i];a[i]=a[j];a[j]=t;}
+    return a;
+  }
+  function makeDots(){
+    dotsBox.innerHTML="";
+    for(var i=0;i<ROUNDS.length;i++){
+      var d=document.createElement("span"); d.className="dot"+(i===rIdx?" on":"");
+      dotsBox.appendChild(d);
+    }
+  }
+  function buildRound(r){
+    done=false;
+    longerName="";
+    var items=shuffle(r.items);
+    var maxLen=-1, ansIdx=0;
+    items.forEach(function(it,i){ if(it.len>maxLen){maxLen=it.len; longerName=it.name; ansIdx=i;} });
+    cur={q:r.q, items:items, answer:ansIdx};
+    var ty=items.length===3?[70,150,230]:[100,200];
+    var html='<line x1="'+ALIGN+'" y1="24" x2="'+ALIGN+'" y2="330" class="baseline" stroke="var(--line)" stroke-width="4"/>';
+    html+='<text x="'+(ALIGN-8)+'" y="336" text-anchor="middle" font-size="18" font-weight="700" fill="#8aa3c0">起点</text>';
+    items.forEach(function(it,i){
+      var mk=maker(it.type);
+      html+=mk(it.len,it.color,it.name,ALIGN,ty[i]).replace('data-idx="0"','data-idx="'+i+'"');
+    });
+    stage.innerHTML=html;
+    qText.textContent=r.q;
+    fb.className="fb"; fb.textContent="";
+    nextBtn.classList.remove("show");
+    againBtn.style.display="none";
+  }
+  function removeShake(el){ el.classList.remove("shake"); void el.getBoundingClientRect(); }
+
+  /* ---------- 点选 ---------- */
+  stage.addEventListener("click",function(e){
+    if(done) return;
+    var g=e.target.closest? e.target.closest(".cr"):null;
+    if(!g) return;
+    var idx=+g.getAttribute("data-idx");
+    if(idx===cur.answer){
+      done=true;
+      g.classList.add("win","hop");
+      var others=stage.querySelectorAll(".cr:not([data-idx=\""+idx+"\"])");
+      others.forEach(function(o){o.classList.add("dim");});
+      /* 在长的脑袋上方画 ✓ 与提示线 */
+      var it=cur.items[idx];
+      var tip=ALIGN+it.len+(it.type==="noodle"?0:14);
+      var line=document.createElementNS(SVGNS,"line");
+      line.setAttribute("x1",tip); line.setAttribute("y1",24); line.setAttribute("x2",tip); line.setAttribute("y2",310);
+      line.setAttribute("class","probe"); line.setAttribute("stroke","var(--ok)");
+      stage.appendChild(line);
+      var mk=document.createElementNS(SVGNS,"text");
+      mk.setAttribute("x",tip); mk.setAttribute("y",16); mk.setAttribute("text-anchor","middle");
+      mk.setAttribute("font-size","30"); mk.setAttribute("font-weight","900"); mk.setAttribute("fill","var(--ok)");
+      mk.setAttribute("class","marker"); mk.textContent="✓ 更长";
+      stage.appendChild(mk);
+      /* 撒几个小星星 */
+      for(var s=0;s<5;s++){
+        var st=document.createElementNS(SVGNS,"text");
+        st.setAttribute("x",tip+(s*14-28)); st.setAttribute("y",26+s*14);
+        st.setAttribute("font-size","22"); st.setAttribute("class","spark");
+        st.textContent="✦";
+        st.setAttribute("fill",s%2?"#f59e0b":"#2fbf71");
+        stage.appendChild(st);
+      }
+      fb.className="fb ok show";
+      var roundMsg = rIdx===1 ? "尾巴对齐后，谁的脑袋多出一点点，谁就更长。" :
+                    (rIdx===2 ? "三只的尾巴都在同一条线上，谁的头最靠右，谁就最长！" :
+                    (rIdx===3 ? "换成了面条也一样：尾巴对齐，比脑袋。" : "尾巴对齐，谁的脑袋更靠右，谁就更长。"));
+      fb.innerHTML="🎉 对啦！<b>"+longerName+"</b>更长！"+roundMsg;
+      if(rIdx<ROUNDS.length-1){ nextBtn.classList.add("show"); nextBtn.textContent="下一关 ▶"; }
+      else{ againBtn.style.display="inline-block"; nextBtn.classList.remove("show"); }
+    }else{
+      /* 概念类错误：短反馈 + 对照 + 允许重选；点错的这根不再参与 */
+      removeShake(g); g.classList.add("shake");
+      setTimeout(function(){ g.classList.remove("shake"); g.classList.add("dim"); },480);
+      fb.className="fb bad show";
+      var shortName = g.querySelector(".nm").textContent;
+      var specific = rIdx===1
+        ? "<b>"+longerName+"</b>的头只多出一点点，可还是更长！"
+        : (rIdx===2 ? "<b>"+longerName+"</b>的头最靠右，所以它最长！" : "<b>"+longerName+"</b>的头更靠右，所以它更长！");
+      fb.innerHTML="🤔 "+shortName+"的尾巴也在起点线上，要比就看另一头——"+specific+"<br>再点剩下的那根试试！";
+    }
+  });
+
+  nextBtn.addEventListener("click",function(){
+    rIdx++; makeDots(); buildRound(ROUNDS[rIdx]);
+  });
+  function restart(){
+    rIdx=0; makeDots(); buildRound(ROUNDS[0]);
+  }
+  againBtn.addEventListener("click",restart);
+  resetBtn.addEventListener("click",function(){
+    if(!demo.classList.contains("hide")){
+      step=1; blueTx=170; snapDone=false; drawDemo();
+    }else{
+      restart();
+    }
+  });
+
+  /* ---------- 开场演示：歪 vs 齐 + 拖拽对齐 ---------- */
+  var step=1, blueTx=170, dragging=false, snapDone=false, dragG=null;
+
+  function drawDemo(){
+    var html='<line x1="'+ALIGN+'" y1="20" x2="'+ALIGN+'" y2="210" class="baseline" stroke="var(--line)" stroke-width="4"/>';
+    html+='<text x="'+(ALIGN-6)+'" y="222" text-anchor="middle" font-size="16" font-weight="700" fill="#8aa3c0">起点</text>';
+    html+=worm(260,"#4caf7d","小绿",ALIGN,48);
+    html+=worm(175,"#9b6de0","小紫",blueTx,150);
+    demoSvg.innerHTML=html;
+    dragG=demoSvg.querySelectorAll(".cr")[1];
+    if(step===2 && !snapDone){
+      dragG.classList.add("pulse");
+      demoText.textContent="按住小紫，把它拖到左边的起点线！";
+      demoBtn.textContent="我拖好啦 ➜";
+    }else if(step===2 && snapDone){
+      dragG.classList.remove("pulse");
+      demoText.textContent="尾巴对齐啦！现在只看脑袋。";
+      demoBtn.textContent="比比看 ➜";
+    }else if(step===3){
+      demoText.innerHTML="<b>小绿</b>的脑袋更靠右 → <b>小绿更长</b>！<br>记住：尾巴对齐，比脑袋。";
+      demoBtn.textContent="开始玩 🎮";
+    }
+  }
+  function localX(clientX){
+    var pt=demoSvg.createSVGPoint(); pt.x=clientX; pt.y=0;
+    var m=demoSvg.getScreenCTM(); var inv=m.inverse();
+    return pt.matrixTransform(inv).x;
+  }
+  demoSvg.addEventListener("pointerdown",function(e){
+    if(step!==2 || snapDone) return;
+    var g=e.target.closest? e.target.closest(".cr"):null;
+    if(g && +g.getAttribute("data-idx")===1){ dragging=true; dragG.setPointerCapture(e.pointerId); }
+  });
+  demoSvg.addEventListener("pointermove",function(e){
+    if(!dragging) return;
+    var nx=localX(e.clientX);
+    blueTx=Math.max(ALIGN-60, Math.min(400,nx-30));
+    dragG.setAttribute("transform","translate("+blueTx+",150)");
+  });
+  function endDrag(e){
+    if(!dragging) return; dragging=false;
+    if(Math.abs(blueTx-ALIGN)<46){
+      blueTx=ALIGN; dragG.setAttribute("transform","translate("+blueTx+",150)");
+      snapDone=true; drawDemo();
+    }else{
+      demoText.innerHTML="再靠近一点！让小紫的<b>尾巴（左边）</b>贴到起点线。";
+    }
+  }
+  demoSvg.addEventListener("pointerup",endDrag);
+  demoSvg.addEventListener("pointercancel",endDrag);
+
+  demoBtn.addEventListener("click",function(){
+    if(step===1){ step=2; drawDemo(); }
+    else if(step===2){
+      if(!snapDone){ demoText.innerHTML="先拖一拖小紫，把它拉到起点线那边去～"; return; }
+      step=3; drawDemo();
+    }
+    else { startGame(); }
+  });
+  skipBtn.addEventListener("click",startGame);
+
+  function startGame(){
+    demo.classList.add("hide");
+    restart();
+  }
+
+  drawDemo();
+})();
+</script>
+</body>
+</html>

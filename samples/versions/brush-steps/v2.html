@@ -1,0 +1,427 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta name="aid-version" content="v2">
+<meta name="aid-version-at" content="2026-08-14T08:25:38">
+<meta name="aid-version-note" content="当前稿">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>刷牙步骤排队 · 排序</title>
+<style>
+:root{--ink:#1e3a5f;--accent:#2f6fbf;--ok:#2fbf71;--bad:#e85d5d;--card:#fff;--bg:#e8f3ff;--line:#bcd7f0;--ease:cubic-bezier(.25,1,.5,1);--touch:68px}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100dvh;height:100vh;overflow:hidden}
+body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",system-ui,sans-serif;color:var(--ink);background:var(--bg);display:flex;align-items:stretch}
+.card{flex:1;display:flex;flex-direction:column;max-width:min(1240px,100%);margin:0 auto;background:var(--card);padding:clamp(10px,1.6vh,20px) clamp(14px,2.4vw,28px) clamp(10px,1.4vh,16px);overflow:hidden}
+/* 顶栏 */
+.top{display:flex;align-items:center;justify-content:space-between;gap:10px;flex:none;margin-bottom:6px}
+.top h1{font-size:clamp(24px,2.6vw,32px);font-weight:800;letter-spacing:.5px}
+.badge{font-size:clamp(16px,1.6vw,19px);font-weight:700;color:#fff;background:var(--accent);padding:7px 16px;border-radius:999px;white-space:nowrap}
+/* 主图舞台 */
+.stage{flex:1 1 auto;min-height:150px;overflow:hidden;display:flex;flex-direction:column;justify-content:center;background:linear-gradient(180deg,#f3f9ff,#e6f2ff);border:2px solid var(--line);border-radius:18px;padding:4px}
+.dots{display:flex;justify-content:center;gap:12px;padding:6px 0 2px;flex:none}
+.dot{width:18px;height:18px;border-radius:50%;background:#d7e6f5;border:2px solid var(--line);transition:background .3s var(--ease)}
+.dot.on{background:var(--accent);border-color:var(--accent)}
+.stage svg{flex:1 1 auto;width:100%;height:100%;min-height:0;max-height:300px}
+/* 槽位 */
+.slots{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;flex:none;margin:10px 0 8px}
+.slot{flex:1 1 130px;min-height:var(--touch);max-width:220px;display:flex;align-items:center;gap:10px;border:2.5px dashed #9cc3e8;border-radius:16px;background:#f7fbff;padding:8px 12px;cursor:pointer;font-family:inherit;color:var(--ink);transition:border-color .2s var(--ease),background .2s var(--ease)}
+.slot .num{flex:none;width:40px;height:40px;border-radius:50%;background:#e1effb;color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800}
+.slot .body{font-size:24px;font-weight:700;line-height:1.2;text-align:left}
+.slot.filled{border-style:solid;border-color:var(--accent);background:#eef6ff}
+.slot.ok{border-color:var(--ok);background:#edfbf3}
+.slot.bad{border-color:var(--bad);background:#fef1f1}
+.slot:disabled{cursor:default}
+/* 卡片 */
+.tokens{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;flex:none;margin-bottom:8px}
+.tok{min-height:var(--touch);display:flex;align-items:center;gap:10px;border:2.5px solid #c9dcef;border-radius:16px;background:#fff;padding:8px 14px;cursor:pointer;font-family:inherit;color:var(--ink);transition:transform .15s var(--ease),box-shadow .15s var(--ease)}
+.tok .ico{flex:none;width:40px;height:40px}
+.tok .txt{font-size:24px;font-weight:700}
+.tok:hover{box-shadow:0 4px 10px rgba(31,58,95,.12)}
+.tok.picked{border-color:var(--accent);background:#eaf4ff;box-shadow:0 0 0 4px rgba(47,111,191,.18)}
+.tok.used{opacity:.32;pointer-events:none}
+.tok.dragging{position:fixed;z-index:50;margin:0;box-shadow:0 10px 22px rgba(31,58,95,.28);pointer-events:none}
+/* 按钮 */
+.btn-row{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;flex:none}
+.btn{min-height:var(--touch);padding:12px 22px;border-radius:16px;border:2.5px solid var(--line);background:#fff;font-size:24px;font-weight:700;cursor:pointer;font-family:inherit;color:var(--ink);transition:transform .12s var(--ease)}
+.btn:active{transform:scale(.97)}
+.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn.okbtn{background:var(--ok);color:#fff;border-color:var(--ok)}
+.btn.ghost{background:#eef4fb}
+/* 反馈条 */
+.fb{flex:none;min-height:54px;border-radius:16px;padding:10px 14px;margin-top:10px;background:#f3f8fe;border:2px solid var(--line);font-size:clamp(19px,1.9vw,23px);line-height:1.4;font-weight:600}
+.fb.ok{background:#edfbf3;border-color:#8fe0b4;color:#137a46}
+.fb.bad{background:#fef1f1;border-color:#f5b1b1;color:#b34040}
+/* 开场演示 */
+#ovl{position:fixed;inset:0;z-index:100;background:rgba(20,42,70,.82);display:flex;align-items:center;justify-content:center;padding:18px}
+.ovl-card{background:#fff;border-radius:22px;max-width:min(680px,94vw);width:100%;padding:clamp(16px,3vh,30px) clamp(16px,3vw,34px);text-align:center}
+.ovl-card h2{font-size:clamp(24px,3vw,32px);font-weight:800;margin-bottom:4px}
+.ovl-card .sub{font-size:clamp(18px,2vw,22px);color:#5b7aa0;margin-bottom:16px;font-weight:600}
+.ovl-steps{display:flex;align-items:center;justify-content:center;gap:clamp(6px,1.5vw,14px);margin-bottom:20px;flex-wrap:wrap}
+.ovl-step{width:clamp(92px,14vw,130px);opacity:1;transform:translateY(10px);animation:ovlIn .7s var(--ease) forwards}
+.ovl-step .pic{width:100%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;border:2.5px solid var(--line);border-radius:16px;background:#f6faff}
+.ovl-step .pic svg{width:76%;height:76%}
+.ovl-step p{font-size:clamp(16px,1.9vw,20px);font-weight:700;margin-top:6px}
+.ovl-arrow{font-size:clamp(22px,3vw,30px);font-weight:800;color:var(--accent);animation:ovlIn .5s var(--ease) forwards}
+.ovl-start{min-height:var(--touch);padding:14px 34px;border-radius:16px;border:none;background:var(--accent);color:#fff;font-size:26px;font-weight:800;cursor:pointer;font-family:inherit;animation:ovlPulse 1.4s ease-in-out 5}
+.ovl-start:hover{filter:brightness(1.06)}
+.ovl-skip{display:block;margin:12px auto 0;background:none;border:none;color:#7d9cc0;font-size:18px;font-weight:600;cursor:pointer;font-family:inherit;text-decoration:underline}
+/* 收尾举一反三 */
+#end{display:none;flex:1;flex-direction:column;justify-content:center;align-items:center;gap:12px;text-align:center}
+#end h2{font-size:clamp(26px,3vw,34px);font-weight:800}
+#end .like{margin-top:4px;max-width:min(560px,92%);font-size:clamp(20px,2.2vw,26px);line-height:1.55;background:#eef6ff;border:2.5px solid var(--line);border-radius:18px;padding:16px 18px}
+#end .like b{color:var(--accent)}
+#end .sayline{font-size:22px;font-weight:700;color:#137a46;min-height:30px}
+@keyframes ovlIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes ovlPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+/* 舞台动作动画 */
+.act{display:none}
+.act.show{display:block}
+.cup-go{animation:slideCup .9s var(--ease) both}
+@keyframes slideCup{from{transform:translateX(100px)}to{transform:translateX(0)}}
+.cream{transform-box:fill-box;transform-origin:center top;animation:creamGo .8s var(--ease) both}
+@keyframes creamGo{from{transform:scaleY(0)}to{transform:scaleY(1)}}
+.brush-go{animation:brushGo .5s ease-in-out 4}
+@keyframes brushGo{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
+.bub{transform-box:fill-box;transform-origin:center;animation:popGo .7s ease-out both}
+.bub.b2{animation-delay:.12s}.bub.b3{animation-delay:.24s}
+@keyframes popGo{from{transform:scale(0)}to{transform:scale(1)}}
+.star{transform-box:fill-box;transform-origin:center;animation:popGo .5s var(--ease) both}
+.star.s2{animation-delay:.15s}.star.s3{animation-delay:.3s}
+.bean-jump{animation:jumpGo .5s ease-in-out 3}
+@keyframes jumpGo{0%,100%{transform:translateY(0)}50%{transform:translateY(-16px)}}
+@media (max-height:640px){
+  .fb{min-height:40px;padding:6px 10px;font-size:18px;margin-top:6px}
+  .tokens,.slots{margin:6px 0}
+  .tok .txt,.slot .body,.btn{font-size:22px}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="top">
+    <h1>刷牙步骤排队</h1>
+    <span class="badge">3–6 岁 · 排队游戏</span>
+  </div>
+
+  <div class="stage" id="stage">
+    <div class="dots" id="dots" aria-hidden="true"></div>
+    <svg viewBox="0 0 420 250" role="img" aria-label="刷牙小舞台">
+      <!-- 场景：镜子 + 水槽台面 + 水龙头 -->
+      <rect x="92" y="14" width="236" height="58" rx="10" fill="#fff" stroke="#a9c9ea" stroke-width="3" opacity=".9"/>
+      <rect x="24" y="196" width="372" height="34" rx="10" fill="#dcebfa" stroke="#a9c9ea" stroke-width="3"/>
+      <rect x="338" y="96" width="14" height="96" rx="6" fill="#c3d9f0" stroke="#8fb4da" stroke-width="2.5"/>
+      <path d="M338 104 h-10 v-6 h10 z" fill="#c3d9f0" stroke="#8fb4da" stroke-width="2.5"/>
+
+      <!-- 豆人 -->
+      <g id="bean">
+        <circle cx="210" cy="150" r="42" fill="#1e3a5f"/>
+        <circle cx="196" cy="139" r="6" fill="#fff"/>
+        <circle cx="224" cy="139" r="6" fill="#fff"/>
+        <path d="M197 158 Q210 169 223 158" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round"/>
+        <path d="M171 138 Q163 152 171 164" fill="none" stroke="#1e3a5f" stroke-width="7" stroke-linecap="round"/>
+        <path d="M249 138 Q257 152 249 164" fill="none" stroke="#1e3a5f" stroke-width="7" stroke-linecap="round"/>
+        <path d="M195 190 L190 212 M225 190 L230 212" fill="none" stroke="#1e3a5f" stroke-width="7" stroke-linecap="round"/>
+      </g>
+
+      <!-- 动作：拿杯子 -->
+      <g id="act-cup" class="act">
+        <g class="cup-go">
+          <rect x="222" y="138" width="26" height="32" rx="4" fill="#fff" stroke="#1e3a5f" stroke-width="3.5"/>
+          <path d="M248 146 q11 4 0 14" fill="none" stroke="#1e3a5f" stroke-width="3.5"/>
+        </g>
+      </g>
+
+      <!-- 动作：挤牙膏 -->
+      <g id="act-paste" class="act">
+        <g>
+          <g transform="rotate(-22 158 116)">
+            <rect x="145" y="86" width="26" height="56" rx="9" fill="#fff" stroke="#1e3a5f" stroke-width="3.5"/>
+            <rect x="145" y="76" width="26" height="14" rx="6" fill="#1e3a5f"/>
+            <rect class="cream" x="151" y="140" width="14" height="26" rx="7" fill="#fff" stroke="#1e3a5f" stroke-width="3"/>
+          </g>
+          <rect x="196" y="158" width="48" height="10" rx="5" fill="#fff" stroke="#1e3a5f" stroke-width="3.5"/>
+        </g>
+      </g>
+
+      <!-- 动作：刷牙 -->
+      <g id="act-brush" class="act">
+        <g class="brush-go">
+          <rect x="188" y="158" width="56" height="11" rx="5.5" fill="#fff" stroke="#1e3a5f" stroke-width="3.5"/>
+          <path d="M188 165 v-7 M196 165 v-7 M204 165 v-7 M212 165 v-7 M220 165 v-7" stroke="#1e3a5f" stroke-width="3.5" stroke-linecap="round"/>
+        </g>
+      </g>
+
+      <!-- 动作：漱口 -->
+      <g id="act-rinse" class="act">
+        <circle class="bub b1" cx="240" cy="144" r="12" fill="#e0f2fe" stroke="#38bdf8" stroke-width="3.5"/>
+        <circle class="bub b2" cx="258" cy="156" r="9" fill="#e0f2fe" stroke="#38bdf8" stroke-width="3"/>
+        <circle class="bub b3" cx="236" cy="168" r="8" fill="#e0f2fe" stroke="#38bdf8" stroke-width="3"/>
+      </g>
+
+      <!-- 欢呼星星 -->
+      <g id="act-cheer" class="act">
+        <path class="star s1" d="M210 70 l5 11 12 1.5 -8.5 8.5 2 12 -10.5 -5.5 -10.5 5.5 2 -12 -8.5 -8.5 12 -1.5 z" fill="#fbbf24" stroke="#d97706" stroke-width="2"/>
+        <path class="star s2" d="M166 104 l4 9 10 1.5 -7 7 1.6 10 -8.6 -4.6 -8.6 4.6 1.6 -10 -7 -7 10 -1.5 z" fill="#fbbf24" stroke="#d97706" stroke-width="2"/>
+        <path class="star s3" d="M254 104 l4 9 10 1.5 -7 7 1.6 10 -8.6 -4.6 -8.6 4.6 1.6 -10 -7 -7 10 -1.5 z" fill="#fbbf24" stroke="#d97706" stroke-width="2"/>
+      </g>
+    </svg>
+  </div>
+
+  <div class="slots" id="slots" role="group" aria-label="步骤格子"></div>
+  <div class="tokens" id="tokens" role="group" aria-label="步骤卡片"></div>
+
+  <div class="btn-row">
+    <button type="button" class="btn primary" id="btnCheck">✓ 检查顺序</button>
+    <button type="button" class="btn ghost" id="btnReset">↻ 重新开始</button>
+    <button type="button" class="btn okbtn" id="btnNext" style="display:none">下一关 ➜</button>
+  </div>
+
+  <div class="fb" id="fb" aria-live="polite">先点一张卡片，再点格子，把刷牙步骤排排队。</div>
+
+  <div id="end">
+    <h2>收工啦！🎉</h2>
+    <div class="like">举一反三：<b>洗手也要排队</b>哦——<br>① 开水把小手冲湿 → ② 搓出泡泡 → ③ 冲水擦干</div>
+    <button type="button" class="btn" id="btnSay">🗣️ 我会说</button>
+    <div class="sayline" id="sayline"></div>
+    <button type="button" class="btn primary" id="btnAgain">↻ 再玩一次</button>
+  </div>
+</div>
+
+<!-- 开场演示 -->
+<div id="ovl" role="dialog" aria-label="开场演示">
+  <div class="ovl-card">
+    <h2>刷牙要排队！</h2>
+    <p class="sub">先挤牙膏 → 再刷牙 → 最后漱口</p>
+    <div class="ovl-steps">
+      <div class="ovl-step" style="animation-delay:.1s">
+        <div class="pic"><svg viewBox="0 0 40 40"><g transform="rotate(-20 20 22)"><rect x="12" y="6" width="16" height="26" rx="6" fill="#fff" stroke="#1e3a5f" stroke-width="3"/><rect x="12" y="2" width="16" height="8" rx="4" fill="#1e3a5f"/><circle cx="20" cy="38" r="4.5" fill="#fff" stroke="#1e3a5f" stroke-width="2.5"/></g></svg></div>
+        <p>先挤牙膏</p>
+      </div>
+      <div class="ovl-arrow" style="animation-delay:.9s">→</div>
+      <div class="ovl-step" style="animation-delay:1s">
+        <div class="pic"><svg viewBox="0 0 40 40"><rect x="3" y="20" width="26" height="8" rx="4" fill="#fff" stroke="#1e3a5f" stroke-width="3"/><path d="M3 20 v-6 M10 20 v-6 M17 20 v-6 M24 20 v-6" stroke="#1e3a5f" stroke-width="3" stroke-linecap="round"/><rect x="29" y="20" width="7" height="8" rx="3.5" fill="#fff" stroke="#1e3a5f" stroke-width="3"/></svg></div>
+        <p>再刷牙</p>
+      </div>
+      <div class="ovl-arrow" style="animation-delay:1.9s">→</div>
+      <div class="ovl-step" style="animation-delay:2s">
+        <div class="pic"><svg viewBox="0 0 40 40"><path d="M13 27 q7 7 14 0" fill="none" stroke="#1e3a5f" stroke-width="3" stroke-linecap="round"/><circle cx="27" cy="14" r="6" fill="#e0f2fe" stroke="#38bdf8" stroke-width="3"/><circle cx="33" cy="22" r="4" fill="#e0f2fe" stroke="#38bdf8" stroke-width="2.5"/></svg></div>
+        <p>最后漱口</p>
+      </div>
+    </div>
+    <button type="button" class="ovl-start" id="btnStart">开始玩 ▶</button>
+    <button type="button" class="ovl-skip" id="btnSkip">跳过演示，直接开始</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  const $=id=>document.getElementById(id);
+  const STEPS={
+    cup:{txt:'拿出杯子和牙刷',ico:'<svg viewBox="0 0 40 40"><rect x="8" y="12" width="18" height="20" rx="4" fill="#fff" stroke="#1e3a5f" stroke-width="3"/><path d="M26 16 q9 4 0 14" fill="none" stroke="#1e3a5f" stroke-width="3"/></svg>'},
+    paste:{txt:'挤上牙膏',ico:'<svg viewBox="0 0 40 40"><g transform="rotate(-20 20 22)"><rect x="12" y="6" width="16" height="26" rx="6" fill="#fff" stroke="#1e3a5f" stroke-width="3"/><rect x="12" y="2" width="16" height="8" rx="4" fill="#1e3a5f"/><circle cx="20" cy="38" r="4.5" fill="#fff" stroke="#1e3a5f" stroke-width="2.5"/></g></svg>'},
+    brush:{txt:'上下轻轻刷',ico:'<svg viewBox="0 0 40 40"><rect x="3" y="20" width="26" height="8" rx="4" fill="#fff" stroke="#1e3a5f" stroke-width="3"/><path d="M3 20 v-6 M10 20 v-6 M17 20 v-6 M24 20 v-6" stroke="#1e3a5f" stroke-width="3" stroke-linecap="round"/><rect x="29" y="20" width="7" height="8" rx="3.5" fill="#fff" stroke="#1e3a5f" stroke-width="3"/></svg>'},
+    rinse:{txt:'漱口吐掉',ico:'<svg viewBox="0 0 40 40"><path d="M13 27 q7 7 14 0" fill="none" stroke="#1e3a5f" stroke-width="3" stroke-linecap="round"/><circle cx="27" cy="14" r="6" fill="#e0f2fe" stroke="#38bdf8" stroke-width="3"/><circle cx="33" cy="22" r="4" fill="#e0f2fe" stroke="#38bdf8" stroke-width="2.5"/></svg>'}
+  };
+  const LEVELS={
+    1:{order:['paste','brush','rinse'],win:'太棒啦！刷牙要排队：先挤牙膏，再刷牙，最后漱口。',wrong:{
+      paste:{need:'先挤牙膏，牙刷才有泡泡。',got_brush:'还没挤牙膏就刷，干牙刷刷不干净哦。',got_rinse:'还没刷就先漱口？泡沫都还没出来呢。'},
+      brush:{need:'挤好牙膏，就该上下轻轻刷了。',got_paste:'牙膏刚才已经挤过啦，不用再挤一遍。',got_rinse:'牙齿还没刷，不能先漱口。'},
+      rinse:{need:'最后漱口，把泡沫吐掉，嘴巴就干净啦。',got_paste:'漱口是最后一步，牙膏要早一点挤。',got_brush:'刷完牙才漱口，顺序反啦。'}
+    }},
+    2:{order:['cup','paste','brush','rinse'],win:'太棒啦！①拿杯 → ②挤膏 → ③刷 → ④漱口，全对！',wrong:{
+      cup:{need:'先拿出杯子和牙刷，工具准备好了才开始。',got_paste:'还没拿杯子牙刷，牙膏挤在哪里呀？',got_brush:'先拿工具再挤牙膏，牙刷都还没拿呢。',got_rinse:'杯子都还没拿，怎么漱口呀？'},
+      paste:{need:'第二步挤牙膏，牙刷才有泡泡。',got_cup:'杯子刚才已经拿好啦，不用再拿一次。',got_brush:'还没挤牙膏就刷，干牙刷刷不干净哦。',got_rinse:'还没刷牙呢，不能先漱口。'},
+      brush:{need:'第三步上下轻轻刷，把每颗牙都刷到。',got_cup:'前面两步已经做完啦，挤好牙膏就该刷牙了。',got_paste:'前面两步已经做完啦，挤好牙膏就该刷牙了。',got_rinse:'牙齿还没刷完，不能先漱口。'},
+      rinse:{need:'最后漱口，把泡沫吐掉。',got_brush:'刷完牙才漱口，顺序反啦。',got_cup:'漱口是最后一步，前面几步做完才能漱口。',got_paste:'漱口是最后一步，前面几步做完才能漱口。'}
+    }}
+  };
+
+  let level=1, filled={}, picked=null, locked=false, drag=null, justDragged=false;
+
+  function shuffle(a){return a.slice().sort(()=>Math.random()-.5)}
+  function dotsHTML(n,on){let s='';for(let i=0;i<n;i++)s+='<span class="dot'+(i<on?' on':'')+'"></span>';return s}
+
+  function render(){
+    const L=LEVELS[level], n=L.order.length;
+    $('dots').innerHTML=dotsHTML(n,Object.keys(filled).length);
+    // 槽
+    const slots=$('slots');slots.innerHTML='';
+    L.order.forEach((need,i)=>{
+      const b=document.createElement('button');
+      b.type='button';b.className='slot'+(filled[i]?' filled':'');b.dataset.i=i;
+      const got=filled[i];
+      b.innerHTML='<span class="num">'+(i+1)+'</span><span class="body">'+(got?STEPS[got].txt:'第 '+(i+1)+' 步')+'</span>';
+      b.onclick=()=>onSlot(i);
+      slots.appendChild(b);
+    });
+    // 卡片
+    const used=Object.values(filled);
+    const toks=$('tokens');toks.innerHTML='';
+    shuffle(L.order.filter(id=>!used.includes(id))).forEach(id=>{
+      const t=document.createElement('button');
+      t.type='button';t.className='tok'+(picked===id?' picked':'');t.dataset.id=id;
+      t.innerHTML='<span class="ico">'+STEPS[id].ico+'</span><span class="txt">'+STEPS[id].txt+'</span>';
+      t.onpointerdown=e=>{if(locked)return;drag={tok:t,sx:e.clientX,sy:e.clientY,moved:false};t.setPointerCapture(e.pointerId)};
+      t.onpointermove=e=>{
+        if(!drag||drag.tok!==t)return;
+        const dx=e.clientX-drag.sx,dy=e.clientY-drag.sy;
+        if(Math.hypot(dx,dy)>8){drag.moved=true;justDragged=true;t.classList.add('dragging');t.style.transform='translate('+dx+'px,'+dy+'px)'}
+      };
+      t.onpointerup=e=>{
+        if(!drag||drag.tok!==t)return;
+        if(drag.moved)dropAt(e.clientX,e.clientY,t);
+        drag=null;
+      };
+      t.onclick=()=>{
+        if(justDragged){justDragged=false;return}
+        if(locked)return;
+        picked=(picked===id)?null:id;
+        fb('',picked?('选了「'+STEPS[id].txt+'」，再点一个格子放进去。'):'再选一张卡片吧。');
+        render();
+      };
+      toks.appendChild(t);
+    });
+  }
+
+  function onSlot(i){
+    if(locked)return;
+    const L=LEVELS[level];
+    if(!picked){
+      if(filled[i]){
+        delete filled[i];
+        document.querySelectorAll('.slot').forEach(s=>s.classList.remove('ok','bad'));
+        fb('','拿出来啦，再想想它排在第几步。');
+        render();
+      }else{
+        fb('bad','先点下面一张卡片，再点格子。');
+      }
+      return;
+    }
+    const old=filled[i];
+    filled[i]=picked;picked=null;
+    if(old){/*旧卡自动回到卡片区*/}
+    document.querySelectorAll('.slot').forEach(s=>s.classList.remove('ok','bad'));
+    fb('','放进第 '+(i+1)+' 步啦。');
+    render();
+  }
+
+  function fb(kind,msg){
+    const f=$('fb');
+    f.className='fb'+(kind?' '+kind:'');
+    f.textContent=msg;
+  }
+
+  function wrongMsg(i,got,need){
+    const L=LEVELS[level], w=L.wrong[need], g=STEPS[got], n=STEPS[need];
+    let tail=w['got_'+got]||'';
+    return '第 '+(i+1)+' 步放了「'+g.txt+'」，更合理是「'+n.txt+'」。'+(tail?tail+' ':'')+'点格子把它拿出来，再重新排。';
+  }
+
+  $('btnCheck').onclick=()=>{
+    if(locked)return;
+    const L=LEVELS[level],n=L.order.length;
+    if(Object.keys(filled).length<n){fb('bad','还有空位，继续放。');return}
+    let allOk=true,first=-1;
+    for(let i=0;i<n;i++){
+      if(filled[i]!==L.order[i]){allOk=false;if(first<0)first=i}
+    }
+    document.querySelectorAll('.slot').forEach(s=>{
+      const i=+s.dataset.i;
+      s.classList.remove('ok','bad');
+      if(filled[i]===L.order[i])s.classList.add('ok');
+      else s.classList.add('bad');
+    });
+    if(allOk){success();}
+    else{fb('bad',wrongMsg(first,filled[first],L.order[first]));}
+  };
+
+  $('btnReset').onclick=()=>{
+    if(level===2&&$('btnNext').style.display!=='none')return;
+    filled={};picked=null;locked=false;
+    fb('','先点一张卡片，再点格子，把刷牙步骤排排队。');
+    render();
+  };
+
+  $('btnNext').onclick=()=>{
+    level=2;filled={};picked=null;locked=false;
+    $('btnNext').style.display='none';
+    fb('','这次多了一张卡片：拿杯子。先点卡片，再点格子。');
+    render();
+  };
+
+  function showAction(id){
+    document.querySelectorAll('.act').forEach(a=>a.classList.remove('show'));
+    if(id)$('act-'+id).classList.add('show');
+  }
+  function playSequence(ids,done){
+    let k=0;
+    showAction(ids[0]);
+    const timer=setInterval(()=>{
+      k++;
+      if(k<ids.length){showAction(ids[k])}
+      else{
+        clearInterval(timer);
+        setTimeout(()=>{
+          document.querySelectorAll('.act').forEach(a=>a.classList.remove('show'));
+          if(done)done();
+        },500);
+      }
+    },1150);
+  }
+
+  function success(){
+    const L=LEVELS[level],n=L.order.length;
+    locked=true;
+    fb('ok',L.win);
+    playSequence(L.order,()=>{
+      // 欢呼
+      $('act-cheer').classList.add('show');
+      const bean=$('bean');
+      bean.style.transition='transform .5s var(--ease)';
+      bean.classList.add('bean-jump');
+      if(level===1){
+        $('btnNext').style.display='';
+      }else{
+        setTimeout(()=>{
+          document.querySelector('.top').style.display='none';
+          $('stage').style.display='none';
+          $('slots').style.display='none';
+          $('tokens').style.display='none';
+          $('btnCheck').style.display='none';
+          $('btnReset').style.display='none';
+          $('fb').style.display='none';
+          $('end').style.display='flex';
+        },900);
+      }
+    });
+  }
+
+  $('btnSay').onclick=()=>{$('sayline').textContent='我会说：先湿手，再搓泡泡，最后冲水擦干。'};
+  $('btnAgain').onclick=()=>{
+    level=1;filled={};picked=null;locked=false;
+    $('end').style.display='none';
+    document.querySelector('.top').style.display='';
+    $('stage').style.display='';
+    $('slots').style.display='';
+    $('tokens').style.display='';
+    $('btnCheck').style.display='';
+    $('btnReset').style.display='';
+    $('fb').style.display='';
+    $('btnNext').style.display='none';
+    $('sayline').textContent='';
+    fb('','先点一张卡片，再点格子，把刷牙步骤排排队。');
+    showAction(null);
+    render();
+  };
+
+  // 开场
+  $('btnStart').onclick=()=>{$('ovl').style.display='none';showAction(null);render();};
+  $('btnSkip').onclick=()=>{$('ovl').style.display='none';showAction(null);render();};
+
+  showAction(null);
+})();
+</script>
+</body>
+</html>

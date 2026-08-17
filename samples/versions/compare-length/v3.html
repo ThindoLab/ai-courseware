@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta name="aid-version" content="v3">
+<meta name="aid-version-at" content="2026-08-14T08:25:39">
+<meta name="aid-version-note" content="当前稿">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>谁更长·比一比</title>
+<style>
+  :root{
+    --ink:#1e3a5f; --accent:#2f6fbf; --ok:#2fbf71; --bad:#e85d5d;
+    --card:#ffffff; --paper:#f4f7fb; --line:#c9d8ec;
+    --r:18px;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{height:100dvh; overflow:hidden; margin:0;}
+  body{
+    font-family:"PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+    background:var(--paper); color:var(--ink);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .app{
+    width:min(1240px,100%); height:100dvh;
+    display:flex; flex-direction:column;
+    padding:16px clamp(14px,3vw,40px) 14px;
+  }
+  header{display:flex; align-items:baseline; justify-content:space-between; padding:4px 2px 10px;}
+  .title{font-size:clamp(22px,4.4vw,40px); font-weight:800; letter-spacing:.5px;}
+  .stage-note{font-size:clamp(14px,2vw,18px); color:#5b7394;}
+  .card{
+    flex:1; min-height:0; background:var(--card);
+    border-radius:var(--r); box-shadow:0 8px 24px rgba(30,58,95,.10);
+    display:flex; flex-direction:column; padding:clamp(12px,2.4vw,28px);
+    position:relative; overflow:hidden;
+  }
+  .prompt{
+    font-size:clamp(20px,3.4vw,30px); font-weight:700; line-height:1.35;
+    text-align:center; padding:6px 0 4px; flex-shrink:0;
+  }
+  .stage{flex:1; min-height:0; display:flex; align-items:center; justify-content:center; position:relative;}
+  .hint{
+    font-size:clamp(16px,2.2vw,20px); color:#5b7394; text-align:center;
+    padding:6px 0 2px; flex-shrink:0;
+  }
+  .choices{
+    display:flex; justify-content:center; gap:clamp(10px,3vw,26px);
+    flex-wrap:wrap; padding:8px 0 2px; flex-shrink:0;
+  }
+  .pick{
+    min-width:clamp(132px,20vw,220px); min-height:52px;
+    border:3px solid var(--line); background:#fff; color:var(--ink);
+    border-radius:16px; font-size:clamp(20px,2.8vw,26px); font-weight:700;
+    cursor:pointer; padding:10px 22px; transition:transform .15s, border-color .2s, background .2s;
+  }
+  .pick:active{transform:scale(.96);}
+  .pick.right{border-color:var(--ok); background:#eafaf1; color:#1d7a4a;}
+  .pick.wrong{border-color:var(--bad); background:#fdecec; color:#b43b3b;}
+  .pick:disabled{opacity:.92; cursor:default;}
+  .pick.shake{animation:shk .4s;}
+  @keyframes shk{0%,100%{transform:translateX(0)}25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
+
+  /* 主图区 */
+  .plot{width:100%; height:100%; display:block;}
+  .bar{stroke-linecap:round;}
+  .bar-cap{stroke-linecap:round;}
+
+  /* 反馈条 */
+  .fb{
+    min-height:64px; margin-top:auto; border-radius:14px; padding:10px 16px;
+    font-size:clamp(17px,2.3vw,21px); line-height:1.45; flex-shrink:0;
+    display:flex; align-items:center; gap:12px; opacity:0; transform:translateY(8px);
+    transition:opacity .25s, transform .25s;
+  }
+  .fb.show{opacity:1; transform:none;}
+  .fb .fb-icon{font-size:26px; flex-shrink:0;}
+  .fb.ok{background:#eafaf1; color:#1d7a4a;}
+  .fb.bad{background:#fdecec; color:#b43b3b;}
+  .fb.info{background:#eaf2fc; color:var(--accent);}
+  .fb b{font-weight:800;}
+
+  .bar-row{display:flex; gap:10px; align-items:center;}
+  .go{
+    min-height:52px; border:none; border-radius:16px; background:var(--accent); color:#fff;
+    font-size:clamp(18px,2.5vw,23px); font-weight:800; padding:10px 26px; cursor:pointer;
+    transition:transform .15s, filter .2s;
+  }
+  .go:active{transform:scale(.96);}
+  .go:hover{filter:brightness(1.06);}
+
+  /* 开场 overlay */
+  .ov{
+    position:absolute; inset:0; background:var(--card); z-index:20;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px;
+    padding:18px; text-align:center;
+  }
+  .ov.hidden{display:none;}
+  .ov-title{font-size:clamp(24px,4vw,36px); font-weight:800;}
+  .ov-sub{font-size:clamp(16px,2.3vw,21px); color:#5b7394; max-width:560px; line-height:1.6;}
+  .ov-stage{width:min(560px,92%); flex:0 0 auto;}
+  .ov-btn{
+    min-height:52px; border:none; border-radius:16px; background:var(--accent); color:#fff;
+    font-size:clamp(18px,2.5vw,23px); font-weight:800; padding:10px 30px; cursor:pointer; margin-top:6px;
+  }
+  .ov-skip{
+    min-height:44px; background:none; border:2px solid var(--line); color:#5b7394;
+    border-radius:14px; font-size:clamp(15px,2vw,18px); padding:6px 18px; cursor:pointer; margin-top:8px;
+  }
+
+  /* 小豆人 */
+  .bean{fill:#2f4a73;}
+  .bean-eye{fill:#fff;}
+
+  .arrow-anim{stroke-dasharray:7 7; animation:dashmove 1s linear infinite;}
+  @keyframes dashmove{to{stroke-dashoffset:-14;}}
+  @media (prefers-reduced-motion:reduce){
+    *{animation:none!important; transition:none!important;}
+    .arrow-anim{stroke-dasharray:none; animation:none;}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="title">谁更长 · 比一比</div>
+    <div class="stage-note" id="stageNote">第 1 关 · 对齐再比</div>
+  </header>
+
+  <main class="card" id="card">
+    <!-- 开场演示 overlay -->
+    <div class="ov" id="ov" role="dialog" aria-label="开场演示">
+      <div class="ov-title">先看我怎么比！</div>
+      <div class="ov-sub">两条尾巴，一头没对齐，直接看会看错。先把<span style="color:var(--accent);font-weight:800;">一头对齐</span>，再看另一头长出来多少。</div>
+      <div class="ov-stage">
+        <svg class="plot" id="ovPlot" viewBox="0 0 560 220" role="img" aria-label="演示：对齐再比">
+          <line x1="40" y1="40" x2="520" y2="40" stroke="#c9d8ec" stroke-width="3" stroke-dasharray="6 8"/>
+          <line x1="40" y1="120" x2="520" y2="120" stroke="#c9d8ec" stroke-width="3" stroke-dasharray="6 8"/>
+          <!-- 红尾巴（先歪） -->
+          <path id="ovTailA" d="M70 40 H360" stroke="#e85d5d" stroke-width="22" class="bar"/>
+          <circle cx="62" cy="40" r="13" fill="#f2b8b8"/>
+          <path d="M70 40 H200" stroke="#1e3a5f" stroke-width="22" class="bar" opacity=".9"/>
+          <circle cx="62" cy="120" r="13" fill="#c3d7f0"/>
+          <!-- 对齐参考线 -->
+          <line id="ovAlign" x1="70" y1="30" x2="70" y2="130" stroke="#2f6fbf" stroke-width="4"/>
+        </svg>
+      </div>
+      <button class="ov-btn" id="ovPlay">▶ 再看一遍</button>
+      <button class="ov-skip" id="ovSkip">开始玩 →</button>
+    </div>
+
+    <div class="prompt" id="prompt">谁的尾巴更长？点它！</div>
+    <div class="stage">
+      <svg class="plot" id="plot" viewBox="0 0 640 360" role="img" aria-label="比长短主图"></svg>
+    </div>
+    <div class="hint" id="hint">记住：比长短，先把一头对齐。</div>
+    <div class="choices" id="choices"></div>
+    <div class="fb" id="fb" aria-live="polite"><span class="fb-icon" id="fbIcon"></span><span id="fbText"></span></div>
+  </main>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  const $ = id => document.getElementById(id);
+  const plot = $("plot"), prompt = $("prompt"), hint = $("hint"),
+        choices = $("choices"), fb = $("fb"), fbIcon = $("fbIcon"),
+        fbText = $("fbText"), stageNote = $("stageNote"), card = $("card");
+
+  const NS = "http://www.w3.org/2000/svg";
+  function el(tag, attrs){
+    const n = document.createElementNS(NS, tag);
+    for(const k in attrs) n.setAttribute(k, attrs[k]);
+    return n;
+  }
+
+  /* ---------- 开场演示 ---------- */
+  const ov = $("ov"), ovPlot = $("ovPlot"), ovPlay = $("ovPlay"), ovSkip = $("ovSkip");
+  let ovTimer = null;
+  function demoReset(){
+    const a = $("ovTailA");
+    a.setAttribute("x1", 70); a.setAttribute("x2", 360);
+    a.style.transition = "none";
+    $("ovAlign").setAttribute("x1", 70);
+  }
+  function demoRun(){
+    const a = $("ovTailA"), al = $("ovAlign");
+    a.style.transition = "x1 .5s cubic-bezier(.25,1,.5,1), x2 .5s cubic-bezier(.25,1,.5,1)";
+    // 第一拍：直接看尾巴头，以为 A 长（A 右端 360，蓝只有 200，但 A 左端在 70，蓝在 70 对齐）
+    // 第二拍：把 A 的头拉到 70 对齐，右端缩回，发现蓝更长
+    setTimeout(()=>{ a.setAttribute("x1", 70); a.setAttribute("x2", 165); }, 300);
+    setTimeout(()=>{ al.setAttribute("x1", 70); }, 300);
+    setTimeout(()=>{ ovPlay.blur(); }, 1200);
+  }
+  demoReset(); demoRun();
+  ovPlay.addEventListener("click", ()=>{ demoReset(); demoRun(); });
+  ovSkip.addEventListener("click", ()=>{ ov.classList.add("hidden"); startLevel(); });
+
+  /* ---------- 关卡数据 ---------- */
+  let level = 0, picked = false;
+  const LEVELS = [
+    {
+      note:"第 1 关 · 两条尾巴",
+      prompt:"谁的尾巴更长？点它！",
+      hint:"比长短：先把一头对齐，再看另一头。",
+      rows:[
+        {name:"红红", len:225, color:"#e85d5d", head:"#f2b8b8", align:true},
+        {name:"蓝蓝", len:330, color:"#2f6fbf", head:"#c3d7f0", align:true}
+      ],
+      right:1
+    },
+    {
+      note:"第 2 关 · 三根胡萝卜",
+      prompt:"哪根胡萝卜最长？点它！",
+      hint:"三根都对齐啦，看哪根冒出来最多。",
+      rows:[
+        {name:"1号", len:200, color:"#f59e0b", head:"#fcd07a", align:true},
+        {name:"2号", len:300, color:"#f59e0b", head:"#fcd07a", align:true},
+        {name:"3号", len:260, color:"#f59e0b", head:"#fcd07a", align:true}
+      ],
+      right:1
+    },
+    {
+      note:"第 3 关 · 偷偷歪了",
+      prompt:"哪根绳子更长？先帮它们对齐！",
+      hint:"一根偷偷歪了，先点「对齐」，再点答案。",
+      rows:[
+        {name:"小绿", len:250, color:"#2fbf71", head:"#a4e8c5", align:false, offset:55},
+        {name:"小橙", len:300, color:"#f59e0b", head:"#fcd07a", align:true}
+      ],
+      right:1,
+      needAlign:true
+    }
+  ];
+
+  /* ---------- 画主图 ---------- */
+  function drawLevel(lv){
+    plot.innerHTML = "";
+    const W = 640, H = 360, padL = 60;
+    const rows = lv.rows;
+    const gap = 34, top = 92;
+    rows.forEach((r, i)=>{
+      const y = top + i * (gap + 22);
+      const x1 = padL + (r.align ? 0 : (r.offset || 0));
+      const x2 = x1 + r.len;
+      const g = el("g", {});
+      // 尾巴本体
+      const bar = el("path", {d:`M${x1} ${y} H${x2}`, class:"bar",
+        stroke:r.color, "stroke-width":"22", fill:"none"});
+      const cap = el("circle", {cx:x2, cy:y, r:11, class:"bar-cap", fill:r.color});
+      // 头
+      const head = el("circle", {cx:x1-10, cy:y, r:13, fill:r.head, stroke:r.color, "stroke-width":"3"});
+      const eye = el("circle", {cx:x1-7, cy:y-4, r:2.6, fill:"#1e3a5f"});
+      g.append(bar, cap, head, eye);
+      g.dataset.row = i;
+      plot.appendChild(g);
+    });
+    // 对齐参考线
+    const al = el("line", {x1:padL, y1:70, x2:padL, y2:300, stroke:"#c9d8ec", "stroke-width":"3", "stroke-dasharray":"6 8"});
+    plot.appendChild(al);
+    // 箭头（指出多出的一段）会在选对后出现
+  }
+
+  function drawAlignBtn(){
+    if(!currentLevel.needAlign) return;
+    const b = document.createElement("button");
+    b.className = "go"; b.textContent = "⇥ 对齐";
+    b.style.marginRight = "6px";
+    b.addEventListener("click", doAlign);
+    choices.prepend(b);
+    if(alignBtn) alignBtn = b;
+  }
+
+  let alignBtn = null, currentLevel = null;
+  function startLevel(){
+    currentLevel = LEVELS[level];
+    picked = false;
+    stageNote.textContent = currentLevel.note;
+    prompt.textContent = currentLevel.prompt;
+    hint.textContent = currentLevel.hint;
+    drawLevel(currentLevel);
+    buildChoices();
+    fb.classList.remove("show","ok","bad","info");
+  }
+
+  function buildChoices(){
+    choices.innerHTML = "";
+    if(currentLevel.needAlign){
+      const b = document.createElement("button");
+      b.className = "go"; b.textContent = "⇥ 对齐";
+      b.addEventListener("click", doAlign);
+      choices.appendChild(b);
+    }
+    currentLevel.rows.forEach((r, i)=>{
+      const b = document.createElement("button");
+      b.className = "pick";
+      b.textContent = r.name;
+      b.dataset.idx = i;
+      b.addEventListener("click", ()=>onPick(i, b));
+      choices.appendChild(b);
+    });
+  }
+
+  function doAlign(){
+    if(picked) return;
+    const rows = currentLevel.rows;
+    rows.forEach((r, i)=>{
+      if(!r.align){
+        const g = plot.querySelector(`[data-row="${i}"]`);
+        const bar = g.querySelector("path.bar"), cap = g.querySelector("circle.bar-cap");
+        const dx = r.offset || 0;
+        bar.style.transition = "d .45s cubic-bezier(.25,1,.5,1)";
+        cap.style.transition = "cx .45s cubic-bezier(.25,1,.5,1)";
+        requestAnimationFrame(()=>{
+          r.align = true; r.offset = 0;
+          bar.setAttribute("d", `M60 ${92+i*56} H${60+r.len}`);
+          cap.setAttribute("cx", 60+r.len);
+        });
+        g.querySelector("circle.bar-cap");
+      }
+    });
+    setTimeout(()=>{ fb.classList.remove("show","ok","bad","info"); }, 50);
+    fbIcon.textContent = "✅"; fbText.innerHTML = "对齐啦！现在再比，哪根更长？";
+    fb.className = "fb show info";
+    if(alignBtn){ alignBtn.disabled = true; alignBtn.style.opacity = .5; }
+  }
+
+  /* ---------- 点选判断 ---------- */
+  function onPick(i, btn){
+    if(picked) return;
+    const rows = currentLevel.rows;
+    if(currentLevel.needAlign && rows.some(r=>!r.align)){
+      // 概念错：没对齐就比
+      picked = true;
+      btn.classList.add("wrong","shake");
+      showFb("bad","还没对齐就比，会看错哦！点上面的「⇥ 对齐」，把绳子一头对齐，再点答案。");
+      setTimeout(()=>{ picked = false; btn.classList.remove("wrong","shake"); fb.classList.remove("show","ok","bad","info"); }, 2600);
+      return;
+    }
+    const right = i === currentLevel.right;
+    const others = choices.querySelectorAll(".pick");
+    if(right){
+      picked = true;
+      btn.classList.add("right");
+      others.forEach(o=>{ if(o.dataset.idx != i) o.disabled = true; });
+      showFb("ok", okText(currentLevel));
+      markWinner(i);
+      setTimeout(nextOrEnd, 1400);
+    }else{
+      // 概念错：对照说明
+      picked = true;
+      btn.classList.add("wrong","shake");
+      showFb("bad", badText(currentLevel, i));
+      setTimeout(()=>{ picked = false; btn.classList.remove("wrong","shake"); fb.classList.remove("show","ok","bad","info"); }, 2400);
+    }
+  }
+
+  function okText(lv){
+    if(lv.needAlign) return "对啦！对齐以后，<b>" + lv.rows[lv.right].name + "</b>冒出最多，所以它最长。";
+    return "对啦！<b>" + lv.rows[lv.right].name + "</b>多出来一大截，所以它最长。";
+  }
+  function badText(lv, i){
+    const r = lv.rows[i], rr = lv.rows[lv.right];
+    if(lv.needAlign) return "<b>" + r.name + "</b>不是最长。对齐以后再比：<b>" + rr.name + "</b>的另一头更靠右。你刚才把它看长了，就是因为没对齐。";
+    return "再仔细看：<b>" + rr.name + "</b>的另一头更靠右，多出来一截。比长短要看<b>另一头</b>，不是看谁的头更靠左。";
+  }
+
+  function markWinner(i){
+    const rows = currentLevel.rows;
+    const W = 640, H = 360, padL = 60;
+    const winner = rows[i];
+    const y = 92 + i * 56;
+    // 找出最长那根的多出段：从第二长右端画箭头到最右端
+    let second = -1, max = -1;
+    rows.forEach((r, j)=>{ if(r.len > max){ second = max; max = r.len; } });
+    const xStart = padL + Math.max(...rows.map(r=>r.len - (r.align?0:(r.offset||0)))) ; // 简化为对齐后
+    const xA = padL + 0;
+    const xs = padL + Math.max(...rows.filter((r,j)=>j!==i).map(r=>r.len));
+    const xe = padL + winner.len;
+    if(xe > xs){
+      const arrow = el("line", {x1:xs, y1:y, x2:xe-14, y2:y,
+        stroke:"#f59e0b","stroke-width":"6","stroke-linecap":"round",class:"arrow-anim"});
+      const head = el("path", {d:`M${xe-2} ${y} l-14 -7 v14 z`, fill:"#f59e0b"});
+      plot.appendChild(arrow); plot.appendChild(head);
+      const tag = el("text", {x:(xs+xe)/2, y:y-20, "text-anchor":"middle",
+        "font-size":"20","font-weight":"800", fill:"#1e3a5f"});
+      tag.textContent = "多出的";
+      plot.appendChild(tag);
+    }
+  }
+
+  function showFb(kind, html){
+    fbIcon.textContent = kind==="ok" ? "🎉" : kind==="bad" ? "🤔" : "✅";
+    fbText.innerHTML = html;
+    fb.className = "fb show " + kind;
+  }
+
+  function nextOrEnd(){
+    if(level < LEVELS.length-1){
+      level++;
+      startLevel();
+    }else{
+      // 举一反三收尾
+      stageNote.textContent = "举一反三";
+      prompt.textContent = "再试一次：谁更长？";
+      hint.textContent = "这次换成两根香蕉，还是对齐再比。";
+      drawBonus();
+      buildBonusChoices();
+    }
+  }
+
+  /* ---------- 举一反三：香蕉 ---------- */
+  function drawBonus(){
+    plot.innerHTML = "";
+    const W = 640, H = 360, padL = 60;
+    const data = [
+      {name:"小黄", len:240, color:"#fbbf24", head:"#fcd07a"},
+      {name:"小绿", len:300, color:"#84cc16", head:"#d9f99d"}
+    ];
+    data.forEach((r, i)=>{
+      const y = 92 + i * 56;
+      const x1 = padL, x2 = padL + r.len;
+      const g = el("g", {});
+      const bar = el("path", {d:`M${x1} ${y} H${x2}`, class:"bar", stroke:r.color, "stroke-width":"20", fill:"none"});
+      const cap = el("circle", {cx:x2, cy:y, r:10, fill:r.color});
+      const head = el("circle", {cx:x1-10, cy:y, r:13, fill:r.head, stroke:r.color, "stroke-width":"3"});
+      const eye = el("circle", {cx:x1-7, cy:y-4, r:2.6, fill:"#1e3a5f"});
+      g.append(bar, cap, head, eye);
+      plot.appendChild(g);
+    });
+    const al = el("line", {x1:padL, y1:70, x2:padL, y2:300, stroke:"#c9d8ec", "stroke-width":"3", "stroke-dasharray":"6 8"});
+    plot.appendChild(al);
+  }
+  function buildBonusChoices(){
+    picked = false;
+    choices.innerHTML = "";
+    ["小黄","小绿"].forEach((name, i)=>{
+      const b = document.createElement("button");
+      b.className = "pick"; b.textContent = name; b.dataset.idx = i;
+      b.addEventListener("click", ()=>onBonusPick(i, b));
+      choices.appendChild(b);
+    });
+  }
+  function onBonusPick(i, btn){
+    if(picked) return;
+    const right = i === 1;
+    if(right){
+      picked = true; btn.classList.add("right");
+      showFb("ok","对！<b>小绿</b>更长。方法还是一样的：对齐一头，比另一头。你学会啦！");
+      markBonusWinner(i);
+    }else{
+      picked = true; btn.classList.add("wrong","shake");
+      showFb("bad","小黄不是最长。对齐以后看另一头：<b>小绿</b>更靠右，多出一截。");
+      setTimeout(()=>{ picked = false; btn.classList.remove("wrong","shake"); fb.classList.remove("show","ok","bad","info"); }, 2400);
+    }
+  }
+  function markBonusWinner(i){
+    const xs = 60 + 240, xe = 60 + 300, y = 92 + 56;
+    const arrow = el("line", {x1:xs, y1:y, x2:xe-14, y2:y,
+      stroke:"#f59e0b","stroke-width":"6","stroke-linecap":"round",class:"arrow-anim"});
+    const head = el("path", {d:`M${xe-2} ${y} l-14 -7 v14 z`, fill:"#f59e0b"});
+    plot.appendChild(arrow); plot.appendChild(head);
+    const tag = el("text", {x:(xs+xe)/2, y:y-20, "text-anchor":"middle",
+      "font-size":"20","font-weight":"800", fill:"#1e3a5f"});
+    tag.textContent = "多出的";
+    plot.appendChild(tag);
+  }
+})();
+</script>
+</body>
+</html>

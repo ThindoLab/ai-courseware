@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta name="aid-version" content="v2">
+<meta name="aid-version-at" content="2026-08-14T07-37-00">
+<meta name="aid-version-note" content="整库重跑前的当时当前稿">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>按颜色分类</title>
+<style>
+:root{
+  --ink:#1e3a5f; --accent:#2f6fbf; --ok:#2fbf71; --bad:#e85d5d; --card:#fff;
+  --r:18px; --shadow:0 6px 18px rgba(30,58,95,.14);
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+html,body{height:100dvh; margin:0; overflow:hidden; font-family:"PingFang SC","Microsoft YaHei",system-ui,sans-serif; background:linear-gradient(180deg,#f2f7ff,#e3eefc); color:var(--ink);}
+.stage{height:100dvh; display:flex; flex-direction:column; max-width:1240px; margin:0 auto; padding:8px 14px 10px;}
+header{display:flex; align-items:center; gap:12px; padding:6px 4px 8px;}
+.title{display:flex; align-items:center; gap:8px; font-size:24px; font-weight:900; letter-spacing:1px;}
+.title .sw{width:20px; height:20px; border-radius:6px; display:inline-block;}
+.btn{background:var(--accent); color:#fff; border:none; border-radius:14px; font-size:18px; font-weight:800; padding:10px 22px; cursor:pointer; box-shadow:0 4px 10px rgba(47,111,191,.3);}
+.btn:active{transform:translateY(1px);}
+.btn.ghost{background:#fff; color:var(--ink); border:2px solid var(--accent); box-shadow:none;}
+.restart{margin-left:auto; background:#fff; color:var(--ink); border:2px solid #cfdcec; border-radius:14px; font-size:16px; font-weight:700; padding:8px 16px; cursor:pointer;}
+.level-chip{background:#fff; border-radius:999px; padding:6px 16px; font-size:17px; font-weight:800; color:var(--accent); box-shadow:var(--shadow);}
+.play{flex:1; min-height:0; display:flex; flex-direction:column; justify-content:center; gap:6px;}
+.bins{display:flex; justify-content:center; align-items:flex-end; gap:10px; flex-wrap:wrap;}
+.bin{width:118px; display:flex; flex-direction:column; align-items:center; cursor:pointer; position:relative; user-select:none; touch-action:manipulation;}
+.bin svg{width:108px; height:126px; filter:drop-shadow(0 4px 6px rgba(30,58,95,.15));}
+.bin .bname{font-size:21px; font-weight:900; margin-top:2px;}
+.bin .dots{display:flex; gap:4px; min-height:14px; margin-top:2px; pointer-events:none;}
+.bin .dots i{width:13px; height:13px; border-radius:50%; display:block; animation:pop .35s cubic-bezier(.25,1,.5,1);}
+.bin.bounce{animation:bounce .5s cubic-bezier(.25,1,.5,1);}
+.bin.shake{animation:shake .45s ease;}
+.bin.targeting{transform:scale(1.05);}
+@keyframes bounce{0%,100%{transform:scale(1)}35%{transform:scale(1.12) translateY(-4px)}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-6px)}80%{transform:translateX(6px)}}
+@keyframes pop{0%{transform:scale(0)}70%{transform:scale(1.25)}100%{transform:scale(1)}}
+.items{display:flex; flex-wrap:wrap; gap:12px; justify-content:center; align-items:center; padding:6px 2px; min-height:0;}
+.item{width:88px; height:88px; background:var(--card); border:3px solid #e2ebf6; border-radius:var(--r); display:flex; align-items:center; justify-content:center; position:relative; cursor:grab; touch-action:none; user-select:none; box-shadow:var(--shadow); will-change:transform;}
+.item svg{width:62px; height:62px; pointer-events:none;}
+.item:focus-visible{outline:4px solid var(--accent); outline-offset:2px;}
+.item.selected{border-color:var(--accent); transform:scale(1.08); box-shadow:0 10px 22px rgba(47,111,191,.28);}
+.item.dragging{z-index:60; box-shadow:0 14px 28px rgba(30,58,95,.3); border-color:var(--accent);}
+.item.done{pointer-events:none; opacity:0;}
+.item .ring{position:absolute; inset:-4px; border-radius:20px; pointer-events:none;}
+.hint{display:flex; align-items:center; justify-content:center; gap:8px; min-height:46px; padding:6px 14px; background:#fff; border-radius:16px; box-shadow:var(--shadow); font-size:18px; font-weight:700; text-align:center;}
+.hint .sw{width:18px; height:18px; border-radius:50%; display:inline-block; flex:none;}
+.hint.err{background:#fdecec; color:#b34040; border:2px solid #f3b8b8;}
+.hint.ok{background:#e6f7ec; color:#1f7a45; border:2px solid #a9e3c0;}
+.overlay{position:fixed; inset:0; background:rgba(30,58,95,.45); display:flex; align-items:center; justify-content:center; z-index:100; padding:16px;}
+.overlay[hidden]{display:none;}
+.card{background:#fff; border-radius:22px; max-width:560px; width:100%; padding:22px 26px 26px; text-align:center; box-shadow:0 18px 50px rgba(30,58,95,.35);}
+.card h2{font-size:26px; margin:6px 0 10px; font-weight:900;}
+.card p{font-size:18px; line-height:1.6; margin:6px 0 14px;}
+.bigbtn{font-size:22px; padding:16px 44px; border-radius:18px;}
+.demo-stage{position:relative; height:190px; background:#f2f7ff; border-radius:18px; overflow:hidden; border:2px dashed #cfe0f2; margin-bottom:6px;}
+.demo-bucket{position:absolute; bottom:12px; width:74px; height:92px; display:flex; flex-direction:column; align-items:center;}
+.demo-bucket svg{width:74px; height:84px;}
+.demo-bucket .dn{font-size:16px; font-weight:800;}
+.demo-apple{position:absolute; width:52px; height:52px; left:20px; top:120px; transition:transform .7s cubic-bezier(.25,1,.5,1), opacity .3s; z-index:5;}
+.demo-apple svg{width:52px; height:52px;}
+.demo-apple.done{transform:translate(96px,-38px) scale(.55); opacity:0;}
+.stars{display:flex; justify-content:center; gap:10px; margin:8px 0 4px;}
+.stars svg{width:56px; height:56px; animation:starPop .5s cubic-bezier(.25,1,.5,1) both;}
+.stars svg:nth-child(2){animation-delay:.12s;} .stars svg:nth-child(3){animation-delay:.24s;}
+@keyframes starPop{0%{transform:scale(0) rotate(-30deg)}70%{transform:scale(1.25) rotate(6deg)}100%{transform:scale(1) rotate(0)}}
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important; transition:none!important;}
+  .demo-apple.done{transform:none; opacity:1;}
+}
+@media (max-height:640px){
+  header{padding-bottom:2px;} .title{font-size:20px;} .level-chip{font-size:15px;}
+  .bin{width:96px;} .bin svg{width:86px; height:100px;} .bin .bname{font-size:18px;}
+  .item{width:74px; height:74px;} .item svg{width:52px; height:52px;}
+  .hint{display:none;}
+}
+</style>
+</head>
+<body>
+<div class="stage" id="stage">
+  <header>
+    <div class="title">
+      <span class="sw" style="background:#e85d5d"></span>
+      <span class="sw" style="background:#f5c542"></span>
+      <span class="sw" style="background:#4a90e2"></span>
+      按颜色分类
+    </div>
+    <span class="level-chip" id="levelChip">第 1 关</span>
+    <button class="restart" id="restartBtn" type="button">↻ 重置</button>
+  </header>
+  <main class="play">
+    <div class="bins" id="bins" aria-label="分类桶"></div>
+    <div class="items" id="items" aria-label="待分类物品"></div>
+  </main>
+  <div class="hint" id="hint"></div>
+</div>
+
+<!-- 开场演示（可跳过；reduced-motion 只出静帧） -->
+<div class="overlay" id="demoOverlay">
+  <div class="card">
+    <h2>把东西放进<b>一样颜色</b>的桶里</h2>
+    <div class="demo-stage" id="demoStage" aria-hidden="true">
+      <div class="demo-bucket" style="left:16px" data-c="red">
+        <svg viewBox="0 0 120 140"><path d="M28 46 L96 46 L90 130 L34 130 Z" fill="#e85d5d"/><path d="M22 42 L104 42 L106 52 L20 52 Z" fill="#e85d5d" opacity=".9"/><path d="M30 42 Q62 14 92 42" stroke="#e85d5d" fill="none" stroke-width="7" stroke-linecap="round"/><rect x="28" y="50" width="60" height="10" fill="#fff" opacity=".25"/></svg>
+        <div class="dn">红桶</div>
+      </div>
+      <div class="demo-bucket" style="left:100px" data-c="yellow">
+        <svg viewBox="0 0 120 140"><path d="M28 46 L96 46 L90 130 L34 130 Z" fill="#f5c542"/><path d="M22 42 L104 42 L106 52 L20 52 Z" fill="#f5c542" opacity=".9"/><path d="M30 42 Q62 14 92 42" stroke="#f5c542" fill="none" stroke-width="7" stroke-linecap="round"/><rect x="28" y="50" width="60" height="10" fill="#fff" opacity=".25"/></svg>
+        <div class="dn">黄桶</div>
+      </div>
+      <div class="demo-bucket" style="left:184px" data-c="blue">
+        <svg viewBox="0 0 120 140"><path d="M28 46 L96 46 L90 130 L34 130 Z" fill="#4a90e2"/><path d="M22 42 L104 42 L106 52 L20 52 Z" fill="#4a90e2" opacity=".9"/><path d="M30 42 Q62 14 92 42" stroke="#4a90e2" fill="none" stroke-width="7" stroke-linecap="round"/><rect x="28" y="50" width="60" height="10" fill="#fff" opacity=".25"/></svg>
+        <div class="dn">蓝桶</div>
+      </div>
+      <div class="demo-apple" id="demoApple">
+        <svg viewBox="0 0 64 64"><circle cx="32" cy="40" r="21" fill="#e85d5d"/><path d="M32 22 Q33 12 41 9" stroke="#7a5230" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M43 11 q9 -3 11 5 q-9 1 -12 -3" fill="#5cb85c"/><path d="M32 30 q8 6 0 15 q-8 -9 0 -15" fill="#f49a9a" opacity=".55"/></svg>
+      </div>
+    </div>
+    <p id="demoText">看！红色苹果要放进<b>红桶</b></p>
+    <button class="btn bigbtn" id="startBtn" type="button">开始游戏</button>
+  </div>
+</div>
+
+<!-- 通关 / 胜利 -->
+<div class="overlay" id="winOverlay" hidden>
+  <div class="card">
+    <div class="stars" aria-hidden="true">
+      <svg viewBox="0 0 64 64"><path d="M32 6 l8 17 18 2 -13 12 4 18 -17 -9 -17 9 4 -18 -13 -12 18 -2 z" fill="#f5c542" stroke="#e0a91f" stroke-width="2"/></svg>
+      <svg viewBox="0 0 64 64"><path d="M32 6 l8 17 18 2 -13 12 4 18 -17 -9 -17 9 4 -18 -13 -12 18 -2 z" fill="#f5c542" stroke="#e0a91f" stroke-width="2"/></svg>
+      <svg viewBox="0 0 64 64"><path d="M32 6 l8 17 18 2 -13 12 4 18 -17 -9 -17 9 4 -18 -13 -12 18 -2 z" fill="#f5c542" stroke="#e0a91f" stroke-width="2"/></svg>
+    </div>
+    <h2 id="winTitle">真棒！全部放对啦！</h2>
+    <p id="winText"></p>
+    <button class="btn bigbtn" id="nextBtn" type="button">下一关</button>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+var COLORS = {
+  red:   {name:'红', css:'#e85d5d', light:'#fdecec', bucket:'红桶'},
+  yellow:{name:'黄', css:'#f5c542', light:'#fdf6dd', bucket:'黄桶'},
+  blue:  {name:'蓝', css:'#4a90e2', light:'#e7f1fb', bucket:'蓝桶'},
+  green: {name:'绿', css:'#5cb85c', light:'#eaf6ea', bucket:'绿桶'}
+};
+
+function svgItem(inner){ return '<svg viewBox="0 0 64 64" aria-hidden="true">'+inner+'</svg>'; }
+var GRAPH = {
+  apple: svgItem('<circle cx="32" cy="40" r="21" fill="#e85d5d"/><path d="M32 22 Q33 12 41 9" stroke="#7a5230" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M43 11 q9 -3 11 5 q-9 1 -12 -3" fill="#5cb85c"/><path d="M32 30 q8 6 0 15 q-8 -9 0 -15" fill="#f49a9a" opacity=".55"/>'),
+  strawberry: svgItem('<path d="M32 10 C46 18 50 34 41 52 Q32 60 23 52 C14 34 18 18 32 10 Z" fill="#e85d5d"/><path d="M24 34 q4 4 8 0 M32 42 q4 4 8 0 M28 46 q4 4 8 0" stroke="#f6c2c2" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M32 13 q3 -5 8 -4 q-3 4 -8 4" fill="#5cb85c"/>'),
+  banana: svgItem('<path d="M18 14 Q40 16 50 38 Q54 48 44 50 Q40 44 34 40 Q22 30 14 20 Z" fill="#f5c542"/><path d="M46 42 L52 48" stroke="#8a6a1f" stroke-width="4" stroke-linecap="round"/>'),
+  lemon: svgItem('<ellipse cx="32" cy="34" rx="22" ry="16" fill="#f5c542"/><path d="M12 34 q-3 -4 0 -6" stroke="#8a6a1f" stroke-width="3" fill="none"/><path d="M52 34 q3 -4 0 -6" stroke="#8a6a1f" stroke-width="3" fill="none"/><circle cx="32" cy="30" r="4" fill="#fdf3c8"/>'),
+  grape: svgItem('<circle cx="24" cy="30" r="8" fill="#4a90e2"/><circle cx="40" cy="30" r="8" fill="#3f7fd0"/><circle cx="32" cy="42" r="8" fill="#4a90e2"/><circle cx="19" cy="44" r="7" fill="#3f7fd0"/><circle cx="45" cy="44" r="7" fill="#4a90e2"/><circle cx="32" cy="54" r="7" fill="#3f7fd0"/><path d="M32 22 q-2 -8 6 -10" stroke="#5cb85c" stroke-width="3" fill="none"/>'),
+  blueberry: svgItem('<circle cx="26" cy="38" r="14" fill="#4a90e2"/><circle cx="42" cy="40" r="12" fill="#2f6fbf"/><path d="M26 24 q-8 -6 -12 -2 q6 4 12 2 M42 28 q-6 -8 -12 -6 q6 3 12 6" stroke="#5cb85c" stroke-width="3" fill="none"/>'),
+  car: svgItem('<rect x="12" y="28" width="40" height="16" rx="5" fill="#e85d5d"/><path d="M22 28 L30 18 Q32 16 34 18 L42 28 Z" fill="#e85d5d"/><rect x="26" y="20" width="12" height="8" rx="3" fill="#f7b3b3"/><circle cx="23" cy="46" r="5" fill="#334155"/><circle cx="41" cy="46" r="5" fill="#334155"/>'),
+  block: svgItem('<rect x="14" y="18" width="36" height="36" rx="6" fill="#e85d5d"/><path d="M14 30 L50 30" stroke="#c94444" stroke-width="4"/><path d="M22 18 L22 54" stroke="#c94444" stroke-width="3"/>'),
+  duck: svgItem('<ellipse cx="28" cy="42" rx="17" ry="12" fill="#f5c542"/><circle cx="44" cy="30" r="10" fill="#f5c542"/><path d="M54 32 L64 30 L54 37 Z" fill="#f08a24"/><circle cx="47" cy="28" r="2" fill="#1e3a5f"/><path d="M22 52 q8 6 16 0" stroke="#e0a91f" stroke-width="3" fill="none"/>'),
+  ball: svgItem('<circle cx="32" cy="34" r="22" fill="#f5c542"/><path d="M32 12 a20 20 0 0 1 20 20" stroke="#e0a91f" stroke-width="4" fill="none"/><path d="M14 42 a20 20 0 0 0 36 0" stroke="#e0a91f" stroke-width="4" fill="none"/>'),
+  plane: svgItem('<path d="M8 38 L56 30 L46 44 L30 42 L24 54 L18 44 Z" fill="#4a90e2"/><path d="M16 38 L56 30" stroke="#2f6fbf" stroke-width="3"/><circle cx="20" cy="36" r="3" fill="#f7b3b3"/>'),
+  whale: svgItem('<ellipse cx="30" cy="42" rx="22" ry="14" fill="#4a90e2"/><path d="M50 42 L62 32 L60 44 L62 54 Z" fill="#2f6fbf"/><circle cx="22" cy="38" r="3" fill="#fff"/><path d="M16 22 q4 -6 10 -4" stroke="#7fb3ec" stroke-width="3" fill="none"/>'),
+  frog: svgItem('<circle cx="32" cy="40" r="20" fill="#5cb85c"/><circle cx="25" cy="30" r="6" fill="#fff"/><circle cx="39" cy="30" r="6" fill="#fff"/><circle cx="26" cy="30" r="3" fill="#1e3a5f"/><circle cx="40" cy="30" r="3" fill="#1e3a5f"/><path d="M28 46 q4 4 8 0" stroke="#3f8f3f" stroke-width="3" fill="none"/>'),
+  tree: svgItem('<path d="M32 14 L48 34 L16 34 Z" fill="#5cb85c"/><path d="M32 28 L52 48 L12 48 Z" fill="#4aa84a"/><rect x="28" y="48" width="8" height="10" rx="2" fill="#8a5a2b"/>'),
+  sock: function(c){ return svgItem('<path d="M22 8 h20 v30 q0 14 -11 14 h-7 q-11 0 -11 -14 v-7 h9 v7 q0 6 5 6 h2 q5 0 5 -6 v-24 h-12 z" fill="'+c+'"/><path d="M22 40 v5 q0 6 5 6 h2 q5 0 5 -6 v-5 h-12z" fill="#fff" opacity=".4"/>'); }
+};
+
+var LEVELS = [
+  {
+    name:'水果乐园', intro:'看看水果是什么颜色，拖进一样颜色的桶里',
+    colors:['red','yellow','blue'],
+    items:[
+      {name:'苹果', color:'red', g:'apple'},
+      {name:'草莓', color:'red', g:'strawberry'},
+      {name:'香蕉', color:'yellow', g:'banana'},
+      {name:'柠檬', color:'yellow', g:'lemon'},
+      {name:'蓝莓', color:'blue', g:'blueberry'},
+      {name:'葡萄', color:'blue', g:'grape'}
+    ]
+  },
+  {
+    name:'玩具小屋', intro:'绿色也来啦！把玩具按颜色送回家',
+    colors:['red','yellow','blue','green'],
+    items:[
+      {name:'小汽车', color:'red', g:'car'},
+      {name:'积木', color:'red', g:'block'},
+      {name:'小鸭子', color:'yellow', g:'duck'},
+      {name:'皮球', color:'yellow', g:'ball'},
+      {name:'小飞机', color:'blue', g:'plane'},
+      {name:'小鲸鱼', color:'blue', g:'whale'},
+      {name:'小青蛙', color:'green', g:'frog'},
+      {name:'小树', color:'green', g:'tree'}
+    ]
+  },
+  {
+    name:'袜子抽屉', intro:'帮妈妈把袜子按颜色放进抽屉',
+    colors:['red','yellow','blue','green'],
+    items:[
+      {name:'红袜子', color:'red', g:'sock_r'},
+      {name:'红袜子', color:'red', g:'sock_r'},
+      {name:'黄袜子', color:'yellow', g:'sock_y'},
+      {name:'黄袜子', color:'yellow', g:'sock_y'},
+      {name:'蓝袜子', color:'blue', g:'sock_b'},
+      {name:'蓝袜子', color:'blue', g:'sock_b'},
+      {name:'绿袜子', color:'green', g:'sock_g'},
+      {name:'绿袜子', color:'green', g:'sock_g'}
+    ]
+  }
+];
+
+var levelIdx = 0;
+var doneCount = 0;
+var selected = null;
+var hintTimer = null;
+var binsEl = document.getElementById('bins');
+var itemsEl = document.getElementById('items');
+var hintEl = document.getElementById('hint');
+
+function bucketSvg(css){
+  return '<svg viewBox="0 0 120 140" aria-hidden="true">'+
+    '<path d="M28 46 L96 46 L90 130 L34 130 Z" fill="'+css+'"/>'+
+    '<path d="M22 42 L104 42 L106 52 L20 52 Z" fill="'+css+'" opacity=".9"/>'+
+    '<path d="M30 42 Q62 14 92 42" stroke="'+css+'" fill="none" stroke-width="7" stroke-linecap="round"/>'+
+    '<rect x="28" y="50" width="60" height="10" fill="#fff" opacity=".25"/>'+
+    '</svg>';
+}
+
+function renderBins(){
+  binsEl.innerHTML='';
+  var lv=LEVELS[levelIdx];
+  lv.colors.forEach(function(c){
+    var C=COLORS[c];
+    var bin=document.createElement('div');
+    bin.className='bin';
+    bin.setAttribute('role','button');
+    bin.setAttribute('tabindex','0');
+    bin.setAttribute('aria-label',C.bucket);
+    bin.dataset.color=c;
+    bin.innerHTML=bucketSvg(C.css)+'<div class="bname">'+C.bucket+'</div><div class="dots" aria-hidden="true"></div>';
+    bin.addEventListener('click',function(){ tryPlace(bin); });
+    bin.addEventListener('keydown',function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); tryPlace(bin);} });
+    binsEl.appendChild(bin);
+  });
+}
+
+function renderItems(){
+  itemsEl.innerHTML='';
+  var lv=LEVELS[levelIdx];
+  var arr=lv.items.slice();
+  // 乱着开始：打乱，绝不按答案排好
+  for(var i=arr.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=arr[i]; arr[i]=arr[j]; arr[j]=t; }
+  arr.forEach(function(it){
+    var C=COLORS[it.color];
+    var el=document.createElement('div');
+    el.className='item';
+    el.setAttribute('role','button');
+    el.setAttribute('tabindex','0');
+    el.dataset.color=it.color;
+    el.dataset.name=it.name;
+    el.setAttribute('aria-label',it.name+'（'+C.name+'色）');
+    var g = it.g.indexOf('sock_')===0 ? GRAPH.sock(COLORS[it.g.slice(5)].css) : GRAPH[it.g];
+    el.innerHTML='<span class="ring" style="background:'+C.light+';opacity:.6"></span>'+g;
+    el.addEventListener('pointerdown',function(e){ onDown(e,el); });
+    el.addEventListener('keydown',function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); selectItem(el);} });
+    itemsEl.appendChild(el);
+  });
+}
+
+/* 拖拽：跟手（transform 不脱离文档流，原位占位不乱） */
+var drag=null;
+function onDown(e,el){
+  e.preventDefault();
+  if(el.dataset.done) return;
+  var r=el.getBoundingClientRect();
+  drag={el:el, sx:e.clientX, sy:e.clientY, moved:false};
+  window.addEventListener('pointermove',onMove);
+  window.addEventListener('pointerup',onUp);
+}
+function onMove(e){
+  if(!drag) return;
+  var dx=e.clientX-drag.sx, dy=e.clientY-drag.sy;
+  if(Math.abs(dx)+Math.abs(dy)>8) drag.moved=true;
+  if(drag.moved){
+    drag.el.classList.add('dragging');
+    if(selected===drag.el){ deselect(); }
+    drag.el.style.transform='translate('+dx+'px,'+dy+'px)';
+  }
+}
+function onUp(e){
+  if(!drag) return;
+  window.removeEventListener('pointermove',onMove);
+  window.removeEventListener('pointerup',onUp);
+  var d=drag; drag=null;
+  var el=d.el;
+  var dx=e.clientX-d.sx, dy=e.clientY-d.sy;
+  el.classList.remove('dragging');
+  if(!d.moved){
+    // 点击：进入点选模式（保留点选入位，不能只拖）
+    selectItem(el);
+    return;
+  }
+  var r=el.getBoundingClientRect();
+  var cx=r.left+r.width/2, cy=r.top+r.height/2;
+  var target=binAt(cx,cy);
+  if(target){ tryPlace(target, el, dx, dy); }
+  else{ bounceBack(el); }
+}
+function bounceBack(el){
+  el.style.transition='transform .3s cubic-bezier(.25,1,.5,1)';
+  el.style.transform='translate(0,0)';
+  setTimeout(function(){ el.style.transition=''; },320);
+}
+function binAt(x,y){
+  var bins=document.querySelectorAll('.bin');
+  for(var i=0;i<bins.length;i++){
+    var r=bins[i].getBoundingClientRect();
+    if(x>=r.left-14 && x<=r.right+14 && y>=r.top-10 && y<=r.bottom+16) return bins[i];
+  }
+  return null;
+}
+function selectItem(el){
+  if(selected){ selected.classList.remove('selected'); }
+  if(selected===el){ selected=null; setHint(LEVELS[levelIdx].intro); return; }
+  selected=el; el.classList.add('selected');
+  setHint('点一下'+el.dataset.name+'对应的颜色桶');
+}
+function deselect(){
+  if(selected){ selected.classList.remove('selected'); selected=null; }
+}
+function tryPlace(bin, itemEl, dx, dy){
+  var el=itemEl||selected;
+  if(!el){ setHint('先点一个物品，再点桶', true); return; }
+  var color=el.dataset.color, binColor=bin.dataset.color;
+  if(color===binColor){
+    placeOk(bin, el, dx||0, dy||0);
+  }else{
+    placeBad(bin, el, dx||0, dy||0);
+  }
+}
+function placeOk(bin, el){
+  deselect();
+  el.dataset.done='1';
+  var o=el.getBoundingClientRect();
+  var b=bin.getBoundingClientRect();
+  var tx=(b.left+b.width/2)-(o.left+o.width/2);
+  var ty=(b.top+b.height/2)-(o.top+o.height/2);
+  el.style.transition='transform .35s cubic-bezier(.25,1,.5,1), opacity .3s';
+  el.style.transform='translate('+tx+'px,'+ty+'px) scale(.3)';
+  el.style.opacity='0';
+  setTimeout(function(){ if(el.parentNode) el.parentNode.removeChild(el); },380);
+  bin.classList.remove('bounce'); void bin.offsetWidth; bin.classList.add('bounce');
+  var C=COLORS[bin.dataset.color];
+  var d=document.createElement('i'); d.style.background=C.css; bin.querySelector('.dots').appendChild(d);
+  doneCount++;
+  setHint('对啦！'+el.dataset.name+'进了'+C.bucket+'。你真会看颜色！', false, 'ok');
+  sndOk();
+  if(doneCount>=LEVELS[levelIdx].items.length){ setTimeout(win, 600); }
+}
+function placeBad(bin, el, dx, dy){
+  // 概念错误：对照对例，指出差在哪一处
+  deselect();
+  bin.classList.remove('shake'); void bin.offsetWidth; bin.classList.add('shake');
+  var C=COLORS[el.dataset.color], B=COLORS[bin.dataset.color];
+  var hold=el.dataset.name+'是'+C.name+'色的，要放进'+C.bucket+'，不是'+B.bucket+'哦';
+  setHint(hold, true);
+  var okBin=document.querySelector('.bin[data-color="'+el.dataset.color+'"]');
+  if(okBin){ okBin.classList.add('targeting'); setTimeout(function(){ okBin.classList.remove('targeting'); },700); }
+  if(dx!==0 || dy!==0){ bounceBack(el); }
+  sndBad();
+}
+function setHint(html, isErr, cls){
+  clearTimeout(hintTimer);
+  hintEl.className='hint'+(isErr?' err':(cls==='ok'?' ok':''));
+  hintEl.innerHTML=html;
+  if(isErr){
+    hintTimer=setTimeout(function(){
+      hintEl.className='hint';
+      hintEl.textContent=LEVELS[levelIdx].intro;
+    },2200);
+  }
+}
+function win(){
+  var lv=LEVELS[levelIdx];
+  var last = levelIdx>=LEVELS.length-1;
+  document.getElementById('winTitle').textContent = last ? '全部通关！你真棒！' : '真棒！全部放对啦！';
+  document.getElementById('winText').innerHTML = last
+    ? '你学会了按颜色分类！回家也帮妈妈把玩具、袜子按颜色分一分吧。'
+    : lv.name+' 完成！下一关有更多新朋友。';
+  document.getElementById('nextBtn').textContent = last ? '再玩一次' : '下一关';
+  document.getElementById('winOverlay').hidden=false;
+  sndWin();
+}
+function startLevel(idx){
+  levelIdx=idx; doneCount=0; deselect();
+  document.getElementById('levelChip').textContent='第 '+(idx+1)+' 关';
+  renderBins(); renderItems();
+  hintEl.className='hint';
+  hintEl.textContent=LEVELS[idx].intro;
+}
+document.getElementById('nextBtn').addEventListener('click',function(){
+  document.getElementById('winOverlay').hidden=true;
+  if(levelIdx>=LEVELS.length-1){ startLevel(0); }
+  else{ startLevel(levelIdx+1); }
+});
+document.getElementById('restartBtn').addEventListener('click',function(){ startLevel(levelIdx); });
+
+/* 开场演示（约几秒，可跳过） */
+var demoPlayed=false;
+function playDemo(){
+  if(demoPlayed) return;
+  demoPlayed=true;
+  var ap=document.getElementById('demoApple');
+  if(reduceMotion){ return; } /* reduced-motion：只出静帧 + 一句 */
+  setTimeout(function(){
+    ap.classList.add('done');
+    document.getElementById('demoText').innerHTML='红苹果进了<b>红桶</b>！轮到你了';
+  },500);
+}
+document.getElementById('startBtn').addEventListener('click',function(){
+  document.getElementById('demoOverlay').hidden=true;
+  startLevel(0);
+  if(!reduceMotion){ sndOk(); }
+});
+window.addEventListener('keydown',function(e){
+  if(e.key==='Enter' && !document.getElementById('demoOverlay').hidden){ document.getElementById('startBtn').click(); }
+});
+setTimeout(playDemo,300);
+
+/* 简单音效（离线 Web Audio，失败自动静音） */
+var ac=null;
+function tone(f,t0,dur,type,vol){
+  try{
+    ac=ac||new (window.AudioContext||window.webkitAudioContext)();
+    var o=ac.createOscillator(), g=ac.createGain();
+    o.type=type||'sine'; o.frequency.value=f;
+    g.gain.setValueAtTime(0.0001, ac.currentTime+t0);
+    g.gain.linearRampToValueAtTime(vol||.14, ac.currentTime+t0+.02);
+    g.gain.exponentialRampToValueAtTime(.001, ac.currentTime+t0+dur);
+    o.connect(g); g.connect(ac.destination);
+    o.start(ac.currentTime+t0); o.stop(ac.currentTime+t0+dur+.06);
+  }catch(e){}
+}
+function sndOk(){ tone(660,0,.12); tone(880,.1,.16); }
+function sndBad(){ tone(200,0,.22,'triangle',.12); }
+function sndWin(){ [523,659,784,1047].forEach(function(f,i){ tone(f,i*.13,.24); }); }
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta name="aid-version" content="v1">
+<meta name="aid-version-at" content="2026-08-14T07-37-00">
+<meta name="aid-version-note" content="整库重跑前的当时当前稿">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>小猴的天平 · 比轻重</title>
+<!-- 风格：科学探究·天平倾斜 / 场景：教室+家庭 / 核心：质量比较 -->
+<style>
+:root{--accent:#0d9488;--ink:#1f2a44;--muted:#667085;--line:#99f6e4;--ease:cubic-bezier(0.25,1,0.5,1);--touch:52px}
+*{box-sizing:border-box}html,body{margin:0}
+body{font-family:-apple-system,"PingFang SC",system-ui,sans-serif;color:var(--ink);background:linear-gradient(160deg,#f0fdfa,#e0f2fe);min-height:100vh;padding:14px 12px 28px}
+.card{max-width:720px;margin:0 auto;background:#fff;border:1px solid var(--line);border-radius:20px;box-shadow:0 12px 28px rgba(13,148,136,.12);padding:18px 16px 22px}
+.top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.top h1{margin:0;font-size:22px;font-weight:800}
+.badge{font-size:14px;font-weight:700;color:#0f766e;background:#ccfbf1;padding:5px 12px;border-radius:999px}
+.story{background:linear-gradient(135deg,#ccfbf1,#e0f2fe);border-left:5px solid var(--accent);border-radius:0 14px 14px 0;padding:12px;margin-bottom:12px;font-size:16px;line-height:1.7}
+.stage{background:#f0fdfa;border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:12px;min-height:200px}
+.scale{position:relative;height:160px;margin:0 auto;max-width:400px}
+.pole{position:absolute;left:50%;bottom:10px;width:8px;height:90px;background:#64748b;transform:translateX(-50%);border-radius:4px}
+.base{position:absolute;left:50%;bottom:0;width:80px;height:12px;background:#475569;transform:translateX(-50%);border-radius:6px}
+.beam{position:absolute;left:50%;bottom:90px;width:280px;height:10px;background:#0f766e;transform:translateX(-50%);transform-origin:center center;border-radius:5px;transition:transform .55s var(--ease)}
+.pan{position:absolute;top:-8px;width:70px;height:40px;background:#5eead4;border:3px solid #0d9488;border-radius:0 0 40px 40px;display:flex;align-items:flex-end;justify-content:center;font-size:22px;padding-bottom:4px}
+.pan.L{left:0;transform:translateX(-50%)}
+.pan.R{right:0;transform:translateX(50%)}
+.labels{display:flex;justify-content:space-between;max-width:320px;margin:8px auto 0;font-weight:700;font-size:14px;color:var(--muted)}
+.ctrl{display:flex;flex-direction:column;gap:12px}
+.row{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:10px}
+.row label{font-weight:700}
+.step button{min-width:var(--touch);min-height:var(--touch);border-radius:14px;border:2px solid var(--line);background:#fff;font-size:22px;font-weight:800;cursor:pointer;font-family:inherit}
+.step .v{min-width:40px;text-align:center;font-size:22px;font-weight:800;color:var(--accent)}
+.btn-row{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+.btn{min-height:var(--touch);padding:12px 18px;border-radius:14px;border:2px solid var(--line);background:#fff;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit}
+.btn.primary{background:linear-gradient(135deg,var(--accent),#0f766e);color:#fff;border:none}
+.fb{min-height:52px;border-radius:14px;padding:12px;background:#f8fafc;border:1px solid #e2e8f0;font-size:16px;line-height:1.55;margin:10px 0}
+.thinking{background:#fffbeb;border-radius:12px;padding:10px;font-size:15px;border:1px dashed #fcd34d}
+.thinking .tag{font-weight:800;color:#b45309}
+.say{margin-top:8px;font-size:15px;min-height:22px}
+.verdict{text-align:center;font-size:20px;font-weight:800;margin-top:6px;color:#0f766e}
+@media (prefers-reduced-motion:reduce){.beam{transition:none!important}}
+</style><style id="aid-fit">/* AID_FIT_V1 */
+html,body{height:100%!important;max-height:100dvh!important;overflow:hidden!important}
+body{
+  min-height:100dvh!important;height:100dvh!important;
+  display:flex!important;flex-direction:column!important;
+  padding:clamp(6px,1.2vh,14px) clamp(8px,1.5vw,18px)!important;
+  box-sizing:border-box!important;
+}
+body>.card,main.card{
+  flex:1 1 auto!important;min-height:0!important;width:100%!important;
+  max-width:min(1240px,100%)!important;margin:0 auto!important;
+  display:flex!important;flex-direction:column!important;
+  overflow:hidden!important;
+  padding:clamp(10px,1.5vh,20px) clamp(12px,1.8vw,24px) clamp(10px,1.3vh,16px)!important;
+}
+.stage,.scene,.stage-wrap,.viz{
+  flex:1 1 42%!important;min-height:min(280px,38vh)!important;overflow:hidden!important;
+  display:flex!important;flex-direction:column!important;justify-content:center!important;
+}
+.stage svg,.scene svg,#diagram{
+  flex:1 1 auto;width:100%!important;height:100%!important;max-height:100%!important;min-height:0;
+}
+.ctrl,.choices,.btn-row,.top,.topbar,.fb,.progress{flex:none}
+.slots,.grid,.bins,.pool,.ten{flex:1 1 auto!important;min-height:0}
+html.aid-compact .story,html.aid-compact .thinking,html.aid-compact .say{display:none!important}
+html.aid-compact .fb{min-height:0!important;padding:8px 10px!important;margin:6px 0!important;font-size:14px!important}
+html.aid-compact h1{font-size:clamp(18px,2.2vw,22px)!important}
+html.aid-compact .ctrl{gap:8px}
+html.aid-compact .btn{min-height:44px;padding:8px 14px}
+html.aid-compact .controls{display:grid!important;grid-template-columns:1fr 1fr;gap:6px 12px;max-height:30vh;overflow:auto}
+html.aid-tight .legend,html.aid-tight .hints,html.aid-tight .thinking{display:none!important}
+html.aid-tight .story{display:none!important}
+html.aid-tight .stage,html.aid-tight .scene{min-height:min(200px,32vh)!important}
+@media (min-width:960px) and (min-height:780px){
+  body{font-size:17px}
+  .top h1,.topbar h1{font-size:clamp(24px,2.1vw,30px)}
+}
+</style>
+</head>
+<body>
+<main class="card">
+  <div class="top"><h1>小猴的天平</h1><span class="badge">6–9 岁 · 比轻重</span></div>
+  <div class="story">左边放一些 🍎，右边放一些 🍐。哪边<strong>更重</strong>，横梁就向哪边<strong>低下去</strong>。两边一样重就平衡。</div>
+  <div class="stage" role="img" aria-label="天平图解">
+    <div class="scale">
+      <div class="base"></div>
+      <div class="pole"></div>
+      <div class="beam" id="beam">
+        <div class="pan L" id="panL">🍎</div>
+        <div class="pan R" id="panR">🍐</div>
+      </div>
+    </div>
+    <div class="labels"><span id="labL">左 3</span><span id="labR">右 2</span></div>
+    <div class="verdict" id="verdict">左边更重 ↓</div>
+  </div>
+  <div class="ctrl">
+    <div class="row">
+      <label>左边 🍎</label>
+      <div class="step"><button type="button" id="lM">−</button><span class="v" id="lV">3</span><button type="button" id="lP">+</button></div>
+      <input type="range" id="L" min="0" max="8" value="3" aria-label="左边个数">
+    </div>
+    <div class="row">
+      <label>右边 🍐</label>
+      <div class="step"><button type="button" id="rM">−</button><span class="v" id="rV">2</span><button type="button" id="rP">+</button></div>
+      <input type="range" id="R" min="0" max="8" value="2" aria-label="右边个数">
+    </div>
+    <div class="btn-row">
+      <button type="button" class="btn primary" id="btnCheck">✓ 我说得对吗</button>
+      <button type="button" class="btn" id="btnReset">↻ 重新开始</button>
+      <button type="button" class="btn" id="btnSay">🗣️ 我会说</button>
+    </div>
+  </div>
+  <div class="fb" id="fb" aria-live="polite">拖滑块看横梁倾斜。重的一侧会向下。</div>
+  <p class="thinking"><span class="tag">我怎么想：</span><span id="think">比个数：多的一侧更重（这里一个苹果≈一个梨）。</span></p>
+  <div class="say" id="say"></div>
+</main>
+<script>
+(function(){
+  let L=3,R=2;
+  const $=id=>document.getElementById(id);
+  function state(){
+    if(L>R) return 'left';
+    if(R>L) return 'right';
+    return 'eq';
+  }
+  function draw(){
+    L=+$('L').value; R=+$('R').value;
+    $('lV').textContent=L; $('rV').textContent=R;
+    $('labL').textContent='左 '+L+' 个'; $('labR').textContent='右 '+R+' 个';
+    $('panL').textContent = L? '🍎'.repeat(Math.min(L,3))+(L>3?'×'+L:'') : '空';
+    $('panR').textContent = R? '🍐'.repeat(Math.min(R,3))+(R>3?'×'+R:'') : '空';
+    const s=state();
+    // 倾斜随差值增大（最多 18°），更直观
+    const diff = Math.min(Math.abs(L-R), 6);
+    const ang = s==='left' ? (6+diff*2) : s==='right' ? -(6+diff*2) : 0;
+    $('beam').style.transform = 'translateX(-50%) rotate('+ang+'deg)';
+    $('verdict').textContent = s==='left'?'左边更重 ↓（多 '+(L-R)+'）':s==='right'?'右边更重 ↓（多 '+(R-L)+'）':'两边一样 · 平衡 ✓';
+    $('verdict').style.color = s==='eq'?'#059669':'#0f766e';
+    $('think').textContent = s==='eq'?'两边个数相同 → 平衡。':'差得越多，横梁斜得越厉害。';
+    $('fb').className='fb';
+    $('fb').textContent='左 '+L+' · 右 '+R+'。拖滑块看倾斜变化。';
+  }
+  function bind(m,p,r){
+    $(m).onclick=()=>{ r.value=Math.max(+r.min,+r.value-1); draw(); };
+    $(p).onclick=()=>{ r.value=Math.min(+r.max,+r.value+1); draw(); };
+    r.oninput=draw;
+  }
+  bind('lM','lP',$('L')); bind('rM','rP',$('R'));
+  $('btnCheck').onclick=()=>{
+    const s=state();
+    $('fb').className='fb';
+    $('fb').style.background = s==='eq'?'#ecfdf5':'#f0fdfa';
+    $('fb').textContent = s==='left'?'对：左 '+L+' > 右 '+R+'，左侧重。':s==='right'?'对：右 '+R+' > 左 '+L+'，右侧重。':'对：一样重，横梁水平。';
+  };
+  $('btnReset').onclick=()=>{ $('L').value=3; $('R').value=2; draw(); $('say').textContent=''; $('fb').textContent='拖滑块看横梁倾斜。重的一侧会向下。'; };
+  $('btnSay').onclick=()=>{
+    const s=state();
+    $('say').textContent = s==='eq'?'我会说：两边一样重，天平平衡。':s==='left'?'我会说：左边更重，所以左边低下去。':'我会说：右边更重，所以右边低下去。';
+  };
+  draw();
+})();
+</script><script id="aid-fit-js">/* AID_FIT_V1 */
+(function(){
+  var html=document.documentElement;
+  function measure(){
+    var card=document.querySelector("main.card, body>.card");
+    if(!card) return;
+    html.classList.remove("aid-compact","aid-tight");
+    card.style.overflowY="hidden";
+    void card.offsetHeight;
+    var stage=card.querySelector(".stage,.scene,.stage-wrap,.viz");
+    var stageH=stage?stage.clientHeight:999;
+    if(card.scrollHeight>card.clientHeight+8 || stageH<240 || innerHeight<820) html.classList.add("aid-compact");
+    void card.offsetHeight;
+    stageH=stage?stage.clientHeight:999;
+    if(card.scrollHeight>card.clientHeight+8 || stageH<200) html.classList.add("aid-tight");
+    void card.offsetHeight;
+    if(card.scrollHeight>card.clientHeight+8) card.style.overflowY="auto";
+  }
+  addEventListener("resize",measure);
+  addEventListener("load",measure);
+  if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",measure);
+  else requestAnimationFrame(measure);
+  setTimeout(measure,80);
+  setTimeout(measure,400);
+  var card=document.querySelector("main.card, body>.card");
+  if(card && typeof MutationObserver==="function"){
+    var t;
+    new MutationObserver(function(){
+      clearTimeout(t); t=setTimeout(measure,40);
+    }).observe(card,{childList:true,subtree:true,characterData:true});
+  }
+})();
+</script>
+</body>
+</html>

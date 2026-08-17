@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta name="aid-version" content="v1">
+<meta name="aid-version-at" content="2026-08-14T08:25:38">
+<meta name="aid-version-note" content="当前稿">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>班级点心投票 · 条形图</title>
+<!-- 风格：数据启蒙·条形图 / 场景：教室 / 核心：计数与比较 -->
+<style>
+:root{--accent:#2563eb;--ink:#1f2a44;--muted:#667085;--line:#bfdbfe;--ease:cubic-bezier(0.25,1,0.5,1);--touch:52px}
+*{box-sizing:border-box}html,body{margin:0}
+body{font-family:-apple-system,"PingFang SC",system-ui,sans-serif;color:var(--ink);background:linear-gradient(160deg,#eff6ff,#f0fdf4);min-height:100vh;padding:14px 12px 28px}
+.card{max-width:720px;margin:0 auto;background:#fff;border:1px solid var(--line);border-radius:20px;box-shadow:0 12px 28px rgba(37,99,235,.1);padding:18px 16px 22px}
+.top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.top h1{margin:0;font-size:20px;font-weight:800}
+.badge{font-size:14px;font-weight:700;color:#1d4ed8;background:#dbeafe;padding:5px 12px;border-radius:999px}
+.story{background:linear-gradient(135deg,#dbeafe,#d1fae5);border-left:5px solid var(--accent);border-radius:0 14px 14px 0;padding:12px;margin-bottom:12px;font-size:16px;line-height:1.7}
+.chart{background:#f8fafc;border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:12px}
+.bar-row{display:grid;grid-template-columns:72px 1fr 40px 36px;gap:8px;align-items:center;margin:10px 0}
+.bar-row .name{font-weight:800;font-size:15px}
+.bar-row .crown{font-size:16px;text-align:center;opacity:0;transition:opacity .25s}
+.bar-row .crown.show{opacity:1}
+.track{height:28px;background:#e2e8f0;border-radius:8px;overflow:hidden;position:relative}
+.track i{display:block;height:100%;width:0;border-radius:8px;transition:width .45s var(--ease);position:relative;z-index:1}
+.track .a{background:#60a5fa}.track .b{background:#34d399}.track .c{background:#fbbf24}
+/* 刻度线：帮助理解「绝对长度」而非只比相对 */
+.track .ticks{position:absolute;inset:0;display:flex;pointer-events:none;z-index:0}
+.track .ticks b{flex:1;border-right:1px solid rgba(100,116,139,.25)}
+.track .ticks b:last-child{border-right:0}
+.bar-row .cnt{font-weight:800;text-align:right}
+.total{text-align:center;font-size:15px;font-weight:700;color:var(--muted);margin-top:8px}
+.ctrl{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:10px}
+.vbtn{min-height:var(--touch);padding:10px 14px;border-radius:14px;border:2px solid var(--line);background:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit}
+.vbtn:active{transform:scale(.97)}
+.btn-row{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+.btn{min-height:var(--touch);padding:12px 18px;border-radius:14px;border:2px solid var(--line);background:#fff;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit}
+.btn.primary{background:linear-gradient(135deg,var(--accent),#1d4ed8);color:#fff;border:none}
+.fb{min-height:52px;border-radius:14px;padding:12px;background:#f8fafc;border:1px solid #e2e8f0;font-size:16px;line-height:1.55;margin:10px 0}
+.thinking{background:#fffbeb;border-radius:12px;padding:10px;font-size:15px;border:1px dashed #fcd34d}
+.thinking .tag{font-weight:800;color:#b45309}
+.say{margin-top:8px;font-size:15px;min-height:22px}
+.q{font-weight:700;margin:8px 0;text-align:center}
+.opts{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.opt{min-height:48px;padding:10px 14px;border-radius:12px;border:2px solid var(--line);background:#fff;font-weight:700;cursor:pointer;font-family:inherit}
+.opt.ok{border-color:#10b981;background:#ecfdf5}
+.opt.bad{border-color:#ef4444;background:#fef2f2}
+@media (prefers-reduced-motion:reduce){.track i{transition:none!important}}
+</style><style id="aid-fit">/* AID_FIT_V1 */
+html,body{height:100%!important;max-height:100dvh!important;overflow:hidden!important}
+body{
+  min-height:100dvh!important;height:100dvh!important;
+  display:flex!important;flex-direction:column!important;
+  padding:clamp(6px,1.2vh,14px) clamp(8px,1.5vw,18px)!important;
+  box-sizing:border-box!important;
+}
+body>.card,main.card{
+  flex:1 1 auto!important;min-height:0!important;width:100%!important;
+  max-width:min(1240px,100%)!important;margin:0 auto!important;
+  display:flex!important;flex-direction:column!important;
+  overflow:hidden!important;
+  padding:clamp(10px,1.5vh,20px) clamp(12px,1.8vw,24px) clamp(10px,1.3vh,16px)!important;
+}
+.stage,.scene,.stage-wrap,.viz{
+  flex:1 1 42%!important;min-height:min(280px,38vh)!important;overflow:hidden!important;
+  display:flex!important;flex-direction:column!important;justify-content:center!important;
+}
+.stage svg,.scene svg,#diagram{
+  flex:1 1 auto;width:100%!important;height:100%!important;max-height:100%!important;min-height:0;
+}
+.ctrl,.choices,.btn-row,.top,.topbar,.fb,.progress{flex:none}
+.slots,.grid,.bins,.pool,.ten{flex:1 1 auto!important;min-height:0}
+html.aid-compact .story,html.aid-compact .thinking,html.aid-compact .say{display:none!important}
+html.aid-compact .fb{min-height:0!important;padding:8px 10px!important;margin:6px 0!important;font-size:14px!important}
+html.aid-compact h1{font-size:clamp(18px,2.2vw,22px)!important}
+html.aid-compact .ctrl{gap:8px}
+html.aid-compact .btn{min-height:44px;padding:8px 14px}
+html.aid-compact .controls{display:grid!important;grid-template-columns:1fr 1fr;gap:6px 12px;max-height:30vh;overflow:auto}
+html.aid-tight .legend,html.aid-tight .hints,html.aid-tight .thinking{display:none!important}
+html.aid-tight .story{display:none!important}
+html.aid-tight .stage,html.aid-tight .scene{min-height:min(200px,32vh)!important}
+@media (min-width:960px) and (min-height:780px){
+  body{font-size:17px}
+  .top h1,.topbar h1{font-size:clamp(24px,2.1vw,30px)}
+}
+</style>
+</head>
+<body>
+<main class="card">
+  <div class="top"><h1>班级点心投票</h1><span class="badge">7–10 岁 · 数据图</span></div>
+  <div class="story">全班给喜欢的点心投票。条越长，票越多。你来加点票，再回答：谁最多？</div>
+  <div class="chart" role="img" aria-label="投票条形图">
+    <div class="bar-row" data-k="a"><span class="name">🍎 苹果</span><div class="track"><span class="ticks" id="ta"></span><i class="a" id="ba"></i></div><span class="cnt" id="ca">0</span><span class="crown" id="ka">👑</span></div>
+    <div class="bar-row" data-k="b"><span class="name">🍌 香蕉</span><div class="track"><span class="ticks" id="tb"></span><i class="b" id="bb"></i></div><span class="cnt" id="cb">0</span><span class="crown" id="kb">👑</span></div>
+    <div class="bar-row" data-k="c"><span class="name">🍪 饼干</span><div class="track"><span class="ticks" id="tc"></span><i class="c" id="bc"></i></div><span class="cnt" id="cc">0</span><span class="crown" id="kc">👑</span></div>
+    <div class="total" id="total">一共 0 票</div>
+  </div>
+  <div class="ctrl">
+    <button type="button" class="vbtn" data-k="a">+1 🍎</button>
+    <button type="button" class="vbtn" data-k="b">+1 🍌</button>
+    <button type="button" class="vbtn" data-k="c">+1 🍪</button>
+  </div>
+  <div class="q">谁的票最多？</div>
+  <div class="opts" id="opts">
+    <button type="button" class="opt" data-a="a">苹果</button>
+    <button type="button" class="opt" data-a="b">香蕉</button>
+    <button type="button" class="opt" data-a="c">饼干</button>
+    <button type="button" class="opt" data-a="tie">一样多/并列</button>
+  </div>
+  <div class="btn-row" style="margin-top:12px">
+    <button type="button" class="btn" id="btnReset">↻ 重新开始</button>
+    <button type="button" class="btn" id="btnSay">🗣️ 我会说</button>
+  </div>
+  <div class="fb" id="fb" aria-live="polite">点 +1 加票，看条变长，再选出最多的。</div>
+  <p class="thinking"><span class="tag">我怎么想：</span><span id="think">条形图用长度表示数量，最长的就是最多。</span></p>
+  <div class="say" id="say"></div>
+</main>
+<script>
+(function(){
+  let votes={a:4,b:2,c:3};
+  const label={a:'苹果',b:'香蕉',c:'饼干'};
+  const $=id=>document.getElementById(id);
+  function maxKey(){
+    const m=Math.max(votes.a,votes.b,votes.c);
+    const ks=['a','b','c'].filter(k=>votes[k]===m);
+    if(ks.length>1) return 'tie';
+    return ks[0];
+  }
+  // 固定刻度：条长 = 票数/scale，加票时条只变长不变「相对缩短」
+  let scale = 12;
+  function paintTicks(){
+    const n = Math.min(scale, 16);
+    ['ta','tb','tc'].forEach(id=>{
+      const el=$(id); if(!el) return;
+      el.innerHTML = Array.from({length:n},()=>'<b></b>').join('');
+    });
+  }
+  function draw(){
+    const peak = Math.max(votes.a,votes.b,votes.c, 1);
+    if(peak > scale) scale = peak; // 超出再扩刻度，扩时三条同比例仍可比
+    paintTicks();
+    $('ba').style.width = (votes.a/scale*100)+'%';
+    $('bb').style.width = (votes.b/scale*100)+'%';
+    $('bc').style.width = (votes.c/scale*100)+'%';
+    $('ca').textContent=votes.a; $('cb').textContent=votes.b; $('cc').textContent=votes.c;
+    $('total').textContent='一共 '+(votes.a+votes.b+votes.c)+' 票 · 刻度满格='+scale;
+    const mk=maxKey();
+    ['a','b','c'].forEach(k=>{
+      const el=$('k'+k);
+      if(!el) return;
+      const show = mk==='tie' ? votes[k]===Math.max(votes.a,votes.b,votes.c) : mk===k;
+      el.classList.toggle('show', show && (votes.a+votes.b+votes.c)>0);
+    });
+    $('think').textContent='条越长票越多（同一刻度）。当前最多：'+(mk==='tie'?'并列':label[mk])+'。';
+  }
+  document.querySelector('.ctrl').onclick=e=>{
+    const b=e.target.closest('.vbtn'); if(!b) return;
+    const before = votes[b.dataset.k];
+    votes[b.dataset.k]++; draw();
+    document.querySelectorAll('.opt').forEach(o=>o.classList.remove('ok','bad'));
+    $('fb').className='fb';
+    $('fb').textContent='「'+label[b.dataset.k]+'」'+(before)+'→'+votes[b.dataset.k]+'，条变长了。再比谁最长。';
+  };
+  $('opts').onclick=e=>{
+    const b=e.target.closest('.opt'); if(!b) return;
+    const ans=maxKey();
+    document.querySelectorAll('.opt').forEach(o=>o.classList.remove('ok','bad'));
+    if(b.dataset.a===ans){
+      b.classList.add('ok');
+      $('fb').className='fb'; $('fb').style.background='#ecfdf5';
+      $('fb').textContent=ans==='tie'?'对！有并列第一，条一样长。':'对！'+label[ans]+' 票最多，条最长。';
+    } else {
+      b.classList.add('bad');
+      $('fb').style.background='#fff7ed';
+      $('fb').textContent='再比一比三条的长度和右边数字。';
+    }
+  };
+  $('btnReset').onclick=()=>{ votes={a:4,b:2,c:3}; scale=12; draw(); $('fb').style.background=''; $('fb').textContent='点 +1 加票，看条变长，再选出最多的。'; $('say').textContent=''; document.querySelectorAll('.opt').forEach(o=>o.classList.remove('ok','bad')); };
+  $('btnSay').onclick=()=>{
+    const ans=maxKey();
+    $('say').textContent=ans==='tie'?'我会说：有两个一样多，并列第一。':'我会说：'+label[ans]+'最多，因为条最长、数字最大。';
+  };
+  draw();
+})();
+</script><script id="aid-fit-js">/* AID_FIT_V1 */
+(function(){
+  var html=document.documentElement;
+  function measure(){
+    var card=document.querySelector("main.card, body>.card");
+    if(!card) return;
+    html.classList.remove("aid-compact","aid-tight");
+    card.style.overflowY="hidden";
+    void card.offsetHeight;
+    var stage=card.querySelector(".stage,.scene,.stage-wrap,.viz");
+    var stageH=stage?stage.clientHeight:999;
+    if(card.scrollHeight>card.clientHeight+8 || stageH<240 || innerHeight<820) html.classList.add("aid-compact");
+    void card.offsetHeight;
+    stageH=stage?stage.clientHeight:999;
+    if(card.scrollHeight>card.clientHeight+8 || stageH<200) html.classList.add("aid-tight");
+    void card.offsetHeight;
+    if(card.scrollHeight>card.clientHeight+8) card.style.overflowY="auto";
+  }
+  addEventListener("resize",measure);
+  addEventListener("load",measure);
+  if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",measure);
+  else requestAnimationFrame(measure);
+  setTimeout(measure,80);
+  setTimeout(measure,400);
+  var card=document.querySelector("main.card, body>.card");
+  if(card && typeof MutationObserver==="function"){
+    var t;
+    new MutationObserver(function(){
+      clearTimeout(t); t=setTimeout(measure,40);
+    }).observe(card,{childList:true,subtree:true,characterData:true});
+  }
+})();
+</script>
+</body>
+</html>

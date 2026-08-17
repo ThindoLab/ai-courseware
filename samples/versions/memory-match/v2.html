@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta name="aid-version" content="v2">
+<meta name="aid-version-at" content="2026-08-14T07-37-00">
+<meta name="aid-version-note" content="整库重跑前的当时当前稿">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>翻牌配对 · 动物和家</title>
+<style>
+:root{--ink:#1e3a5f;--accent:#2f6fbf;--ok:#2fbf71;--bad:#e85d5d;--card:#fff;--line:#d7e5f7;--muted:#5b7a9d;--ease:cubic-bezier(.25,1,.5,1);--r:18px}
+*{box-sizing:border-box}
+html,body{height:100vh;height:100dvh;margin:0;overflow:hidden}
+body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",system-ui,sans-serif;color:var(--ink);background:linear-gradient(160deg,#eef6ff,#e7f8ef);display:flex;flex-direction:column;padding:clamp(8px,1.4vh,16px)}
+.card{position:relative;flex:1 1 auto;min-height:0;width:100%;max-width:min(1240px,100%);margin:0 auto;background:#fff;border:1px solid var(--line);border-radius:20px;box-shadow:0 16px 34px rgba(31,58,95,.12);display:flex;flex-direction:column;overflow:hidden;padding:clamp(12px,1.7vh,22px) clamp(12px,2vw,26px)}
+.top{flex:none;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+h1{margin:0;font-size:clamp(22px,3vw,30px);letter-spacing:.5px}
+.badge{font-size:clamp(14px,1.6vw,17px);font-weight:700;color:#155e75;background:#cffafe;padding:6px 12px;border-radius:999px}
+.story{flex:none;background:linear-gradient(135deg,#e8f2ff,#e6f9f0);border-left:5px solid var(--accent);border-radius:0 14px 14px 0;padding:10px 14px;margin:10px 0 8px;font-size:clamp(19px,2.4vw,22px);line-height:1.55}
+.stats{flex:none;display:flex;gap:clamp(14px,3vw,30px);justify-content:center;font-weight:800;font-size:clamp(16px,2vw,20px);color:var(--muted);margin-bottom:8px}
+.stats b{color:var(--ink)}
+.grid{flex:1 1 auto;min-height:0;display:grid;grid-template-columns:repeat(var(--cols,4),1fr);grid-auto-rows:minmax(0,1fr);gap:clamp(8px,1.4vw,14px);margin:4px 0}
+.pcard{position:relative;width:100%;height:100%;min-height:56px;min-width:0;background:transparent;border:0;padding:0;cursor:pointer;-webkit-tap-highlight-color:transparent;font-family:inherit}
+.flip{position:absolute;inset:0;transform-style:preserve-3d;transition:transform .5s var(--ease)}
+.pcard.flipped .flip{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border-radius:var(--r);border:3px solid var(--line);background:#fff;overflow:hidden}
+.face.front{background:linear-gradient(145deg,#dbeafe,#c7d9f7);border-color:#a7c4ee;color:#1e3a5f}
+.face.front .q{font-size:clamp(30px,5.2vw,46px);font-weight:900;line-height:1}
+.face.front .t{font-size:clamp(14px,1.8vw,18px);font-weight:700;color:#3b5b86}
+.face.back{transform:rotateY(180deg);background:#fff;border-color:#a7c4ee}
+.face.back .em{font-size:clamp(30px,5.2vw,46px);line-height:1.2}
+.face.back .lb{font-size:clamp(17px,2.1vw,22px);font-weight:800;color:var(--ink)}
+.pcard.matched .face.back{border-color:var(--ok);background:#ecfdf5;box-shadow:0 0 0 3px rgba(47,191,113,.22)}
+.pcard.matched{pointer-events:none}
+.pcard.matched .flip{animation:pop .5s var(--ease)}
+@keyframes pop{0%{transform:rotateY(180deg) scale(.88)}60%{transform:rotateY(180deg) scale(1.08)}100%{transform:rotateY(180deg) scale(1)}}
+.pcard.wrong .flip{animation:shake .45s}
+@keyframes shake{0%,100%{transform:rotateY(180deg) translateX(0)}25%{transform:rotateY(180deg) translateX(-7px)}75%{transform:rotateY(180deg) translateX(7px)}}
+.fb{flex:none;min-height:56px;border-radius:14px;padding:10px 14px;background:#f4f8ff;border:2px solid var(--line);font-size:clamp(19px,2.4vw,22px);line-height:1.5;margin:6px 0;display:flex;align-items:center;gap:8px}
+.fb.ok{background:#ecfdf5;border-color:#86e0b0}
+.fb.bad{background:#fef2f2;border-color:#f3a3a3}
+.think{flex:none;background:#fffbeb;border-radius:12px;padding:8px 12px;font-size:clamp(16px,2vw,20px);border:1px dashed #f4d27e;color:#8a5a00;margin:2px 0 6px}
+.think b{color:#b45309}
+.btn-row{flex:none;display:flex;gap:10px;justify-content:center;margin-top:6px;flex-wrap:wrap}
+.btn{min-height:56px;padding:12px 22px;border-radius:14px;border:2px solid var(--line);background:#fff;color:var(--ink);font-size:clamp(19px,2.3vw,22px);font-weight:800;cursor:pointer;font-family:inherit;transition:transform .15s var(--ease),background .2s}
+.btn:active{transform:scale(.96)}
+.btn.primary{background:linear-gradient(135deg,var(--accent),#1d4ed8);color:#fff;border:none;box-shadow:0 6px 14px rgba(47,111,191,.28)}
+.btn.ghost{background:#fff;border-color:#cbd9ea}
+/* 关卡完成 / 举一反三弹层 */
+.modal{position:absolute;inset:0;z-index:20;background:rgba(15,32,54,.45);display:none;align-items:center;justify-content:center;padding:16px}
+.modal.open{display:flex}
+.modal-card{width:min(580px,100%);max-height:96%;overflow:auto;background:#fff;border-radius:20px;padding:20px 22px;box-shadow:0 24px 60px rgba(10,30,55,.35);text-align:center}
+.modal-card h2{margin:0 0 8px;font-size:clamp(22px,3vw,28px)}
+.modal-card p{font-size:clamp(18px,2.3vw,21px);line-height:1.6;margin:8px 0}
+.recap{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:10px 0}
+.recap span{background:#eef4ff;border:1px solid var(--line);border-radius:12px;padding:8px 12px;font-size:clamp(17px,2.1vw,20px);font-weight:700}
+.stars{font-size:clamp(26px,4.2vw,36px);letter-spacing:4px;margin:6px 0}
+/* 开场演示 */
+.overlay{position:absolute;inset:0;z-index:30;background:linear-gradient(160deg,#eef6ff,#eafaf3);display:flex;align-items:center;justify-content:center;padding:16px}
+.overlay.hide{display:none}
+.demo-card{width:min(540px,100%);background:#fff;border-radius:22px;padding:22px 20px;text-align:center;box-shadow:0 24px 60px rgba(10,30,55,.25);border:2px solid var(--line)}
+.demo-card h2{margin:0;font-size:clamp(22px,3.4vw,30px)}
+.demo-tip{font-size:clamp(18px,2.3vw,21px);color:var(--muted);margin:8px 0 12px}
+.demo-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;max-width:340px;margin:0 auto 12px}
+.dcard{position:relative;aspect-ratio:1;border-radius:16px}
+.dcard .face{border-width:3px}
+.dcard.matched .face.back{border-color:var(--ok);background:#ecfdf5;box-shadow:0 0 0 3px rgba(47,191,113,.22)}
+.demo-step{min-height:48px;font-size:clamp(18px,2.3vw,21px);font-weight:700;color:var(--ink);margin:4px 0 10px}
+.demo-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+#btnStart{display:none}
+.demo-actions.show-start #btnStart{display:inline-block}
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+}
+/* 矮屏收拢 */
+html.compact .think{display:none}
+html.compact .story{padding:6px 10px;margin:6px 0 4px;font-size:clamp(16px,2vw,19px)}
+html.compact .grid{gap:6px}
+html.tight .story{display:none}
+@media (max-width:480px){
+  .btn{min-height:52px;padding:10px 16px}
+}
+</style>
+</head>
+<body>
+<main class="card" id="card">
+  <div class="top"><h1>🏡 翻牌配对 · 动物和家</h1><span class="badge" id="lvlBadge">第 1 关 · 3 对</span></div>
+  <p class="story">森林里下了一场大雨，小动物们跑散了，找不到自己的家。<strong>翻开两张牌：一张是动物，一张是它的家。</strong>配对成功，就帮它回到家！</p>
+  <div class="stats"><span>已配对 <b id="pairs">0</b>/<span id="total">3</span></span><span>翻开 <b id="tries">0</b> 次</span></div>
+  <div class="grid" id="grid" role="group" aria-label="翻牌配对游戏"></div>
+  <div class="fb" id="fb" aria-live="polite">👆 点一张牌，看看翻出来的是动物还是它的家。</div>
+  <p class="think"><b>我怎么想：</b><span id="think">配对不是瞎点——先记住「刚翻过什么、在哪里」。</span></p>
+  <div class="btn-row">
+    <button type="button" class="btn primary" id="btnSay">🗣️ 我会说</button>
+    <button type="button" class="btn ghost" id="btnReset">↻ 重新开始</button>
+  </div>
+
+  <div class="overlay" id="demo" role="dialog" aria-label="开场演示">
+    <div class="demo-card">
+      <h2>小动物迷路了 🐝🐦</h2>
+      <p class="demo-tip">翻两张牌，帮动物找到家</p>
+      <div class="demo-grid" id="demoGrid">
+        <div class="dcard" id="d0"><div class="flip"><span class="face front"><span class="q">❓</span></span><span class="face back"><span class="em">🐝</span><span class="lb">蜜蜂</span></span></div></div>
+        <div class="dcard" id="d1"><div class="flip"><span class="face front"><span class="q">❓</span></span><span class="face back"><span class="em">🍯</span><span class="lb">蜂巢</span></span></div></div>
+        <div class="dcard" id="d2"><div class="flip"><span class="face front"><span class="q">❓</span></span><span class="face back"><span class="em">🐦</span><span class="lb">小鸟</span></span></div></div>
+        <div class="dcard" id="d3"><div class="flip"><span class="face front"><span class="q">❓</span></span><span class="face back"><span class="em">🪺</span><span class="lb">鸟窝</span></span></div></div>
+      </div>
+      <p class="demo-step" id="demoStep">看：先翻一张牌……</p>
+      <div class="demo-actions" id="demoActions">
+        <button type="button" class="btn primary" id="btnStart">🚀 开始游戏</button>
+        <button type="button" class="btn ghost" id="btnSkip">跳过演示</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="modal" role="dialog" aria-modal="true" aria-label="关卡完成">
+    <div class="modal-card">
+      <h2 id="modalTitle"></h2>
+      <div id="modalBody"></div>
+      <div class="btn-row"><button type="button" class="btn primary" id="modalNext">下一关 ➜</button></div>
+    </div>
+  </div>
+</main>
+<script>
+(function(){
+'use strict';
+const PAIRS=[
+  {a:'🐝',la:'蜜蜂',b:'🍯',lb:'蜂巢'},
+  {a:'🐦',la:'小鸟',b:'🪺',lb:'鸟窝'},
+  {a:'🐰',la:'兔子',b:'🕳️',lb:'地洞'},
+  {a:'🐶',la:'小狗',b:'🏠',lb:'狗窝'},
+  {a:'🕷️',la:'蜘蛛',b:'🕸️',lb:'蛛网'},
+  {a:'🐻',la:'小熊',b:'🌳',lb:'树洞'},
+  {a:'🐟',la:'小鱼',b:'🌊',lb:'池塘'}
+];
+const LEVELS=[3,5,7];
+let level=0, cards=[], open=[], matched=new Set(), tries=0, lock=false;
+const $=id=>document.getElementById(id);
+const grid=$('grid'), fb=$('fb'), think=$('think'), modal=$('modal'), demo=$('demo');
+const demoStep=$('demoStep'), demoActions=$('demoActions');
+
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+
+function layout(){
+  const n=cards.length;
+  let cols = n<=6 ? 3 : n<=10 ? (innerWidth<600?4:5) : (innerWidth<600?4:7);
+  grid.style.setProperty('--cols',cols);
+}
+function deal(){
+  const cnt=LEVELS[level];
+  cards=[]; open=[]; matched=new Set(); tries=0; lock=false;
+  for(let i=0;i<cnt;i++){
+    const p=PAIRS[i];
+    cards.push({pair:i,em:p.a,lb:p.la});
+    cards.push({pair:i,em:p.b,lb:p.lb});
+  }
+  shuffle(cards);
+  $('total').textContent=cnt;
+  $('pairs').textContent=0;
+  $('tries').textContent=0;
+  $('lvlBadge').textContent='第 '+(level+1)+' 关 · '+cnt+' 对';
+  fb.className='fb'; fb.innerHTML='👆 点一张牌，看看翻出来的是动物还是它的家。';
+  think.innerHTML='配对不是瞎点——先记住「刚翻过什么、在哪里」。';
+  render();
+  layout();
+  requestAnimationFrame(fit);
+}
+function render(){
+  grid.innerHTML='';
+  cards.forEach((c,i)=>{
+    const b=document.createElement('button');
+    b.type='button'; b.className='pcard';
+    b.setAttribute('aria-label','未翻开');
+    b.innerHTML='<span class="flip"><span class="face front"><span class="q">❓</span><span class="t">翻牌</span></span><span class="face back"><span class="em">'+c.em+'</span><span class="lb">'+c.lb+'</span></span></span>';
+    b.onclick=()=>flip(i);
+    grid.appendChild(b);
+    c.el=b;
+  });
+}
+function flip(i){
+  if(lock || matched.has(cards[i].pair) || open.includes(i)) return;
+  const el=cards[i].el;
+  open.push(i); el.classList.add('flipped');
+  if(open.length===2){
+    lock=true; tries++; $('tries').textContent=tries;
+    const a=open[0], b=open[1], ca=cards[a], cb=cards[b];
+    if(ca.pair===cb.pair){
+      setTimeout(()=>{
+        matched.add(ca.pair);
+        ca.el.classList.add('matched'); cb.el.classList.add('matched');
+        $('pairs').textContent=matched.size;
+        const p=PAIRS[ca.pair];
+        fb.className='fb ok';
+        fb.innerHTML='✅ '+p.la+p.a+'的家是'+p.lb+p.b+'！';
+        think.innerHTML='记住这一对的位置，剩下的更好找。';
+        if(matched.size===LEVELS[level]){
+          setTimeout(levelDone,650);
+        }else{
+          open=[]; lock=false;
+        }
+      },500);
+    }else{
+      setTimeout(()=>{
+        ca.el.classList.add('wrong'); cb.el.classList.add('wrong');
+        fb.className='fb bad';
+        fb.innerHTML='❌ 不是一对：'+ca.em+' '+ca.lb+' ↔ '+cb.em+' '+cb.lb+'。记住位置，再找找！';
+      },500);
+      setTimeout(()=>{
+        ca.el.classList.remove('flipped','wrong');
+        cb.el.classList.remove('flipped','wrong');
+        open=[]; lock=false;
+        fb.className='fb'; fb.innerHTML='👀 刚刚两张不是一对，记住位置再翻。';
+      },1700);
+    }
+  }
+}
+function openModal(){ modal.classList.add('open'); }
+function closeModal(){ modal.classList.remove('open'); }
+function levelDone(){
+  const cnt=LEVELS[level];
+  const pArr=PAIRS.slice(0,cnt);
+  const star = tries<=cnt*2+2 ? '⭐⭐⭐' : tries<=cnt*2+6 ? '⭐⭐' : '⭐';
+  const recap=pArr.map(p=>'<span>'+p.a+p.la+' → '+p.b+p.lb+'</span>').join('');
+  const isLast=level===LEVELS.length-1;
+  $('modalTitle').textContent=isLast?'🎉 全部帮小动物回到家！':'🎉 第 '+(level+1)+' 关完成！';
+  $('modalBody').innerHTML=
+    '<p>配对成果：</p><div class="recap">'+recap+'</div>'+
+    '<div class="stars">'+star+'</div>'+
+    '<p>翻开 '+tries+' 次 · 少翻几次 = 记得更牢！</p>'+
+    (isLast?'':'<p>还有更多动物等着回家，下一关多 '+(LEVELS[level+1]-cnt)+' 对！</p>');
+  $('modalNext').textContent=isLast?'🌟 想一想':'下一关 ➜';
+  $('modalNext').onclick=()=>{
+    closeModal();
+    if(isLast){ showFinal(); } else { level++; deal(); }
+  };
+  openModal();
+}
+function showFinal(){
+  $('modalTitle').textContent='🌟 你会想到更多吗？';
+  $('modalBody').innerHTML=
+    '<p>🐸 青蛙也有自己的家。想一想：<b>青蛙的家在哪里？</b></p>'+
+    '<div id="revealZone" style="min-height:70px;display:flex;align-items:center;justify-content:center"></div>'+
+    '<p id="afterZone"></p>';
+  $('modalNext').textContent='💡 让我看看';
+  $('modalNext').onclick=()=>{
+    $('revealZone').innerHTML='<div class="recap" style="display:flex"><span>🐸 青蛙 → 🌊 池塘</span></div>';
+    $('afterZone').innerHTML='没错！青蛙住在池塘里。你还能说出别的小动物的家吗？';
+    $('modalNext').textContent='↻ 再玩一遍';
+    $('modalNext').onclick=()=>{ closeModal(); level=0; deal(); };
+  };
+  openModal();
+}
+function fit(){
+  const html=document.documentElement, c=$('card');
+  html.classList.remove('compact','tight');
+  if(c.scrollHeight>c.clientHeight+8) html.classList.add('compact');
+  if(c.scrollHeight>c.clientHeight+8) html.classList.add('tight');
+}
+addEventListener('resize',fit);
+
+/* —— 开场演示（可跳过，约 9 秒） —— */
+function runDemo(){
+  const d=[$('d0'),$('d1'),$('d2'),$('d3')];
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches){
+    d.forEach(x=>x.classList.add('flipped'));
+    d[0].classList.add('matched'); d[1].classList.add('matched');
+    demoStep.textContent='翻两张牌：🐝 和 🍯 是一对，帮动物找到家！';
+    demoActions.classList.add('show-start');
+    return;
+  }
+  const t=(fn,ms)=>setTimeout(fn,ms);
+  t(()=>{d[0].classList.add('flipped'); demoStep.textContent='先翻一张：这是谁？';},300);
+  t(()=>{demoStep.textContent='🐝 蜜蜂！记住它。';},1700);
+  t(()=>{d[1].classList.add('flipped'); demoStep.textContent='再翻一张：这是它的家吗？';},3000);
+  t(()=>{demoStep.textContent='🍯 蜂巢！蜜蜂的家就是蜂巢 —— 配对成功！'; d[0].classList.add('matched'); d[1].classList.add('matched');},4500);
+  t(()=>{d[2].classList.add('flipped'); d[3].classList.add('flipped'); demoStep.textContent='小鸟🐦 的家是鸟窝🪺，小鱼的家是池塘……';},6100);
+  t(()=>{demoStep.textContent='记住位置，翻两张，配对成功就留下！'; demoActions.classList.add('show-start');},7900);
+}
+function startGame(){
+  demo.classList.add('hide');
+  level=0; deal();
+}
+$('btnStart').onclick=startGame;
+$('btnSkip').onclick=startGame;
+$('btnSay').onclick=()=>{
+  const pArr=PAIRS.slice(0,LEVELS[level]);
+  const s=pArr.map(p=>p.la+'住'+p.lb).join('，');
+  fb.className='fb ok';
+  fb.innerHTML='🗣️ '+s+'。每种动物都有自己的家！';
+};
+$('btnReset').onclick=()=>{ level=0; deal(); };
+runDemo();
+})();
+</script>
+</body>
+</html>

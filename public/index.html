@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>原子教具</title>
+<title>一句话教具</title>
 <style>
   :root{
     --paper:#F7F4EC; --paper-2:#EFEADF; --grid:#E4DCC8;
@@ -75,27 +75,23 @@
 
   nav{flex:none}
   footer{flex:none}
+  body.on-create{overflow:hidden;height:100dvh}
   body.on-create .hero,body.on-create footer{display:none}
   section{display:none;padding:18px 0 28px;flex:1;min-height:0}
   section.active{display:flex;flex-direction:column;animation:fadeUp .35s var(--ease)}
-  section.active > .container{flex:1;min-height:0;display:flex;flex-direction:column}
+  section.active > .container{flex:1;min-height:0;width:100%}
   #tab-samples.active,#tab-guide.active{overflow:auto}
+  #tab-create.active{overflow:hidden;padding:12px 0 14px}
+  #tab-create.active > .container{display:flex;flex-direction:column;overflow:hidden;gap:10px}
   #tab-create .form-card{flex:none}
-  #tab-create.has-result .chips,#tab-create.has-result .form-card>label,#tab-create.has-result #gen{display:none}
-  #tab-create.has-result textarea{min-height:40px;max-height:44px;padding:8px 12px}
-  #tab-create.has-result .form-card{padding:12px 16px}
-  #tab-create.has-result .result{margin-top:8px}
-  #tab-create.has-result .agent-panel{max-height:92px;overflow:auto;margin-top:8px;padding:8px 12px}
-  #tab-create .live-preview{display:none;flex:1;min-height:0;margin-top:10px;border:1px solid var(--line);border-radius:var(--r);overflow:hidden;background:#fff}
-  #tab-create.has-result .live-preview{display:flex;flex-direction:column}
-  #tab-create .live-preview iframe{flex:1;min-height:0;width:100%;border:0}
+  #tab-create textarea{resize:none;max-height:88px}
+  #tab-create .agent-panel{flex:1 1 auto;min-height:0;margin-top:0;display:flex;flex-direction:column;overflow:hidden}
+  #tab-create .agent-head{flex:none}
+  #tab-create .agent-idle{flex:none}
+  #tab-create .agent-log{flex:1;min-height:0;max-height:none}
   .btn-cancel{display:none;width:100%;margin-top:10px}
   .btn-cancel.show{display:inline-flex}
   .chip-more{border-style:dashed}
-  .preview-dock{display:none}
-  .preview-dock.open{display:flex;flex-direction:column;position:fixed;inset:0;z-index:80;margin:0;border:0;border-radius:0;background:#fff}
-  .preview-dock.open .pd-bar{flex:none}
-  .preview-dock.open iframe{flex:1;height:auto;min-height:0}
   @keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 
   .card{background:var(--paper);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow-sm)}
@@ -180,13 +176,7 @@
   .filter-btn{min-height:36px;padding:6px 14px;border-radius:999px;border:1px solid var(--line);background:#fff;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;font-family:inherit;transition:all .15s var(--ease)}
   .filter-btn:hover{border-color:var(--blue);color:var(--blue-d)}
   .filter-btn.on{background:var(--ink);color:var(--paper);border-color:var(--ink)}
-  .preview-dock{display:none;margin-top:18px;border:1px solid var(--line);border-radius:var(--r);overflow:hidden;background:#fff;box-shadow:var(--shadow)}
-  .preview-dock.open{display:flex;flex-direction:column;position:fixed;inset:0;z-index:80;margin:0;border:0;border-radius:0}
-  .preview-dock .pd-bar{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--paper-2);border-bottom:1px solid var(--line);font-size:13.5px;font-weight:600;flex:none}
-  .preview-dock .pd-bar button{margin-left:auto;min-height:36px;padding:0 12px;border-radius:8px;border:1px solid var(--line);background:#fff;cursor:pointer;font:inherit;font-size:13px}
-  .preview-dock iframe{width:100%;height:min(70vh,560px);border:0;display:block;background:#f8fafc}
-  .preview-dock.open iframe{flex:1;height:auto;min-height:0}
-  .gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(255px,1fr));gap:16px}
+  .gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
   .gcard{padding:0;display:flex;flex-direction:column;overflow:hidden;cursor:pointer;transition:transform .2s var(--ease),box-shadow .2s var(--ease),border-color .2s var(--ease)}
   .gcard:hover{transform:translateY(-3px);box-shadow:var(--shadow-md);border-color:#C9C0A6}
   .gcard .meta-line{font-size:12.5px;color:var(--muted);line-height:1.45}
@@ -194,16 +184,16 @@
   .gcard.t-pv .stripe{background:#3B6EA5}
   .gcard.t-bs .stripe{background:var(--amber)}
   .gcard.t-ds .stripe{background:var(--green)}
-  .gcard .body{padding:18px;display:flex;flex-direction:column;gap:11px;flex:1}
-  .gcard h3{margin:0;font-size:15px;line-height:1.45;font-weight:600;letter-spacing:-.005em}
+  .gcard .body{padding:16px 16px 14px;display:flex;flex-direction:column;gap:8px;flex:1}
+  .gcard h3{margin:0;font-size:16px;line-height:1.4;font-weight:600;letter-spacing:-.005em}
   .badges{display:flex;flex-wrap:wrap;gap:6px}
   .badge{font-size:11px;padding:3px 8px;border-radius:5px;font-weight:600;letter-spacing:.02em}
   .b-pv{background:#E1ECF7;color:#2B4C8C} .b-bs{background:#F6ECCF;color:#8A5A12} .b-ds{background:#E2EFE5;color:#356A43}
   .b-math{background:#EDE9DD;color:#5B5440} .b-safety{background:#F6E0DD;color:#9A2F27} .b-english{background:#E6E4F2;color:#4A4490}
   .b-builtin{background:var(--blue-l);color:var(--blue-d)} .b-creator{background:#F6ECCF;color:#8A5A12}
   .gcard .size{font-size:12px;color:var(--faint);font-family:ui-monospace,monospace}
-  .gcard .g-actions{display:flex;gap:8px;margin-top:auto}
-  .gcard .g-actions .btn{flex:1;min-height:40px;font-size:13px;padding:0 10px}
+  .gcard .g-actions{display:flex;gap:8px;margin-top:8px}
+  .gcard .g-actions .btn{flex:1;min-height:36px;font-size:13px;padding:0 10px}
 
   .skill-card{padding:20px;transition:transform .2s var(--ease),box-shadow .2s var(--ease),border-color .2s var(--ease)}
   .skill-card:hover{transform:translateY(-3px);box-shadow:var(--shadow-md);border-color:#C9C0A6}
@@ -246,11 +236,11 @@
   <div class="container nav-inner">
     <div class="brand">
       <span class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16M4 12h10M4 19h7"/><path d="M17 14l3 3-3 3"/></svg></span>
-      原子教具 <small>Atomic Aids</small>
+      一句话教具 <small>图解 · 离线</small>
     </div>
     <div class="tabs">
-      <button class="tab active" data-tab="create">创作</button>
-      <button class="tab" data-tab="samples">样例库</button>
+      <button class="tab active" data-tab="samples">教具</button>
+      <button class="tab" data-tab="create">创作</button>
       <button class="tab" data-tab="guide">使用说明</button>
     </div>
   </div>
@@ -264,7 +254,7 @@
       <p class="lede">用图解降低理解难度：孩子看见关系、摸清步骤。AI 按场景生成单文件 HTML，白板 / 平板直接打开，离线可用。</p>
       <div class="meta-row">
         <span><b id="st-skills">5</b> 个创作技能</span><span class="sep">·</span>
-        <span><b id="st-samples">16</b> 个样例</span><span class="sep">·</span>
+        <span><b id="st-samples">16</b> 件教具</span><span class="sep">·</span>
         <span><b>3</b> 种交互类型</span><span class="sep">·</span>
         <span>单文件 <b>≤500KB</b></span>
       </div>
@@ -304,7 +294,7 @@
   </div>
 </header>
 
-<section id="tab-create" class="active">
+<section id="tab-create">
   <div class="container">
     <div class="card form-card">
       <label for="topic">一句话说明你想教什么</label>
@@ -316,9 +306,6 @@
       </button>
       <button type="button" class="btn btn-ghost btn-cancel" id="cancel-gen">取消生成</button>
       <div class="result" id="result"></div>
-    </div>
-    <div class="live-preview" id="live-preview">
-      <iframe id="live-frame" title="教具预览"></iframe>
     </div>
     <aside class="agent-panel" id="agent-panel" aria-live="polite">
       <div class="agent-head">
@@ -332,19 +319,11 @@
   </div>
 </section>
 
-<section id="tab-samples">
+<section id="tab-samples" class="active">
   <div class="container">
-    <div class="page-head"><h2>样例库</h2><p>按场景打磨的图解教具：预览、下载，也可本地双击打开 · 共 <b id="gallery-count">—</b> 件 · <span id="gallery-balance" style="color:var(--muted);font-size:13px"></span></p></div>
+    <div class="page-head"><h2>教具</h2><p>按场景打磨的图解教具：查看、下载，也可本地双击打开 · 共 <b id="gallery-count">—</b> 件 · <span id="gallery-balance" style="color:var(--muted);font-size:13px"></span></p></div>
     <div class="filters" id="filters" role="toolbar" aria-label="按类型筛选"></div>
     <div class="gallery" id="gallery"></div>
-    <div class="preview-dock" id="preview-dock">
-      <div class="pd-bar">
-        <span id="pd-title">页内预览</span>
-        <a id="pd-open" href="#" target="_blank" rel="noopener" style="font-size:12px;color:var(--blue-d)">新窗口</a>
-        <button type="button" id="pd-close">关闭</button>
-      </div>
-      <iframe id="pd-frame" title="样例预览"></iframe>
-    </div>
   </div>
 </section>
 
@@ -377,7 +356,7 @@
 
 <footer>
   <div class="container">
-    <span>AI 原子教具创作框架</span><span class="dot"></span>
+    <span>一句话教具 · 图解创作</span><span class="dot"></span>
     <span>SDD 驱动</span><span class="dot"></span>
     <span>TypeScript + Hono + pi Agent SDK</span>
   </div>
@@ -388,19 +367,19 @@ const $ = (id) => document.getElementById(id);
 const TYPE_LABEL = { "param-visual":"参数图解", "branch-story":"选择分支", "drag-slot":"拖拽槽位" };
 const TYPE_BADGE = { "param-visual":"b-pv", "branch-story":"b-bs", "drag-slot":"b-ds" };
 const TYPE_STRIPE = { "param-visual":"t-pv", "branch-story":"t-bs", "drag-slot":"t-ds" };
-const CAT_LABEL = { math:"数学", safety:"安全", english:"英语", story:"故事", preschool:"学前", life:"生活", classroom:"教室", chinese:"语文", science:"科学", game:"游戏", data:"数据" };
-const CAT_BADGE = { math:"b-math", safety:"b-safety", english:"b-english", story:"b-math", preschool:"b-builtin", life:"b-bs", classroom:"b-pv", chinese:"b-english", science:"b-pv", game:"b-creator", data:"b-math" };
+const CAT_LABEL = { math:"数学", english:"英语", chinese:"语文", safety:"安全", preschool:"学前", life:"生活" };
+const CAT_BADGE = { math:"b-math", english:"b-english", chinese:"b-english", safety:"b-safety", preschool:"b-builtin", life:"b-bs" };
+const CAT_ORDER = ["math", "english", "chinese", "safety", "preschool", "life"];
 
 const ICON = {
   download:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>',
   external:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6M20 4l-9 9M19 14v5a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>',
-  embed:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M3 10h18"/></svg>',
   ok:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9 12l2 2 4-4"/></svg>',
   warn:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.6 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.6a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4M12 17h.01"/></svg>'
 };
 
 function showTab(name) {
-  const id = name === "skills" ? "guide" : (name || "create");
+  const id = name === "skills" ? "guide" : (name || "samples");
   document.querySelectorAll(".tab").forEach((x) => x.classList.toggle("active", x.dataset.tab === id));
   document.querySelectorAll("section").forEach((x) => x.classList.toggle("active", x.id === "tab-" + id));
   document.body.classList.toggle("on-create", id === "create");
@@ -410,8 +389,8 @@ function showTab(name) {
 document.querySelectorAll(".tab").forEach((t) => {
   t.addEventListener("click", () => showTab(t.dataset.tab));
 });
-window.addEventListener("hashchange", () => showTab((location.hash || "#create").slice(1)));
-showTab((location.hash || "#create").slice(1));
+window.addEventListener("hashchange", () => showTab((location.hash || "#samples").slice(1)));
+showTab((location.hash || "#samples").slice(1));
 document.querySelector(".hero .cta")?.addEventListener("click", (e) => {
   e.preventDefault();
   showTab("create");
@@ -471,12 +450,12 @@ fetch("/skills").then((r) => r.json()).then((defs) => {
 
 function friendlyError(raw) {
   const s = String(raw || "");
-  if (/AbortError|取消/.test(s)) return "已取消。想看现成的，去样例库点一张即可。";
-  if (/超时|timeout|挂起/.test(s)) return "这次备课有点久。可以换个更短的说法，或先打开样例库里相近的主题。";
-  if (/无法解析|空响应|进度流|JSON|崩溃/.test(s)) return "没能拿到完整结果。请再试一次；仍不行就先用样例库。";
-  if (/无可用模型/.test(s)) return "还没有接上可用模型。先打开样例库预览，或检查本机模型配置。";
+  if (/AbortError|取消/.test(s)) return "已取消。想看现成的，去「教具」里点一件即可。";
+  if (/超时|timeout|挂起/.test(s)) return "这次备课有点久。可以换个更短的说法，或先打开「教具」里相近的主题。";
+  if (/无法解析|空响应|进度流|JSON|崩溃/.test(s)) return "没能拿到完整结果。请再试一次；仍不行就先用「教具」页。";
+  if (/无可用模型/.test(s)) return "还没有接上可用模型。先打开「教具」预览，或检查本机模型配置。";
   if (/未成功写出|没有结果/.test(s)) return "没有写出教具。请把话说具体一点再试，例如「台风天关窗还是下楼」。";
-  return s.length > 80 ? "生成没有成功。换一句更具体的主题，或先看样例库。" : (s || "生成没有成功，请再试一次。");
+  return s.length > 80 ? "生成没有成功。换一句更具体的主题，或先看「教具」。" : (s || "生成没有成功，请再试一次。");
 }
 
 let SAMPLE_CACHE = [];
@@ -529,14 +508,14 @@ function renderGallery() {
         <h3>${s.topic || s.slug}</h3>
         <div class="badges">
           <span class="badge ${TYPE_BADGE[s.type]||""}">${TYPE_LABEL[s.type]||s.type||"—"}</span>
+          ${s.tier === "created" ? `<span class="badge b-creator">刚做好</span>` : ""}
           ${s.category ? `<span class="badge ${CAT_BADGE[s.category]||"b-math"}">${CAT_LABEL[s.category]||s.category}</span>` : ""}
           ${s.age ? `<span class="badge b-math">${s.age} 岁</span>` : ""}
         </div>
         ${scene ? `<div class="meta-line">${scene}</div>` : ""}
         <div class="size">${kb} · ${s.slug}</div>
         <div class="g-actions">
-          <button type="button" class="btn btn-ghost btn-embed" data-slug="${s.slug}" data-topic="${(s.topic||s.slug).replace(/"/g,'&quot;')}">${ICON.embed}页内</button>
-          <a class="btn btn-ghost" href="/samples/${s.slug}.html" target="_blank" rel="noopener">${ICON.external}新窗</a>
+          <a class="btn btn-ghost" href="/samples/${s.slug}.html" target="_blank" rel="noopener">${ICON.external}查看</a>
           <a class="btn btn-ok" href="/samples/${s.slug}.html" download="${s.slug}.html">${ICON.download}下载</a>
         </div>
       </div>
@@ -544,63 +523,24 @@ function renderGallery() {
   }).join("") : '<p style="color:var(--muted)">没有匹配的样例，试试清空搜索或换分类</p>';
 }
 
-function fitIframe(frame) {
-  try {
-    const d = frame.contentDocument;
-    if (!d || !d.documentElement) return;
-    const h = Math.max(d.documentElement.scrollHeight, d.body ? d.body.scrollHeight : 0);
-    const box = frame.clientHeight || 1;
-    const scale = h > box + 8 ? Math.max(0.45, box / h) : 1;
-    d.documentElement.style.zoom = String(scale);
-  } catch { /* cross-origin */ }
-}
-function openSamplePreview(slug, topic) {
-  const dock = $("preview-dock");
-  const frame = $("pd-frame");
-  const url = "/samples/" + slug + ".html";
-  $("pd-title").textContent = topic || slug;
-  $("pd-open").href = url;
-  frame.onload = () => fitIframe(frame);
-  frame.src = url;
-  dock.classList.add("open");
-}
-$("pd-close").addEventListener("click", () => {
-  $("preview-dock").classList.remove("open");
-  $("pd-frame").src = "about:blank";
-});
 $("gallery").addEventListener("click", (ev) => {
   if (ev.target.closest("a")) return;
   const card = ev.target.closest(".gcard");
-  const b = ev.target.closest(".btn-embed") || card;
-  if (!b || !b.dataset.slug && !card) return;
-  const slug = (b.dataset && b.dataset.slug) || (card && card.dataset.slug);
-  const topic = (b.dataset && b.dataset.topic) || (card && card.dataset.topic);
-  if (slug) openSamplePreview(slug, topic);
+  if (!card || !card.dataset.slug) return;
+  window.open("/samples/" + card.dataset.slug + ".html", "_blank", "noopener");
 });
 
 function renderFilters() {
-  const types = [
-    { id: "all", label: "全部类型" },
-    { id: "param-visual", label: "参数图解" },
-    { id: "branch-story", label: "选择分支" },
-    { id: "drag-slot", label: "拖拽槽位" },
-  ];
-  const cats = ["all", ...new Set(SAMPLE_CACHE.map((s) => s.category).filter(Boolean))].sort();
-  const catLabels = { all: "全部分类", ...CAT_LABEL };
+  const cats = [{ id: "all", label: "全部" }, ...CAT_ORDER.map((id) => ({ id, label: CAT_LABEL[id] }))];
   $("filters").innerHTML =
     `<input type="search" id="sample-q" placeholder="搜索主题/场景…" value="${String(sampleQ).replace(/"/g, "&quot;")}" style="min-height:36px;padding:6px 12px;border-radius:999px;border:1px solid var(--line);font:inherit;font-size:13px;min-width:160px;flex:1;max-width:220px">` +
-    types.map((t) =>
-      `<button type="button" class="filter-btn${sampleFilter===t.id?" on":""}" data-f="${t.id}">${t.label}</button>`
-    ).join("") +
-    `<span style="width:1px;height:20px;background:var(--line);margin:0 4px"></span>` +
     cats.map((c) =>
-      `<button type="button" class="filter-btn${sampleCat===c?" on":""}" data-cat="${c}">${catLabels[c]||c}</button>`
+      `<button type="button" class="filter-btn${sampleCat===c.id?" on":""}" data-cat="${c.id}">${c.label}</button>`
     ).join("") +
     `<span style="width:1px;height:20px;background:var(--line);margin:0 4px"></span>` +
     [
       { id: "manifest", label: "默认序" },
       { id: "age", label: "按年龄" },
-      { id: "type", label: "按类型排" },
     ].map((s) =>
       `<button type="button" class="filter-btn${sampleSort===s.id?" on":""}" data-sort="${s.id}">${s.label}</button>`
     ).join("");
@@ -622,18 +562,21 @@ $("filters").addEventListener("click", (ev) => {
   renderGallery();
 });
 
-fetch("/samples?_=" + Date.now(), { cache: "no-store" }).then((r) => r.json()).then((list) => {
-  SAMPLE_CACHE = Array.isArray(list) ? list : (list.samples || []);
-  $("st-samples").textContent = SAMPLE_CACHE.length;
-  const bal = $("gallery-balance");
-  if (bal) {
-    const c = { "param-visual": 0, "branch-story": 0, "drag-slot": 0 };
-    SAMPLE_CACHE.forEach((s) => { if (c[s.type] != null) c[s.type]++; });
-    bal.textContent = `图解 ${c["param-visual"]} · 分支 ${c["branch-story"]} · 拖拽 ${c["drag-slot"]}`;
-  }
-  renderFilters();
-  renderGallery();
-}).catch(() => { $("gallery").innerHTML = '<p style="color:var(--muted)">样例库加载失败，请确认服务已启动</p>'; });
+function loadSamples() {
+  return fetch("/samples?_=" + Date.now(), { cache: "no-store" }).then((r) => r.json()).then((list) => {
+    SAMPLE_CACHE = Array.isArray(list) ? list : (list.samples || []);
+    $("st-samples").textContent = SAMPLE_CACHE.length;
+    const bal = $("gallery-balance");
+    if (bal) {
+      const c = {};
+      SAMPLE_CACHE.forEach((s) => { const k = s.category; if (k) c[k] = (c[k] || 0) + 1; });
+      bal.textContent = CAT_ORDER.map((id) => `${CAT_LABEL[id]} ${c[id] || 0}`).join(" · ");
+    }
+    renderFilters();
+    renderGallery();
+  }).catch(() => { $("gallery").innerHTML = '<p style="color:var(--muted)">教具加载失败，请确认服务已启动</p>'; });
+}
+loadSamples();
 
 function resetAgentPanel() {
   const panel = $("agent-panel");
@@ -719,10 +662,9 @@ $("gen").addEventListener("click", async () => {
   $("gen").disabled = true;
   $("cancel-gen").classList.add("show");
   $("result").innerHTML = "";
-  $("tab-create").classList.remove("has-result");
-  if ($("live-frame")) $("live-frame").removeAttribute("srcdoc");
+  $("tab-create").classList.add("is-busy");
   resetAgentPanel();
-  showStatus("loading", "正在备课…样例库里有的主题很快；新主题大约一两分钟");
+  showStatus("loading", "正在备课…库里有的主题很快；新主题大约一两分钟");
 
   createCtrl = new AbortController();
   const timer = setTimeout(() => createCtrl.abort(), 300000);
@@ -764,16 +706,17 @@ $("gen").addEventListener("click", async () => {
     $("result").innerHTML += `
       <div class="toolchain">${TYPE_LABEL[data.type]||data.type} · ${bytes}B${fromLib ? " · 样例" : ""}</div>
       <div class="actions">
-        <a class="btn btn-ok" href="${url}" download="${safe}.html">${ICON.download}下载</a>
-        <button class="btn btn-ghost" id="pv-new">${ICON.external}新窗口</button>
+        <button class="btn btn-ok" id="pv-view">${ICON.external}查看</button>
+        <a class="btn btn-ghost" href="${url}" download="${safe}.html">${ICON.download}下载</a>
+        <button class="btn btn-ghost" id="write-again">再写一句</button>
       </div>`;
-    $("tab-create").classList.add("has-result");
-    const frame = $("live-frame");
-    if (frame) {
-      frame.onload = () => fitIframe(frame);
-      frame.srcdoc = data.html || "";
-    }
-    $("pv-new").addEventListener("click", () => window.open(url, "_blank"));
+    $("pv-view").addEventListener("click", () => window.open(data.galleryUrl || url, "_blank", "noopener"));
+    loadSamples();
+    $("write-again").addEventListener("click", () => {
+      const box = $("topic");
+      box.focus();
+      box.select();
+    });
   } catch (e) {
     clearTimeout(timer);
     finishAgentPanel(false);
@@ -781,6 +724,7 @@ $("gen").addEventListener("click", async () => {
   } finally {
     $("gen").disabled = false;
     $("cancel-gen").classList.remove("show");
+    $("tab-create").classList.remove("is-busy");
     createCtrl = null;
   }
 });

@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta name="aid-version" content="v1">
+<meta name="aid-version-at" content="2026-08-14T08:25:39">
+<meta name="aid-version-note" content="当前稿">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>分披萨 · 分数图解</title>
+<!-- 题型：分数 / 核心：整体相同·份数·涂色份 / 年龄：6-9 / 场景：家庭 -->
+<style>
+:root{
+  --accent:#22c55e; --ink:#1f2a44; --muted:#667085; --line:#bbf7d0;
+  --ease:cubic-bezier(0.25,1,0.5,1); --touch:52px;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  font-family:-apple-system,"PingFang SC",system-ui,sans-serif; color:var(--ink);
+  background:linear-gradient(160deg,#f0fdf4,#fef9c3); min-height:100vh; padding:14px 12px 28px;
+}
+.card{
+  max-width:760px; margin:0 auto; background:#fff; border:1px solid var(--line);
+  border-radius:20px; box-shadow:0 12px 28px rgba(34,197,94,.12); padding:18px 16px 22px;
+}
+.top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.top h1{margin:0;font-size:24px;font-weight:800}
+.badge{font-size:14px;font-weight:700;color:#166534;background:#dcfce7;padding:5px 12px;border-radius:999px}
+.story{
+  background:linear-gradient(135deg,#dcfce7,#fef9c3); border-left:5px solid var(--accent);
+  border-radius:0 14px 14px 0; padding:12px; margin-bottom:12px; font-size:16px; line-height:1.7;
+}
+.viz{
+  display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px;
+}
+@media(max-width:560px){.viz{grid-template-columns:1fr}}
+.panel{
+  background:#f0fdf4; border:1px solid var(--line); border-radius:16px; padding:12px; text-align:center;
+}
+.panel h3{margin:0 0 8px;font-size:14px;color:var(--muted)}
+svg{max-width:100%;height:auto}
+.strip{
+  height:36px; border-radius:8px; border:2px solid #86efac; overflow:hidden;
+  display:flex; margin:12px auto; max-width:280px; background:#fff;
+}
+.strip .cell{
+  flex:1; border-right:1px solid #bbf7d0; transition:background .35s var(--ease);
+}
+.strip .cell:last-child{border-right:none}
+.strip .cell.on{background:#4ade80}
+.frac{
+  font-size:36px; font-weight:800; color:#166534; margin:8px 0;
+  font-variant-numeric:tabular-nums;
+}
+.frac small{font-size:14px;color:var(--muted);font-weight:600;display:block}
+.ctrl{display:flex;flex-direction:column;gap:12px}
+.row{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:10px}
+.row label{font-weight:700;font-size:15px}
+.step button{
+  min-width:var(--touch);min-height:var(--touch);border-radius:14px;border:2px solid var(--line);
+  background:#fff;font-size:22px;font-weight:800;cursor:pointer;font-family:inherit;
+}
+.step .v{min-width:40px;text-align:center;font-size:22px;font-weight:800;color:var(--accent)}
+input[type=range]{width:min(200px,45vw)}
+.btn-row{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+.btn{
+  min-height:var(--touch);padding:12px 18px;border-radius:14px;border:2px solid var(--line);
+  background:#fff;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit;
+}
+.btn.primary{background:linear-gradient(135deg,var(--accent),#15803d);color:#fff;border:none}
+.fb{min-height:52px;border-radius:14px;padding:12px;background:#f8fafc;border:1px solid #e2e8f0;font-size:16px;line-height:1.55;margin:10px 0}
+.fb.ok{background:#ecfdf5;border-color:#6ee7b7}
+.fb.bad{background:#fff7ed;border-color:#fcd34d}
+.thinking{background:#fffbeb;border-radius:12px;padding:10px;font-size:15px;border:1px dashed #fcd34d}
+.thinking .tag{font-weight:800;color:#b45309}
+.say{margin-top:8px;font-size:15px;min-height:22px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style><style id="aid-fit">/* AID_FIT_V1 */
+html,body{height:100%!important;max-height:100dvh!important;overflow:hidden!important}
+body{
+  min-height:100dvh!important;height:100dvh!important;
+  display:flex!important;flex-direction:column!important;
+  padding:clamp(6px,1.2vh,14px) clamp(8px,1.5vw,18px)!important;
+  box-sizing:border-box!important;
+}
+body>.card,main.card{
+  flex:1 1 auto!important;min-height:0!important;width:100%!important;
+  max-width:min(1240px,100%)!important;margin:0 auto!important;
+  display:flex!important;flex-direction:column!important;
+  overflow:hidden!important;
+  padding:clamp(10px,1.5vh,20px) clamp(12px,1.8vw,24px) clamp(10px,1.3vh,16px)!important;
+}
+.stage,.scene,.stage-wrap,.viz{
+  flex:1 1 42%!important;min-height:min(280px,38vh)!important;overflow:hidden!important;
+  display:flex!important;flex-direction:column!important;justify-content:center!important;
+}
+.stage svg,.scene svg,#diagram{
+  flex:1 1 auto;width:100%!important;height:100%!important;max-height:100%!important;min-height:0;
+}
+.ctrl,.choices,.btn-row,.top,.topbar,.fb,.progress{flex:none}
+.slots,.grid,.bins,.pool,.ten{flex:1 1 auto!important;min-height:0}
+html.aid-compact .story,html.aid-compact .thinking,html.aid-compact .say{display:none!important}
+html.aid-compact .fb{min-height:0!important;padding:8px 10px!important;margin:6px 0!important;font-size:14px!important}
+html.aid-compact h1{font-size:clamp(18px,2.2vw,22px)!important}
+html.aid-compact .ctrl{gap:8px}
+html.aid-compact .btn{min-height:44px;padding:8px 14px}
+html.aid-compact .controls{display:grid!important;grid-template-columns:1fr 1fr;gap:6px 12px;max-height:30vh;overflow:auto}
+html.aid-tight .legend,html.aid-tight .hints,html.aid-tight .thinking{display:none!important}
+html.aid-tight .story{display:none!important}
+html.aid-tight .stage,html.aid-tight .scene{min-height:min(200px,32vh)!important}
+@media (min-width:960px) and (min-height:780px){
+  body{font-size:17px}
+  .top h1,.topbar h1{font-size:clamp(24px,2.1vw,30px)}
+}
+</style>
+</head>
+<body>
+<main class="card">
+  <div class="top">
+    <h1>分披萨</h1>
+    <span class="badge">6–9 岁 · 分数</span>
+  </div>
+  <div class="story">
+    一整块披萨是「整体 1」。先切成 <strong>同样大</strong> 的若干份（分母），
+    再涂色拿走几份（分子）。饼图和纸条<strong>整体一样长/一样大</strong>，才能比。
+  </div>
+  <div class="viz">
+    <div class="panel" role="img" aria-label="分数饼图">
+      <h3>🍕 饼图</h3>
+      <svg id="pie" viewBox="0 0 120 120" width="160" height="160"></svg>
+      <div class="frac" id="fracLabel">3/4<small>涂色 / 总份</small></div>
+    </div>
+    <div class="panel" role="img" aria-label="等长纸条">
+      <h3>📏 等长纸条（整体相同）</h3>
+      <div class="strip" id="strip"></div>
+      <div class="strip" id="strip2" style="display:none;margin-top:8px;border-color:#fbbf24" title="超出 1 的部分"></div>
+      <div class="frac" id="words" style="font-size:18px">3 份中的 4 份？</div>
+    </div>
+  </div>
+  <div class="ctrl">
+    <div class="row">
+      <label>分母（切几份）</label>
+      <div class="step">
+        <button type="button" id="dMinus" aria-label="分母减">−</button>
+        <span class="v" id="dVal">4</span>
+        <button type="button" id="dPlus" aria-label="分母加">+</button>
+      </div>
+      <input type="range" id="den" min="2" max="8" value="4" aria-label="分母">
+    </div>
+    <div class="row">
+      <label>分子（涂几份）</label>
+      <div class="step">
+        <button type="button" id="nMinus" aria-label="分子减">−</button>
+        <span class="v" id="nVal">3</span>
+        <button type="button" id="nPlus" aria-label="分子加">+</button>
+      </div>
+      <input type="range" id="num" min="0" max="8" value="3" aria-label="分子">
+    </div>
+    <div class="btn-row">
+      <button type="button" class="btn primary" id="btnCheck">✓ 我说得清吗</button>
+      <button type="button" class="btn" id="btnReset">↻ 重新开始</button>
+      <button type="button" class="btn" id="btnSay">🗣️ 我会说</button>
+    </div>
+  </div>
+  <div class="fb" id="fb" aria-live="polite">拖动分子分母，看饼和纸条一起变。假分数时饼会「第二圈」提示。</div>
+  <p class="thinking"><span class="tag">我怎么想：</span><span id="think">分母=平均切几份；分子=涂了几份。先保证每份一样大。</span></p>
+  <div class="say" id="say"></div>
+</main>
+<script>
+(function(){
+  let den=4, num=3;
+  const $ = id => document.getElementById(id);
+
+  function polar(cx,cy,r,ang){
+    const a = (ang-90)*Math.PI/180;
+    return [cx+r*Math.cos(a), cy+r*Math.sin(a)];
+  }
+  function slicePath(cx,cy,r,a0,a1){
+    const large = a1-a0 > 180 ? 1 : 0;
+    const [x0,y0]=polar(cx,cy,r,a0);
+    const [x1,y1]=polar(cx,cy,r,a1);
+    return `M ${cx} ${cy} L ${x0} ${y0} A ${r} ${r} 0 ${large} 1 ${x1} ${y1} Z`;
+  }
+
+  function drawPie(){
+    const svg = $('pie');
+    svg.innerHTML = '';
+    // base circle
+    const bg = document.createElementNS('http://www.w3.org/2000/svg','circle');
+    bg.setAttribute('cx',60); bg.setAttribute('cy',60); bg.setAttribute('r',50);
+    bg.setAttribute('fill','#fff'); bg.setAttribute('stroke','#86efac'); bg.setAttribute('stroke-width','3');
+    svg.appendChild(bg);
+
+    const showNum = Math.min(num, den); // first pie
+    const step = 360/den;
+    for(let i=0;i<den;i++){
+      const p = document.createElementNS('http://www.w3.org/2000/svg','path');
+      p.setAttribute('d', slicePath(60,60,48, i*step, (i+1)*step));
+      p.setAttribute('fill', i < showNum ? '#4ade80' : '#f0fdf4');
+      p.setAttribute('stroke', '#166534');
+      p.setAttribute('stroke-width', '1');
+      p.style.transition = 'fill .35s cubic-bezier(0.25,1,0.5,1)';
+      svg.appendChild(p);
+    }
+    // improper: second ring badge
+    if(num > den){
+      const badge = document.createElementNS('http://www.w3.org/2000/svg','circle');
+      badge.setAttribute('cx',95); badge.setAttribute('cy',25); badge.setAttribute('r',16);
+      badge.setAttribute('fill','#fbbf24'); badge.setAttribute('stroke','#b45309');
+      svg.appendChild(badge);
+      const tx = document.createElementNS('http://www.w3.org/2000/svg','text');
+      tx.setAttribute('x',95); tx.setAttribute('y',30); tx.setAttribute('text-anchor','middle');
+      tx.setAttribute('font-size','12'); tx.setAttribute('font-weight','800');
+      tx.textContent = '+'+(num-den);
+      svg.appendChild(tx);
+    }
+    if(den===0){ /* guarded by min 2 */ }
+  }
+
+  function drawStrip(){
+    const el = $('strip');
+    const el2 = $('strip2');
+    el.innerHTML = '';
+    for(let i=0;i<den;i++){
+      const c = document.createElement('div');
+      c.className = 'cell' + (i < Math.min(num,den) ? ' on' : '');
+      el.appendChild(c);
+    }
+    // 假分数：第二段纸条 = 超出 1 的份（与饼图角标一致）
+    if(num > den && el2){
+      el2.style.display = 'flex';
+      el2.innerHTML = '';
+      const extra = num - den;
+      for(let i=0;i<den;i++){
+        const c = document.createElement('div');
+        c.className = 'cell' + (i < extra ? ' on' : '');
+        if(i < extra) c.style.background = '#fbbf24';
+        el2.appendChild(c);
+      }
+    } else if(el2){
+      el2.style.display = 'none';
+      el2.innerHTML = '';
+    }
+  }
+
+  function sync(){
+    den = +$('den').value;
+    // clamp num max to den*2 for improper demo
+    $('num').max = den*2;
+    if(+$('num').value > den*2) $('num').value = den*2;
+    num = +$('num').value;
+    $('dVal').textContent = den;
+    $('nVal').textContent = num;
+    $('fracLabel').innerHTML = num+'/'+den + '<small>涂色 / 总份</small>';
+    if(num===0) $('words').textContent = '还没涂色 → 0';
+    else if(num<den) $('words').textContent = '把整体分成 '+den+' 份，涂了 '+num+' 份（真分数 <1）';
+    else if(num===den) $('words').textContent = '涂满了整块 = 1 整';
+    else $('words').textContent = '假分数 >1：等于 1 又 '+(num-den)+'/'+den+'（角标 +'+(num-den)+'）';
+    drawPie();
+    drawStrip();
+    $('fb').className = 'fb';
+    $('fb').textContent = '饼和纸条的「整体」一样大，所以 '+num+'/'+den+' 表示同一关系。';
+    $('think').textContent = num>den
+      ? '假分数：一份饼装不下，角标显示多出来的份。'
+      : '分子≤分母时，涂色不超过一整块。';
+    $('say').textContent = '';
+  }
+
+  function bind(m,p,r){
+    $(m).onclick=()=>{ r.value=Math.max(+r.min,+r.value-1); sync(); };
+    $(p).onclick=()=>{ r.value=Math.min(+r.max,+r.value+1); sync(); };
+    r.oninput=sync;
+  }
+  bind('dMinus','dPlus',$('den'));
+  bind('nMinus','nPlus',$('num'));
+
+  $('btnCheck').onclick=()=>{
+    $('fb').className = 'fb ok';
+    if(num===0) $('fb').textContent='0 份涂色，就是 0。';
+    else if(num===den) $('fb').textContent='分子=分母 → 正好 1 整块。';
+    else if(num<den) $('fb').textContent='对：'+num+'/'+den+' 表示「'+den+' 等份里取 '+num+' 份」。';
+    else $('fb').textContent='假分数 '+num+'/'+den+'：超过 1。可以想成 1 整 + '+(num-den)+'/'+den+'。';
+  };
+  $('btnReset').onclick=()=>{ $('den').value=4; $('num').value=3; sync(); };
+  $('btnSay').onclick=()=>{
+    $('say').textContent = '我会说：把披萨分成 '+den+' 份，我拿 '+num+' 份，写作 '+num+'/'+den+'。';
+  };
+  sync();
+})();
+</script><script id="aid-fit-js">/* AID_FIT_V1 */
+(function(){
+  var html=document.documentElement;
+  function measure(){
+    var card=document.querySelector("main.card, body>.card");
+    if(!card) return;
+    html.classList.remove("aid-compact","aid-tight");
+    card.style.overflowY="hidden";
+    void card.offsetHeight;
+    var stage=card.querySelector(".stage,.scene,.stage-wrap,.viz");
+    var stageH=stage?stage.clientHeight:999;
+    if(card.scrollHeight>card.clientHeight+8 || stageH<240 || innerHeight<820) html.classList.add("aid-compact");
+    void card.offsetHeight;
+    stageH=stage?stage.clientHeight:999;
+    if(card.scrollHeight>card.clientHeight+8 || stageH<200) html.classList.add("aid-tight");
+    void card.offsetHeight;
+    if(card.scrollHeight>card.clientHeight+8) card.style.overflowY="auto";
+  }
+  addEventListener("resize",measure);
+  addEventListener("load",measure);
+  if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",measure);
+  else requestAnimationFrame(measure);
+  setTimeout(measure,80);
+  setTimeout(measure,400);
+  var card=document.querySelector("main.card, body>.card");
+  if(card && typeof MutationObserver==="function"){
+    var t;
+    new MutationObserver(function(){
+      clearTimeout(t); t=setTimeout(measure,40);
+    }).observe(card,{childList:true,subtree:true,characterData:true});
+  }
+})();
+</script>
+</body>
+</html>

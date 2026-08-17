@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta name="aid-version" content="v1">
+<meta name="aid-version-at" content="2026-08-14T08:25:39">
+<meta name="aid-version-note" content="当前稿">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>奇偶分队 · 能不能两两握手</title>
+<!-- 风格：学前数感·奇偶 / 场景：家庭+教室 / 核心：能否两两配对 -->
+<style>
+:root{--accent:#ec4899;--ok:#10b981;--ink:#1f2a44;--muted:#667085;--line:#fbcfe8;--ease:cubic-bezier(0.25,1,0.5,1);--touch:56px}
+*{box-sizing:border-box}html,body{margin:0}
+body{font-family:-apple-system,"PingFang SC",system-ui,sans-serif;color:var(--ink);background:linear-gradient(160deg,#fdf2f8,#e0f2fe);min-height:100vh;padding:14px 12px 28px}
+.card{max-width:720px;margin:0 auto;background:#fff;border:1px solid var(--line);border-radius:20px;box-shadow:0 12px 28px rgba(236,72,153,.12);padding:18px 16px 22px}
+.top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.top h1{margin:0;font-size:22px;font-weight:800}
+.badge{font-size:14px;font-weight:700;color:#be185d;background:#fce7f3;padding:5px 12px;border-radius:999px}
+.story{background:linear-gradient(135deg,#fce7f3,#e0f2fe);border-left:5px solid var(--accent);border-radius:0 14px 14px 0;padding:12px;margin-bottom:12px;font-size:16px;line-height:1.7}
+.stage{background:#fdf2f8;border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:12px;min-height:120px}
+.kids{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;align-items:flex-end;min-height:72px}
+.kid{font-size:32px;transition:transform .3s var(--ease);display:inline-block}
+.kid.pair{transform:translateY(-4px)}
+.kid.alone{filter:grayscale(.2);outline:3px solid #f472b6;border-radius:50%}
+.verdict{text-align:center;font-size:22px;font-weight:800;margin-top:10px}
+.verdict.even{color:#059669}.verdict.odd{color:#db2777}
+.row{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;align-items:center;margin:12px 0}
+.step button{min-width:var(--touch);min-height:var(--touch);border-radius:14px;border:2px solid var(--line);background:#fff;font-size:22px;font-weight:800;cursor:pointer;font-family:inherit}
+.step .v{min-width:48px;text-align:center;font-size:28px;font-weight:800;color:var(--accent)}
+.btn-row{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+.btn{min-height:var(--touch);padding:12px 18px;border-radius:14px;border:2px solid var(--line);background:#fff;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit}
+.btn.primary{background:linear-gradient(135deg,var(--accent),#db2777);color:#fff;border:none}
+.quiz{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:8px 0}
+.qbtn{min-height:52px;padding:12px 20px;border-radius:14px;border:2px solid var(--line);background:#fff;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit}
+.qbtn.ok{border-color:var(--ok);background:#ecfdf5}
+.qbtn.bad{border-color:#ef4444;background:#fef2f2}
+.fb{min-height:52px;border-radius:14px;padding:12px;background:#f8fafc;border:1px solid #e2e8f0;font-size:16px;line-height:1.55;margin:10px 0}
+.thinking{background:#fffbeb;border-radius:12px;padding:10px;font-size:15px;border:1px dashed #fcd34d}
+.thinking .tag{font-weight:800;color:#b45309}
+.say{margin-top:8px;font-size:15px;min-height:22px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style><style id="aid-fit">/* AID_FIT_V1 */
+html,body{height:100%!important;max-height:100dvh!important;overflow:hidden!important}
+body{
+  min-height:100dvh!important;height:100dvh!important;
+  display:flex!important;flex-direction:column!important;
+  padding:clamp(6px,1.2vh,14px) clamp(8px,1.5vw,18px)!important;
+  box-sizing:border-box!important;
+}
+body>.card,main.card{
+  flex:1 1 auto!important;min-height:0!important;width:100%!important;
+  max-width:min(1240px,100%)!important;margin:0 auto!important;
+  display:flex!important;flex-direction:column!important;
+  overflow:hidden!important;
+  padding:clamp(10px,1.5vh,20px) clamp(12px,1.8vw,24px) clamp(10px,1.3vh,16px)!important;
+}
+.stage,.scene,.stage-wrap,.viz{
+  flex:1 1 42%!important;min-height:min(280px,38vh)!important;overflow:hidden!important;
+  display:flex!important;flex-direction:column!important;justify-content:center!important;
+}
+.stage svg,.scene svg,#diagram{
+  flex:1 1 auto;width:100%!important;height:100%!important;max-height:100%!important;min-height:0;
+}
+.ctrl,.choices,.btn-row,.top,.topbar,.fb,.progress{flex:none}
+.slots,.grid,.bins,.pool,.ten{flex:1 1 auto!important;min-height:0}
+html.aid-compact .story,html.aid-compact .thinking,html.aid-compact .say{display:none!important}
+html.aid-compact .fb{min-height:0!important;padding:8px 10px!important;margin:6px 0!important;font-size:14px!important}
+html.aid-compact h1{font-size:clamp(18px,2.2vw,22px)!important}
+html.aid-compact .ctrl{gap:8px}
+html.aid-compact .btn{min-height:44px;padding:8px 14px}
+html.aid-compact .controls{display:grid!important;grid-template-columns:1fr 1fr;gap:6px 12px;max-height:30vh;overflow:auto}
+html.aid-tight .legend,html.aid-tight .hints,html.aid-tight .thinking{display:none!important}
+html.aid-tight .story{display:none!important}
+html.aid-tight .stage,html.aid-tight .scene{min-height:min(200px,32vh)!important}
+@media (min-width:960px) and (min-height:780px){
+  body{font-size:17px}
+  .top h1,.topbar h1{font-size:clamp(24px,2.1vw,30px)}
+}
+</style>
+</head>
+<body>
+<main class="card">
+  <div class="top"><h1>奇偶分队</h1><span class="badge">5–8 岁 · 奇偶</span></div>
+  <div class="story">小朋友要<strong>两两握手</strong>。人数能正好配对，就是<strong>偶数</strong>；会剩下 1 个没伴，就是<strong>奇数</strong>。</div>
+  <div class="stage" role="img" aria-label="奇偶配对图解">
+    <div class="kids" id="kids"></div>
+    <div class="verdict" id="verdict">—</div>
+  </div>
+  <div class="row">
+    <label style="font-weight:700">人数</label>
+    <div class="step">
+      <button type="button" id="m">−</button>
+      <span class="v" id="nV">5</span>
+      <button type="button" id="p">+</button>
+    </div>
+    <input type="range" id="n" min="1" max="12" value="5" aria-label="人数">
+  </div>
+  <div class="quiz">
+    <button type="button" class="qbtn" data-a="even">偶数（能两两配对）</button>
+    <button type="button" class="qbtn" data-a="odd">奇数（剩 1 个）</button>
+  </div>
+  <div class="btn-row">
+    <button type="button" class="btn primary" id="btnPair">▶ 看配对</button>
+    <button type="button" class="btn" id="btnReset">↻ 重新开始</button>
+    <button type="button" class="btn" id="btnSay">🗣️ 我会说</button>
+  </div>
+  <div class="fb" id="fb" aria-live="polite">调人数，点「看配对」，再判断奇偶。</div>
+  <p class="thinking"><span class="tag">我怎么想：</span><span id="think">除以 2 有没有余数；有余数就是奇数。</span></p>
+  <div class="say" id="say"></div>
+</main>
+<script>
+(function(){
+  let n=5;
+  const $=id=>document.getElementById(id);
+  function isOdd(){ return n%2===1; }
+  function draw(pairMode){
+    n=+$('n').value; $('nV').textContent=n;
+    const el=$('kids'); el.innerHTML='';
+    for(let i=0;i<n;i++){
+      const s=document.createElement('span');
+      s.className='kid';
+      s.textContent='🧒';
+      if(pairMode){
+        const alone = isOdd() && i===n-1;
+        if(alone) s.classList.add('alone');
+        else {
+          s.classList.add('pair');
+          // 成对：偶数下标略靠右、奇数下标略靠左，视觉上握手
+          if(i%2===0) s.style.marginRight='-6px';
+          else s.style.marginLeft='-6px';
+          if(i%2===1) s.style.marginRight='18px'; // 对与对之间拉开
+        }
+      }
+      el.appendChild(s);
+      if(pairMode && !document.body.classList.contains('static'))
+        setTimeout(()=>{ s.style.transform = s.classList.contains('alone') ? 'scale(1.08)' : 'translateY(-6px)'; }, i*20);
+    }
+    const v=$('verdict');
+    if(pairMode){
+      v.className='verdict '+(isOdd()?'odd':'even');
+      v.textContent = isOdd() ? n+' 是奇数 · 剩 1 人没伴' : n+' 是偶数 · 刚好两两握手';
+      $('think').textContent = isOdd() ? n+'÷2 余 1 → 奇数。' : n+'÷2 余 0 → 偶数。';
+    } else {
+      v.className='verdict'; v.textContent='共 '+n+' 人';
+      $('think').textContent='先点「看配对」，看能不能两两握完。';
+    }
+  }
+  $('n').oninput=()=>{ draw(false); document.querySelectorAll('.qbtn').forEach(b=>b.classList.remove('ok','bad')); };
+  $('m').onclick=()=>{ $('n').value=Math.max(1,n-1); draw(false); };
+  $('p').onclick=()=>{ $('n').value=Math.min(12,n+1); draw(false); };
+  $('btnPair').onclick=()=>{
+    draw(true);
+    const pairs=Math.floor(n/2);
+    $('fb').textContent=isOdd()
+      ? '凑成 '+pairs+' 对，还剩 1 人没伴 → '+n+' 是奇数。'
+      : '正好 '+pairs+' 对，全都握上手 → '+n+' 是偶数。';
+    $('think').textContent=isOdd()
+      ? '先看有没有落单；有落单就是奇数。不必先背「÷2」。'
+      : '两两刚好分完，就是偶数。';
+  };
+  document.querySelector('.quiz').onclick=e=>{
+    const b=e.target.closest('.qbtn'); if(!b) return;
+    draw(true);
+    const ans=isOdd()?'odd':'even';
+    document.querySelectorAll('.qbtn').forEach(x=>x.classList.remove('ok','bad'));
+    if(b.dataset.a===ans){
+      b.classList.add('ok');
+      $('fb').className='fb'; $('fb').style.background='#ecfdf5';
+      $('fb').textContent='对！'+n+(ans==='odd'?' 是奇数。':' 是偶数。');
+    } else {
+      b.classList.add('bad');
+      $('fb').style.background='#fff7ed';
+      $('fb').textContent='再看有没有落单的小朋友。';
+    }
+  };
+  $('btnReset').onclick=()=>{ $('n').value=5; draw(false); $('say').textContent=''; $('fb').style.background=''; $('fb').textContent='调人数，点「看配对」，再判断奇偶。'; document.querySelectorAll('.qbtn').forEach(b=>b.classList.remove('ok','bad')); };
+  $('btnSay').onclick=()=>{ $('say').textContent='我会说：'+n+(isOdd()?' 是奇数，两两握手会剩一个。':' 是偶数，可以两两握完。'); };
+  draw(false);
+})();
+</script><script id="aid-fit-js">/* AID_FIT_V1 */
+(function(){
+  var html=document.documentElement;
+  function measure(){
+    var card=document.querySelector("main.card, body>.card");
+    if(!card) return;
+    html.classList.remove("aid-compact","aid-tight");
+    card.style.overflowY="hidden";
+    void card.offsetHeight;
+    var stage=card.querySelector(".stage,.scene,.stage-wrap,.viz");
+    var stageH=stage?stage.clientHeight:999;
+    if(card.scrollHeight>card.clientHeight+8 || stageH<240 || innerHeight<820) html.classList.add("aid-compact");
+    void card.offsetHeight;
+    stageH=stage?stage.clientHeight:999;
+    if(card.scrollHeight>card.clientHeight+8 || stageH<200) html.classList.add("aid-tight");
+    void card.offsetHeight;
+    if(card.scrollHeight>card.clientHeight+8) card.style.overflowY="auto";
+  }
+  addEventListener("resize",measure);
+  addEventListener("load",measure);
+  if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",measure);
+  else requestAnimationFrame(measure);
+  setTimeout(measure,80);
+  setTimeout(measure,400);
+  var card=document.querySelector("main.card, body>.card");
+  if(card && typeof MutationObserver==="function"){
+    var t;
+    new MutationObserver(function(){
+      clearTimeout(t); t=setTimeout(measure,40);
+    }).observe(card,{childList:true,subtree:true,characterData:true});
+  }
+})();
+</script>
+</body>
+</html>

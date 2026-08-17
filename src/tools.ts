@@ -38,7 +38,7 @@ interface QaIssue {
 
 /**
  * 自动化质检：对生成的 HTML 教具做合规检查。
- * 检查项：外链 / 触控尺寸 / 结构完整性 / 外部库 / reduced-motion / 字号 / 体积。
+ * 检查项：外链 / 触控尺寸 / 结构 / 外部库 / reduced-motion / 字号 / 体积 / 一屏 / 紫粉抢戏 / 底栏压主图。
  * 返回 JSON { passed, issues:[{level,rule,detail}], stats }。
  */
 export const qaCheckTool = defineTool({
@@ -46,7 +46,8 @@ export const qaCheckTool = defineTool({
   label: "自动化质检",
   description:
     "对生成的单文件 HTML 教具做自动化合规检查：外链资源、触控尺寸(≥44px)、结构完整性、外部库引用、" +
-    "reduced-motion/静态模式、字号(≥16px)、体积(≤500KB)。返回 JSON 问题清单（passed/issues/stats）。" +
+    "reduced-motion/静态模式、字号(≥16px)、体积(≤500KB)、一屏视口、紫粉抢戏、底栏压主图。" +
+    "返回 JSON 问题清单（passed/issues/stats）。" +
     "写完 HTML 后用本工具自查，error 级问题必须用 edit 修正。",
   parameters: Type.Object({
     html: Type.String({ description: "待检查的完整 HTML 字符串" }),
@@ -108,6 +109,60 @@ export const qaCheckTool = defineTool({
         level: "warn",
         rule: "viewport",
         detail: "未锁一屏（缺 100dvh/100vh 或 overflow:hidden），可能要滚动才能看完一幕",
+      });
+    }
+
+    // 7b. 观感 / 体验（用户反馈：一屏看完、主图不被压、别抢戏）
+    if (
+      /linear-gradient\s*\([^)]*(#(?:7c3aed|8b5cf6|a78bfa|c084fc|d946ef|ec4899)|violet|magenta)/i.test(html) ||
+      /(#(?:7c3aed|8b5cf6|a78bfa).{0,80}#(?:ec4899|f472b6|d946ef))/i.test(html)
+    ) {
+      issues.push({
+        level: "warn",
+        rule: "look-ai",
+        detail: "疑似紫粉双高亮 / AI 渐变，一份教具只留一个 accent",
+      });
+    }
+    if (
+      /(foot|dock|toolbar|bottom-bar|actionbar)[^}]{0,240}position\s*:\s*absolute[^}]{0,80}bottom\s*:\s*0/i.test(html) ||
+      /position\s*:\s*absolute[^}]{0,80}bottom\s*:\s*0[^}]{0,160}(foot|dock|toolbar)/i.test(html)
+    ) {
+      issues.push({
+        level: "warn",
+        rule: "ux-footer",
+        detail: "底栏疑似 absolute;bottom:0，可能压住主图或操作区",
+      });
+    }
+    if (!/我会说|sayout|btn-say|btnSay/i.test(html)) {
+      issues.push({
+        level: "info",
+        rule: "ux-say",
+        detail: "未检测到「我会说」；若做成挡主图的长旁白应改藏，不要为补这一项挤掉主操作",
+      });
+    }
+    const youngTopic = /3-6|4-7|学前|中幼儿|分类|凑十|翻牌|配对|比长短|比一比/i.test(html);
+    if (youngTopic && !/跳过|skip/i.test(html)) {
+      issues.push({
+        level: "warn",
+        rule: "ux-intro",
+        detail: "低龄题未检测到可跳过开场（跳过/skip），孩子可能不知道先干什么",
+      });
+    }
+    if (/第一关|LEVELS\s*=|levelIndex|curLevel/i.test(html) && !/下一关|nextBtn|nextLevel|next-level/i.test(html)) {
+      issues.push({
+        level: "warn",
+        rule: "ux-next",
+        detail: "检测到多关，但没有「下一关」入口，第一关做完可能停死",
+      });
+    }
+    if (
+      /第一关|LEVELS\s*=|关卡/i.test(html) &&
+      !/祝贺|庆祝|完成啦|通关|well-?done|celebrate|winScreen|endScreen/i.test(html)
+    ) {
+      issues.push({
+        level: "warn",
+        rule: "ux-end",
+        detail: "多关题未检测到祝贺/完成页，通关可能无声循环回第一关",
       });
     }
 
