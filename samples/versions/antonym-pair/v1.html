@@ -1,0 +1,301 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta name="aid-version" content="v1">
+<meta name="aid-version-at" content="2026-08-14T08:25:38">
+<meta name="aid-version-note" content="当前稿">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>反义词配对 · 拖进对家</title>
+<!-- 题型：拖拽槽位·语文 / 核心：反义匹配 / 年龄：6-9 / 场景：教室+培训 -->
+<style>
+:root{
+  --accent:#8b5cf6; --ok:#10b981; --bad:#ef4444; --ink:#1f2a44; --muted:#667085; --line:#ddd6fe;
+  --ease:cubic-bezier(0.25,1,0.5,1); --touch:48px;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  font-family:-apple-system,"PingFang SC",system-ui,sans-serif;color:var(--ink);
+  background:linear-gradient(160deg,#f5f3ff,#fce7f3);min-height:100vh;padding:14px 12px 28px;
+}
+.card{
+  max-width:720px;margin:0 auto;background:#fff;border:1px solid var(--line);
+  border-radius:20px;box-shadow:0 12px 28px rgba(139,92,246,.12);padding:18px 16px 22px;
+}
+.top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.top h1{margin:0;font-size:22px;font-weight:800}
+.badge{font-size:14px;font-weight:700;color:#6d28d9;background:#ede9fe;padding:5px 12px;border-radius:999px}
+.story{
+  background:linear-gradient(135deg,#ede9fe,#fce7f3);border-left:5px solid var(--accent);
+  border-radius:0 14px 14px 0;padding:12px;margin-bottom:12px;font-size:16px;line-height:1.7;
+}
+.progress{font-size:14px;font-weight:700;color:var(--muted);margin-bottom:8px;text-align:center}
+.pairs{display:flex;flex-direction:column;gap:10px;margin-bottom:14px}
+.pair{
+  display:grid;grid-template-columns:1fr 40px 1fr;gap:8px;align-items:center;
+  background:#faf5ff;border:1px solid var(--line);border-radius:14px;padding:10px;
+}
+.word{
+  min-height:var(--touch);display:flex;align-items:center;justify-content:center;
+  font-size:20px;font-weight:800;background:#fff;border-radius:12px;border:2px solid #e9d5ff;
+}
+.slot{
+  min-height:var(--touch);border:2px dashed #a78bfa;border-radius:12px;background:#fff;
+  display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;
+  cursor:pointer;transition:border-color .2s,background .2s;
+}
+.slot.filled{border-style:solid;border-color:var(--accent);background:#f5f3ff}
+.slot.correct{border-color:var(--ok);background:#ecfdf5}
+.slot.wrong{border-color:var(--bad);background:#fef2f2}
+.slot.pick-target{box-shadow:0 0 0 3px rgba(139,92,246,.25)}
+.vs{text-align:center;font-size:18px;color:var(--muted);font-weight:800}
+.tokens{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:12px;min-height:56px}
+.tok{
+  min-width:var(--touch);min-height:var(--touch);padding:10px 16px;border-radius:14px;
+  border:2px solid #e2e8f0;background:#fff;font-size:18px;font-weight:700;cursor:pointer;
+  font-family:inherit;touch-action:none;user-select:none;
+}
+.tok.picked{border-color:var(--accent);background:#ede9fe}
+.tok.used{opacity:.3;pointer-events:none}
+.btn-row{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+.btn{
+  min-height:var(--touch);padding:12px 18px;border-radius:14px;border:2px solid var(--line);
+  background:#fff;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit;
+}
+.btn.primary{background:linear-gradient(135deg,var(--accent),#6d28d9);color:#fff;border:none}
+.fb{min-height:52px;border-radius:14px;padding:12px;background:#f8fafc;border:1px solid #e2e8f0;font-size:16px;line-height:1.55;margin:10px 0}
+.fb.ok{background:#ecfdf5;border-color:#6ee7b7}
+.fb.bad{background:#fff7ed;border-color:#fcd34d}
+.thinking{background:#fffbeb;border-radius:12px;padding:10px;font-size:15px;border:1px dashed #fcd34d}
+.thinking .tag{font-weight:800;color:#b45309}
+.say{margin-top:8px;font-size:15px;min-height:22px}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+</style><style id="aid-fit">/* AID_FIT_V1 */
+html,body{height:100%!important;max-height:100dvh!important;overflow:hidden!important}
+body{
+  min-height:100dvh!important;height:100dvh!important;
+  display:flex!important;flex-direction:column!important;
+  padding:clamp(6px,1.2vh,14px) clamp(8px,1.5vw,18px)!important;
+  box-sizing:border-box!important;
+}
+body>.card,main.card{
+  flex:1 1 auto!important;min-height:0!important;width:100%!important;
+  max-width:min(1240px,100%)!important;margin:0 auto!important;
+  display:flex!important;flex-direction:column!important;
+  overflow:hidden!important;
+  padding:clamp(10px,1.5vh,20px) clamp(12px,1.8vw,24px) clamp(10px,1.3vh,16px)!important;
+}
+.stage,.scene,.stage-wrap,.viz{
+  flex:1 1 42%!important;min-height:min(280px,38vh)!important;overflow:hidden!important;
+  display:flex!important;flex-direction:column!important;justify-content:center!important;
+}
+.stage svg,.scene svg,#diagram{
+  flex:1 1 auto;width:100%!important;height:100%!important;max-height:100%!important;min-height:0;
+}
+.ctrl,.choices,.btn-row,.top,.topbar,.fb,.progress{flex:none}
+.slots,.grid,.bins,.pool,.ten{flex:1 1 auto!important;min-height:0}
+html.aid-compact .story,html.aid-compact .thinking,html.aid-compact .say{display:none!important}
+html.aid-compact .fb{min-height:0!important;padding:8px 10px!important;margin:6px 0!important;font-size:14px!important}
+html.aid-compact h1{font-size:clamp(18px,2.2vw,22px)!important}
+html.aid-compact .ctrl{gap:8px}
+html.aid-compact .btn{min-height:44px;padding:8px 14px}
+html.aid-compact .controls{display:grid!important;grid-template-columns:1fr 1fr;gap:6px 12px;max-height:30vh;overflow:auto}
+html.aid-tight .legend,html.aid-tight .hints,html.aid-tight .thinking{display:none!important}
+html.aid-tight .story{display:none!important}
+html.aid-tight .stage,html.aid-tight .scene{min-height:min(200px,32vh)!important}
+@media (min-width:960px) and (min-height:780px){
+  body{font-size:17px}
+  .top h1,.topbar h1{font-size:clamp(24px,2.1vw,30px)}
+}
+</style>
+</head>
+<body>
+<main class="card">
+  <div class="top">
+    <h1>反义词配对</h1>
+    <span class="badge">6–9 岁 · 语文</span>
+  </div>
+  <div class="story">
+    意思<strong>相反</strong>的两个词是反义词。左边是词，右边空着——把对家词放进去。
+    可点选：先点词块，再点空位。
+  </div>
+  <div class="progress" id="progress">第 1 / 2 组</div>
+  <div class="pairs" id="pairs"></div>
+  <div class="tokens" id="tokens"></div>
+  <div class="btn-row">
+    <button type="button" class="btn primary" id="btnCheck">✓ 检查</button>
+    <button type="button" class="btn" id="btnNext" hidden>下一组 →</button>
+    <button type="button" class="btn" id="btnReset">↻ 重新开始</button>
+    <button type="button" class="btn" id="btnSay">🗣️ 我会说</button>
+  </div>
+  <div class="fb" id="fb" aria-live="polite">把右边词块放进对应空位。</div>
+  <p class="thinking"><span class="tag">我怎么想：</span><span id="think">想「反过来是什么」：大的反面是小，不是中。</span></p>
+  <div class="say" id="say"></div>
+</main>
+<script>
+(function(){
+  const SETS = [
+    {
+      left:[{id:'a',w:'大'},{id:'b',w:'高'},{id:'c',w:'快'}],
+      sol:{a:'小',b:'矮',c:'慢'},
+      pool:['小','矮','慢','中','长']
+    },
+    {
+      left:[{id:'a',w:'开'},{id:'b',w:'进'},{id:'c',w:'白天'}],
+      sol:{a:'关',b:'出',c:'黑夜'},
+      pool:['关','出','黑夜','停','亮']
+    }
+  ];
+  let qi=0, filled={}, picked=null, locked=false;
+  const $ = id => document.getElementById(id);
+
+  function load(){
+    locked=false; filled={}; picked=null;
+    const S = SETS[qi];
+    $('progress').textContent = '第 '+(qi+1)+' / '+SETS.length+' 组';
+    $('btnNext').hidden = true;
+    $('btnCheck').disabled = false;
+    $('fb').className='fb';
+    $('fb').textContent='把右边词块放进对应空位。';
+    $('say').textContent='';
+    $('think').textContent='想「反过来是什么」。';
+    const pairs = $('pairs');
+    pairs.innerHTML = '';
+    S.left.forEach(item=>{
+      const row = document.createElement('div');
+      row.className = 'pair';
+      row.innerHTML =
+        '<div class="word">'+item.w+'</div><div class="vs">⟷</div>'+
+        '<button type="button" class="slot" data-id="'+item.id+'" aria-label="'+item.w+'的反义词空位">(反义词)</button>';
+      pairs.appendChild(row);
+    });
+    pairs.querySelectorAll('.slot').forEach(slot=>{
+      slot.onclick = ()=> onSlot(slot.dataset.id);
+    });
+    renderTokens();
+  }
+
+  function renderTokens(){
+    const S = SETS[qi];
+    const el = $('tokens');
+    el.innerHTML = '';
+    S.pool.forEach(w=>{
+      const used = Object.values(filled).includes(w);
+      const b = document.createElement('button');
+      b.type='button';
+      b.className = 'tok'+(picked===w?' picked':'')+(used?' used':'');
+      b.textContent = w;
+      b.disabled = used || locked;
+      b.onclick = ()=>{
+        if(locked||used) return;
+        picked = w;
+        renderTokens();
+        document.querySelectorAll('.slot').forEach(s=>s.classList.add('pick-target'));
+      };
+      el.appendChild(b);
+    });
+  }
+
+  function onSlot(id){
+    if(locked) return;
+    if(!picked){
+      if(filled[id]){
+        delete filled[id];
+        updateSlots();
+        renderTokens();
+      }
+      return;
+    }
+    filled[id] = picked;
+    picked = null;
+    document.querySelectorAll('.slot').forEach(s=>s.classList.remove('pick-target','correct','wrong'));
+    updateSlots();
+    renderTokens();
+  }
+
+  function updateSlots(){
+    document.querySelectorAll('.slot').forEach(s=>{
+      const id = s.dataset.id;
+      s.textContent = filled[id] || '(反义词)';
+      s.classList.toggle('filled', !!filled[id]);
+    });
+  }
+
+  $('btnCheck').onclick=()=>{
+    const S = SETS[qi];
+    const ids = S.left.map(x=>x.id);
+    if(ids.some(id=>!filled[id])){
+      $('fb').className='fb bad';
+      $('fb').textContent='还有空位没填。';
+      return;
+    }
+    let all=true;
+    document.querySelectorAll('.slot').forEach(s=>{
+      const id=s.dataset.id;
+      s.classList.remove('correct','wrong');
+      if(filled[id]===S.sol[id]) s.classList.add('correct');
+      else { s.classList.add('wrong'); all=false; }
+    });
+    if(all){
+      locked=true; $('btnCheck').disabled=true;
+      $('fb').className='fb ok';
+      $('fb').textContent='全对！反义词意思相反，又常常成对出现。';
+      $('think').textContent='大↔小、高↔矮…记住成对。';
+      if(qi<SETS.length-1) $('btnNext').hidden=false;
+      else $('fb').textContent+=' 两组都完成了！';
+    } else {
+      $('fb').className='fb bad';
+      const wrong = ids.filter(id=>filled[id]!==S.sol[id]);
+      const w0 = S.left.find(x=>x.id===wrong[0]);
+      const got = filled[wrong[0]];
+      // 字段化：指出哪一对、为何不像反义（不直接甩全部答案）
+      $('fb').textContent = '「'+w0.w+'」↔「'+got+'」还不像反义。反义要意思相反（如大↔小），不是近义或无关词。取出重放。';
+      $('think').textContent='先固定左边的词，在脑子里说「反义词是…」再选。';
+    }
+  };
+
+  $('btnNext').onclick=()=>{ if(qi<SETS.length-1){ qi++; load(); } };
+  $('btnReset').onclick=()=>{ qi=0; load(); };
+  $('btnSay').onclick=()=>{
+    const S=SETS[qi];
+    const parts = S.left.map(x=>x.w+' 对 '+S.sol[x.id]);
+    $('say').textContent='我会说：'+parts.join('，')+'。';
+  };
+  load();
+})();
+</script><script id="aid-fit-js">/* AID_FIT_V1 */
+(function(){
+  var html=document.documentElement;
+  function measure(){
+    var card=document.querySelector("main.card, body>.card");
+    if(!card) return;
+    html.classList.remove("aid-compact","aid-tight");
+    card.style.overflowY="hidden";
+    void card.offsetHeight;
+    var stage=card.querySelector(".stage,.scene,.stage-wrap,.viz");
+    var stageH=stage?stage.clientHeight:999;
+    if(card.scrollHeight>card.clientHeight+8 || stageH<240 || innerHeight<820) html.classList.add("aid-compact");
+    void card.offsetHeight;
+    stageH=stage?stage.clientHeight:999;
+    if(card.scrollHeight>card.clientHeight+8 || stageH<200) html.classList.add("aid-tight");
+    void card.offsetHeight;
+    if(card.scrollHeight>card.clientHeight+8) card.style.overflowY="auto";
+  }
+  addEventListener("resize",measure);
+  addEventListener("load",measure);
+  if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",measure);
+  else requestAnimationFrame(measure);
+  setTimeout(measure,80);
+  setTimeout(measure,400);
+  var card=document.querySelector("main.card, body>.card");
+  if(card && typeof MutationObserver==="function"){
+    var t;
+    new MutationObserver(function(){
+      clearTimeout(t); t=setTimeout(measure,40);
+    }).observe(card,{childList:true,subtree:true,characterData:true});
+  }
+})();
+</script>
+</body>
+</html>

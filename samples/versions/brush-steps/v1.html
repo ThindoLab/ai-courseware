@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta name="aid-version" content="v1">
+<meta name="aid-version-at" content="2026-08-14T07-37-00">
+<meta name="aid-version-note" content="整库重跑前的当时当前稿">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>刷牙步骤排队 · 排序</title>
+<!-- 风格：生活习惯·步骤排序 / 场景：家庭+学前 / 核心：顺序逻辑 -->
+<style>
+:root{--accent:#06b6d4;--ok:#10b981;--bad:#ef4444;--ink:#1f2a44;--muted:#667085;--line:#a5f3fc;--ease:cubic-bezier(0.25,1,0.5,1);--touch:52px}
+*{box-sizing:border-box}html,body{margin:0}
+body{font-family:-apple-system,"PingFang SC",system-ui,sans-serif;color:var(--ink);background:linear-gradient(160deg,#ecfeff,#f0fdf4);min-height:100vh;padding:14px 12px 28px}
+.card{max-width:720px;margin:0 auto;background:#fff;border:1px solid var(--line);border-radius:20px;box-shadow:0 12px 28px rgba(6,182,212,.12);padding:18px 16px 22px}
+.top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.top h1{margin:0;font-size:22px;font-weight:800}
+.badge{font-size:14px;font-weight:700;color:#0e7490;background:#cffafe;padding:5px 12px;border-radius:999px}
+.story{background:linear-gradient(135deg,#cffafe,#d1fae5);border-left:5px solid var(--accent);border-radius:0 14px 14px 0;padding:12px;margin-bottom:12px;font-size:16px;line-height:1.7}
+.slots{display:flex;flex-direction:column;gap:10px;margin-bottom:14px}
+.slot-row{display:grid;grid-template-columns:48px 1fr;gap:10px;align-items:center}
+.num{width:48px;height:48px;border-radius:50%;background:#e0f2fe;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;color:#0369a1}
+.slot{min-height:56px;border:2px dashed #67e8f9;border-radius:14px;background:#f8fafc;display:flex;align-items:center;padding:8px 12px;font-size:16px;font-weight:700;cursor:pointer}
+.slot.filled{border-style:solid;border-color:var(--accent);background:#ecfeff}
+.slot.ok{border-color:var(--ok);background:#ecfdf5}
+.slot.bad{border-color:var(--bad);background:#fef2f2}
+.tokens{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:12px}
+.tok{min-height:var(--touch);padding:12px 14px;border-radius:14px;border:2px solid #e2e8f0;background:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit}
+.tok.picked{border-color:var(--accent);background:#cffafe}
+.tok.used{opacity:.35;pointer-events:none}
+.btn-row{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+.btn{min-height:var(--touch);padding:12px 18px;border-radius:14px;border:2px solid var(--line);background:#fff;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit}
+.btn.primary{background:linear-gradient(135deg,var(--accent),#0891b2);color:#fff;border:none}
+.fb{min-height:52px;border-radius:14px;padding:12px;background:#f8fafc;border:1px solid #e2e8f0;font-size:16px;line-height:1.55;margin:10px 0}
+.fb.ok{background:#ecfdf5;border-color:#6ee7b7}
+.fb.bad{background:#fff7ed;border-color:#fcd34d}
+.thinking{background:#fffbeb;border-radius:12px;padding:10px;font-size:15px;border:1px dashed #fcd34d}
+.thinking .tag{font-weight:800;color:#b45309}
+.say{margin-top:8px;font-size:15px;min-height:22px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style><style id="aid-fit">/* AID_FIT_V1 */
+html,body{height:100%!important;max-height:100dvh!important;overflow:hidden!important}
+body{
+  min-height:100dvh!important;height:100dvh!important;
+  display:flex!important;flex-direction:column!important;
+  padding:clamp(6px,1.2vh,14px) clamp(8px,1.5vw,18px)!important;
+  box-sizing:border-box!important;
+}
+body>.card,main.card{
+  flex:1 1 auto!important;min-height:0!important;width:100%!important;
+  max-width:min(1240px,100%)!important;margin:0 auto!important;
+  display:flex!important;flex-direction:column!important;
+  overflow:hidden!important;
+  padding:clamp(10px,1.5vh,20px) clamp(12px,1.8vw,24px) clamp(10px,1.3vh,16px)!important;
+}
+.stage,.scene,.stage-wrap,.viz{
+  flex:1 1 42%!important;min-height:min(280px,38vh)!important;overflow:hidden!important;
+  display:flex!important;flex-direction:column!important;justify-content:center!important;
+}
+.stage svg,.scene svg,#diagram{
+  flex:1 1 auto;width:100%!important;height:100%!important;max-height:100%!important;min-height:0;
+}
+.ctrl,.choices,.btn-row,.top,.topbar,.fb,.progress{flex:none}
+.slots,.grid,.bins,.pool,.ten{flex:1 1 auto!important;min-height:0}
+html.aid-compact .story,html.aid-compact .thinking,html.aid-compact .say{display:none!important}
+html.aid-compact .fb{min-height:0!important;padding:8px 10px!important;margin:6px 0!important;font-size:14px!important}
+html.aid-compact h1{font-size:clamp(18px,2.2vw,22px)!important}
+html.aid-compact .ctrl{gap:8px}
+html.aid-compact .btn{min-height:44px;padding:8px 14px}
+html.aid-compact .controls{display:grid!important;grid-template-columns:1fr 1fr;gap:6px 12px;max-height:30vh;overflow:auto}
+html.aid-tight .legend,html.aid-tight .hints,html.aid-tight .thinking{display:none!important}
+html.aid-tight .story{display:none!important}
+html.aid-tight .stage,html.aid-tight .scene{min-height:min(200px,32vh)!important}
+@media (min-width:960px) and (min-height:780px){
+  body{font-size:17px}
+  .top h1,.topbar h1{font-size:clamp(24px,2.1vw,30px)}
+}
+</style>
+</head>
+<body>
+<main class="card">
+  <div class="top"><h1>刷牙步骤排队</h1><span class="badge">4–8 岁 · 生活排序</span></div>
+  <div class="story">刷牙有先后顺序。把步骤卡片放进 1→2→3→4 的格子里。可先点卡片再点格子。</div>
+  <div id="pipe" style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-bottom:12px;font-size:13px;font-weight:700;color:#0e7490" aria-hidden="true">
+    <span>①准备</span><span>→</span><span>②挤膏</span><span>→</span><span>③刷</span><span>→</span><span>④漱口</span>
+  </div>
+  <div class="slots" id="slots"></div>
+  <div class="tokens" id="tokens"></div>
+  <div class="btn-row">
+    <button type="button" class="btn primary" id="btnCheck">✓ 检查顺序</button>
+    <button type="button" class="btn" id="btnReset">↻ 重新开始</button>
+    <button type="button" class="btn" id="btnSay">🗣️ 我会说</button>
+  </div>
+  <div class="fb" id="fb" aria-live="polite">先想：挤牙膏之前要先拿什么？</div>
+  <p class="thinking"><span class="tag">我怎么想：</span><span id="think">准备工具 → 挤膏 → 刷 → 漱口。乱序会很奇怪。</span></p>
+  <div class="say" id="say"></div>
+</main>
+<script>
+(function(){
+  const STEPS = [
+    {id:'cup', text:'🪥 拿出牙刷和杯子'},
+    {id:'paste', text:'🧴 挤上牙膏'},
+    {id:'brush', text:'😁 上下轻轻刷干净'},
+    {id:'rinse', text:'💧 漱口把泡沫吐掉'}
+  ];
+  const ORDER = ['cup','paste','brush','rinse'];
+  let filled = {}, picked=null, locked=false;
+  const $=id=>document.getElementById(id);
+
+  let shuffled = STEPS.slice().sort(()=>Math.random()-0.5);
+  function renderTokensStable(){
+    const tok=$('tokens'); tok.innerHTML='';
+    const used=Object.values(filled);
+    shuffled.forEach(st=>{
+      const b=document.createElement('button');
+      b.type='button';
+      b.className='tok'+(picked===st.id?' picked':'')+(used.includes(st.id)?' used':'');
+      b.textContent=st.text;
+      b.disabled=used.includes(st.id)||locked;
+      b.onclick=()=>{ if(locked||used.includes(st.id))return; picked=st.id; renderSlots(); renderTokensStable(); };
+      tok.appendChild(b);
+    });
+  }
+  function renderSlots(){
+    const slots=$('slots'); slots.innerHTML='';
+    ORDER.forEach((_,i)=>{
+      const row=document.createElement('div');
+      row.className='slot-row';
+      row.innerHTML = '<div class="num">'+(i+1)+'</div><button type="button" class="slot'+(filled[i]?' filled':'')+'" data-i="'+i+'"></button>';
+      slots.appendChild(row);
+      const slot=row.querySelector('.slot');
+      if(filled[i]){
+        slot.textContent = STEPS.find(x=>x.id===filled[i]).text;
+      } else slot.textContent='（第 '+(i+1)+' 步）';
+      slot.onclick=()=>onSlot(i);
+    });
+  }
+  function onSlot(i){
+    if(locked) return;
+    if(!picked){
+      if(filled[i]){ delete filled[i]; renderSlots(); renderTokensStable(); }
+      return;
+    }
+    filled[i]=picked; picked=null;
+    document.querySelectorAll('.slot').forEach(s=>s.classList.remove('ok','bad'));
+    renderSlots(); renderTokensStable();
+  }
+  $('btnCheck').onclick=()=>{
+    if(Object.keys(filled).length<4){ $('fb').className='fb bad'; $('fb').textContent='还有空位。'; return; }
+    let all=true;
+    document.querySelectorAll('.slot').forEach(s=>{
+      const i=+s.dataset.i;
+      s.classList.remove('ok','bad');
+      if(filled[i]===ORDER[i]) s.classList.add('ok');
+      else { s.classList.add('bad'); all=false; }
+    });
+    if(all){
+      locked=true;
+      $('fb').className='fb ok';
+      $('fb').textContent='顺序对啦！①准备 → ②挤膏 → ③刷 → ④漱口。每天睡前也这样。';
+      $('think').textContent='生活顺序：先准备工具，再做动作，最后收拾/漱口。';
+    } else {
+      // 指出第一处错误
+      let first=-1;
+      for(let i=0;i<4;i++){ if(filled[i]!==ORDER[i]){ first=i; break; } }
+      const got = STEPS.find(x=>x.id===filled[first]);
+      const need = STEPS.find(x=>x.id===ORDER[first]);
+      $('fb').className='fb bad';
+      $('fb').textContent='第 '+(first+1)+' 步你放了「'+(got?got.text:'?')+'」，更合理的是「'+need.text+'」。点格子取出重排。';
+    }
+  };
+  $('btnReset').onclick=()=>{
+    filled={}; picked=null; locked=false;
+    shuffled = STEPS.slice().sort(()=>Math.random()-0.5);
+    renderSlots(); renderTokensStable();
+    $('fb').className='fb'; $('fb').textContent='先想：挤牙膏之前要先拿什么？';
+    $('say').textContent='';
+  };
+  $('btnSay').onclick=()=>{
+    $('say').textContent='我会说：先拿牙刷杯子，再挤牙膏，然后刷，最后漱口。';
+  };
+  renderSlots(); renderTokensStable();
+})();
+</script><script id="aid-fit-js">/* AID_FIT_V1 */
+(function(){
+  var html=document.documentElement;
+  function measure(){
+    var card=document.querySelector("main.card, body>.card");
+    if(!card) return;
+    html.classList.remove("aid-compact","aid-tight");
+    card.style.overflowY="hidden";
+    void card.offsetHeight;
+    var stage=card.querySelector(".stage,.scene,.stage-wrap,.viz");
+    var stageH=stage?stage.clientHeight:999;
+    if(card.scrollHeight>card.clientHeight+8 || stageH<240 || innerHeight<820) html.classList.add("aid-compact");
+    void card.offsetHeight;
+    stageH=stage?stage.clientHeight:999;
+    if(card.scrollHeight>card.clientHeight+8 || stageH<200) html.classList.add("aid-tight");
+    void card.offsetHeight;
+    if(card.scrollHeight>card.clientHeight+8) card.style.overflowY="auto";
+  }
+  addEventListener("resize",measure);
+  addEventListener("load",measure);
+  if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",measure);
+  else requestAnimationFrame(measure);
+  setTimeout(measure,80);
+  setTimeout(measure,400);
+  var card=document.querySelector("main.card, body>.card");
+  if(card && typeof MutationObserver==="function"){
+    var t;
+    new MutationObserver(function(){
+      clearTimeout(t); t=setTimeout(measure,40);
+    }).observe(card,{childList:true,subtree:true,characterData:true});
+  }
+})();
+</script>
+</body>
+</html>

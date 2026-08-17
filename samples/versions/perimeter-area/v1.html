@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta name="aid-version" content="v1">
+<meta name="aid-version-at" content="2026-08-14T08:25:39">
+<meta name="aid-version-note" content="当前稿">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>围篱笆还是铺地砖 · 周长与面积</title>
+<!-- 题型：周长面积 / 核心：围一圈 vs 铺满面 / 年龄：7-10 / 场景：家庭+教室 -->
+<style>
+:root{
+  --accent:#14b8a6; --ink:#1f2a44; --muted:#667085; --line:#99f6e4;
+  --ease:cubic-bezier(0.25,1,0.5,1); --touch:52px;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  font-family:-apple-system,"PingFang SC",system-ui,sans-serif;color:var(--ink);
+  background:linear-gradient(160deg,#f0fdfa,#ecfeff);min-height:100vh;padding:14px 12px 28px;
+}
+.card{
+  max-width:760px;margin:0 auto;background:#fff;border:1px solid var(--line);
+  border-radius:20px;box-shadow:0 12px 28px rgba(20,184,166,.12);padding:18px 16px 22px;
+}
+.top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.top h1{margin:0;font-size:20px;font-weight:800}
+.badge{font-size:14px;font-weight:700;color:#0f766e;background:#ccfbf1;padding:5px 12px;border-radius:999px}
+.story{
+  background:linear-gradient(135deg,#ccfbf1,#e0f2fe);border-left:5px solid var(--accent);
+  border-radius:0 14px 14px 0;padding:12px;margin-bottom:12px;font-size:16px;line-height:1.7;
+}
+.tabs{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:12px}
+.tab{
+  min-height:48px;padding:8px 14px;border-radius:12px;border:2px solid var(--line);
+  background:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;
+}
+.tab.on{background:#ccfbf1;border-color:var(--accent);color:#0f766e}
+.stage{
+  background:#f0fdfa;border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:12px;
+  display:flex;flex-direction:column;align-items:center;
+}
+.canvas-wrap{position:relative;min-height:220px;display:flex;align-items:center;justify-content:center;width:100%}
+#grid{
+  display:grid; gap:2px; background:#5eead4; padding:2px; border-radius:8px;
+  transition: width .35s var(--ease);
+}
+.cell{
+  width:22px;height:22px;background:#ecfeff; border-radius:2px;
+  transition: background .3s var(--ease), box-shadow .3s var(--ease);
+}
+.cell.edge{box-shadow:inset 0 0 0 2px #f59e0b; background:#fef3c7}
+.cell.fill{background:#2dd4bf}
+.edge-labels{display:flex;gap:16px;flex-wrap:wrap;justify-content:center;margin-top:10px;font-size:14px;font-weight:700}
+.edge-labels span{padding:4px 10px;border-radius:999px;background:#fff;border:1px solid var(--line)}
+.edge-labels .on{background:#fef3c3;border-color:#f59e0b;color:#b45309}
+.nums{text-align:center;font-size:18px;font-weight:800;margin-top:8px;color:#0f766e}
+.ctrl{display:flex;flex-direction:column;gap:12px}
+.row{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:10px}
+.row label{font-weight:700;font-size:15px}
+.step button{
+  min-width:var(--touch);min-height:var(--touch);border-radius:14px;border:2px solid var(--line);
+  background:#fff;font-size:22px;font-weight:800;cursor:pointer;font-family:inherit;
+}
+.step .v{min-width:36px;text-align:center;font-size:20px;font-weight:800;color:var(--accent)}
+input[type=range]{width:min(180px,40vw)}
+.btn-row{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+.btn{
+  min-height:var(--touch);padding:12px 18px;border-radius:14px;border:2px solid var(--line);
+  background:#fff;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit;
+}
+.btn.primary{background:linear-gradient(135deg,var(--accent),#0f766e);color:#fff;border:none}
+.fb{min-height:52px;border-radius:14px;padding:12px;background:#f8fafc;border:1px solid #e2e8f0;font-size:16px;line-height:1.55;margin:10px 0}
+.thinking{background:#fffbeb;border-radius:12px;padding:10px;font-size:15px;border:1px dashed #fcd34d}
+.thinking .tag{font-weight:800;color:#b45309}
+.say{margin-top:8px;font-size:15px;min-height:22px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style><style id="aid-fit">/* AID_FIT_V1 */
+html,body{height:100%!important;max-height:100dvh!important;overflow:hidden!important}
+body{
+  min-height:100dvh!important;height:100dvh!important;
+  display:flex!important;flex-direction:column!important;
+  padding:clamp(6px,1.2vh,14px) clamp(8px,1.5vw,18px)!important;
+  box-sizing:border-box!important;
+}
+body>.card,main.card{
+  flex:1 1 auto!important;min-height:0!important;width:100%!important;
+  max-width:min(1240px,100%)!important;margin:0 auto!important;
+  display:flex!important;flex-direction:column!important;
+  overflow:hidden!important;
+  padding:clamp(10px,1.5vh,20px) clamp(12px,1.8vw,24px) clamp(10px,1.3vh,16px)!important;
+}
+.stage,.scene,.stage-wrap,.viz{
+  flex:1 1 42%!important;min-height:min(280px,38vh)!important;overflow:hidden!important;
+  display:flex!important;flex-direction:column!important;justify-content:center!important;
+}
+.stage svg,.scene svg,#diagram{
+  flex:1 1 auto;width:100%!important;height:100%!important;max-height:100%!important;min-height:0;
+}
+.ctrl,.choices,.btn-row,.top,.topbar,.fb,.progress{flex:none}
+.slots,.grid,.bins,.pool,.ten{flex:1 1 auto!important;min-height:0}
+html.aid-compact .story,html.aid-compact .thinking,html.aid-compact .say{display:none!important}
+html.aid-compact .fb{min-height:0!important;padding:8px 10px!important;margin:6px 0!important;font-size:14px!important}
+html.aid-compact h1{font-size:clamp(18px,2.2vw,22px)!important}
+html.aid-compact .ctrl{gap:8px}
+html.aid-compact .btn{min-height:44px;padding:8px 14px}
+html.aid-compact .controls{display:grid!important;grid-template-columns:1fr 1fr;gap:6px 12px;max-height:30vh;overflow:auto}
+html.aid-tight .legend,html.aid-tight .hints,html.aid-tight .thinking{display:none!important}
+html.aid-tight .story{display:none!important}
+html.aid-tight .stage,html.aid-tight .scene{min-height:min(200px,32vh)!important}
+@media (min-width:960px) and (min-height:780px){
+  body{font-size:17px}
+  .top h1,.topbar h1{font-size:clamp(24px,2.1vw,30px)}
+}
+</style>
+</head>
+<body>
+<main class="card">
+  <div class="top">
+    <h1>围篱笆还是铺地砖</h1>
+    <span class="badge">7–10 岁 · 周长/面积</span>
+  </div>
+  <div class="story">
+    <strong>周长</strong>：沿着边走一圈（篱笆有多长）。
+    <strong>面积</strong>：里面铺满小方砖（占地多大）。
+    长宽一变，两样都会变——但意思不一样！
+  </div>
+  <div class="tabs">
+    <button type="button" class="tab on" data-mode="area">铺地砖 · 面积</button>
+    <button type="button" class="tab" data-mode="peri">围篱笆 · 周长</button>
+  </div>
+  <div class="stage" role="img" aria-label="长方形格子图解">
+    <div class="canvas-wrap">
+      <div id="grid"></div>
+    </div>
+    <div class="edge-labels" id="edgeLab">
+      <span id="eTop">上边</span><span id="eRight">右边</span>
+      <span id="eBot">下边</span><span id="eLeft">左边</span>
+    </div>
+    <div class="nums" id="nums">面积 = 长 × 宽</div>
+  </div>
+  <div class="ctrl">
+    <div class="row">
+      <label>长</label>
+      <div class="step">
+        <button type="button" id="wMinus">−</button>
+        <span class="v" id="wVal">6</span>
+        <button type="button" id="wPlus">+</button>
+      </div>
+      <input type="range" id="w" min="2" max="10" value="6" aria-label="长">
+    </div>
+    <div class="row">
+      <label>宽</label>
+      <div class="step">
+        <button type="button" id="hMinus">−</button>
+        <span class="v" id="hVal">4</span>
+        <button type="button" id="hPlus">+</button>
+      </div>
+      <input type="range" id="h" min="2" max="8" value="4" aria-label="宽">
+    </div>
+    <div class="btn-row">
+      <button type="button" class="btn primary" id="btnPlay">▶ 演示过程</button>
+      <button type="button" class="btn" id="btnReset">↻ 重新开始</button>
+      <button type="button" class="btn" id="btnSay">🗣️ 我会说</button>
+    </div>
+  </div>
+  <div class="fb" id="fb" aria-live="polite">先看「铺满」：每格一块砖，砖数=长×宽。</div>
+  <p class="thinking"><span class="tag">我怎么想：</span><span id="think">面积数格子；周长沿着四边走，两长两宽相加。</span></p>
+  <div class="say" id="say"></div>
+</main>
+<script>
+(function(){
+  let W=6, H=4, mode='area';
+  const $ = id => document.getElementById(id);
+
+  function area(){ return W*H; }
+  function peri(){ return 2*(W+H); }
+
+  function buildGrid(highlight){
+    const g = $('grid');
+    g.style.gridTemplateColumns = 'repeat('+W+', 22px)';
+    g.innerHTML = '';
+    for(let r=0;r<H;r++){
+      for(let c=0;c<W;c++){
+        const cell = document.createElement('div');
+        cell.className = 'cell';
+        const isEdge = r===0||r===H-1||c===0||c===W-1;
+        if(highlight==='area') cell.classList.add('fill');
+        if(highlight==='peri' && isEdge) cell.classList.add('edge');
+        if(highlight==='area-anim'){
+          cell.style.opacity = '0.25';
+          const delay = (r*W+c)*15;
+          setTimeout(()=>{ cell.classList.add('fill'); cell.style.opacity='1'; }, delay);
+        }
+        g.appendChild(cell);
+      }
+    }
+  }
+
+  function draw(anim){
+    $('wVal').textContent=W; $('hVal').textContent=H;
+    document.querySelectorAll('.edge-labels span').forEach(s=>s.classList.remove('on'));
+    if(mode==='area'){
+      buildGrid(anim ? 'area-anim' : 'area');
+      $('nums').textContent = '面积 = '+W+' × '+H+' = '+area()+' 格';
+      $('fb').textContent = '青色格子铺满内部：一共 '+area()+' 块地砖。';
+      $('think').textContent = '面积看「里面铺了多少」，不是边有多长。';
+    } else {
+      buildGrid('peri');
+      $('nums').textContent = '周长 = 2×('+W+'+'+H+') = '+peri();
+      // 依次点亮四边标签，模拟「走一圈」
+      const edges = [
+        ['eTop','上 '+W],
+        ['eRight','右 '+H],
+        ['eBot','下 '+W],
+        ['eLeft','左 '+H]
+      ];
+      edges.forEach(([id,txt])=>{ $(id).textContent=txt; $(id).classList.remove('on'); });
+      if(anim){
+        edges.forEach(([id],i)=>{
+          setTimeout(()=>{
+            document.querySelectorAll('.edge-labels span').forEach(s=>s.classList.remove('on'));
+            $(id).classList.add('on');
+          }, i*280);
+        });
+        setTimeout(()=> edges.forEach(([id])=>$(id).classList.add('on')), 4*280);
+      } else {
+        edges.forEach(([id])=>$(id).classList.add('on'));
+      }
+      $('fb').textContent = '橙色描边是篱笆：上'+W+'+右'+H+'+下'+W+'+左'+H+' = '+peri()+'。';
+      $('think').textContent = '周长只沿边走一圈，不数里面的砖。';
+    }
+  }
+
+  function sync(){ W=+$('w').value; H=+$('h').value; draw(false); }
+  function bind(m,p,r){
+    $(m).onclick=()=>{ r.value=Math.max(+r.min,+r.value-1); sync(); };
+    $(p).onclick=()=>{ r.value=Math.min(+r.max,+r.value+1); sync(); };
+    r.oninput=sync;
+  }
+  bind('wMinus','wPlus',$('w'));
+  bind('hMinus','hPlus',$('h'));
+  document.querySelectorAll('.tab').forEach(t=>{
+    t.onclick=()=>{
+      document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));
+      t.classList.add('on'); mode=t.dataset.mode; draw(mode==='area');
+    };
+  });
+  $('btnPlay').onclick=()=> draw(mode==='area');
+  $('btnReset').onclick=()=>{
+    $('w').value=6; $('h').value=4; mode='area';
+    document.querySelectorAll('.tab').forEach((x,i)=>x.classList.toggle('on',i===0));
+    sync();
+  };
+  $('btnSay').onclick=()=>{
+    $('say').textContent = mode==='area'
+      ? '我会说：面积是长×宽，铺了 '+area()+' 块砖。'
+      : '我会说：周长是两长两宽相加，篱笆长 '+peri()+'。';
+  };
+  draw(false);
+})();
+</script><script id="aid-fit-js">/* AID_FIT_V1 */
+(function(){
+  var html=document.documentElement;
+  function measure(){
+    var card=document.querySelector("main.card, body>.card");
+    if(!card) return;
+    html.classList.remove("aid-compact","aid-tight");
+    card.style.overflowY="hidden";
+    void card.offsetHeight;
+    var stage=card.querySelector(".stage,.scene,.stage-wrap,.viz");
+    var stageH=stage?stage.clientHeight:999;
+    if(card.scrollHeight>card.clientHeight+8 || stageH<240 || innerHeight<820) html.classList.add("aid-compact");
+    void card.offsetHeight;
+    stageH=stage?stage.clientHeight:999;
+    if(card.scrollHeight>card.clientHeight+8 || stageH<200) html.classList.add("aid-tight");
+    void card.offsetHeight;
+    if(card.scrollHeight>card.clientHeight+8) card.style.overflowY="auto";
+  }
+  addEventListener("resize",measure);
+  addEventListener("load",measure);
+  if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",measure);
+  else requestAnimationFrame(measure);
+  setTimeout(measure,80);
+  setTimeout(measure,400);
+  var card=document.querySelector("main.card, body>.card");
+  if(card && typeof MutationObserver==="function"){
+    var t;
+    new MutationObserver(function(){
+      clearTimeout(t); t=setTimeout(measure,40);
+    }).observe(card,{childList:true,subtree:true,characterData:true});
+  }
+})();
+</script>
+</body>
+</html>

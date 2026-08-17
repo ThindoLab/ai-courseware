@@ -66,33 +66,15 @@ src/                           宿主，不编教学 if/else
 ├── inject.ts / validate.ts / inline.ts / io.ts
 └── cli.ts                     create-from-content / validate / search
 
-pi/                            Agent 层，给人审
-├── README.md
-├── 教练.md                    ★ 教练手册（排程/分工/工具/收工）
+pi/                            Agent 层，给人审（分层说明见 pi/README.md）
+├── README.md                  一层总览 + 一场 /create 读序
+├── 教练.md                    ★ 排程 / 分工 / 收工
 ├── teams.yaml                 花名册（不含顺序）
-├── memory/
-│   ├── product.md             人群、五硬核
-│   └── lessons.md             写不出文件、假命中等教训
-├── tools/
-│   ├── README.md              ★ 当前注入了哪些工具
-│   ├── index.ts               组装白名单
-│   ├── match-sample.ts        大类预筛 + 画像 + 小模型相似度
-│   ├── use-sample.ts          高置信交付 samples/{slug}.html
-│   ├── ima-search.ts          教练按库名检索 ima
-│   └── web-search.ts          教练按需联网（pi-web-access）
-├── samples/
-│   └── portraits.json         精品短画像 + 大类标签
-├── ima/
-│   ├── 检索指南.md            何时搜 / 怎么搜
-│   ├── 知识库目录.md          脚本生成：简介、类型、范围
-│   ├── catalog.json           工具用（含 kb_id）
-│   └── allowlist.txt          非空则只允许这些库名
-└── 角色/
-    ├── README.md              岗位索引
-    ├── _CORE.md               全员原则
-    ├── 匹配员.md
-    ├── writer.md / qa.md / 图解.md
-    └── researcher.md …        离线流水线 / 进化环
+├── memory/                    product.md 原则 · lessons.md 教训
+├── 角色/                      README 按 全员 / 线上 / 离线 / 进化 分层
+├── tools/                     README 按 注入 / 岗位 / 未注入 分层
+├── samples/portraits.json     精品短画像
+└── ima/                       README + 检索指南 + 知识库目录
 
 samples/                       精品教具本体（约 30 份）
 ├── manifest.json

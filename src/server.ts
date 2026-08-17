@@ -4,6 +4,7 @@ import { stream } from "hono/streaming";
 import fs from "node:fs";
 import path from "node:path";
 import { createTeachingAid } from "./agent.ts";
+import { listGallery, publishCreatedAid, resolveSampleFile } from "./gallery.ts";
 import { loadSkills } from "./skills-loader.ts";
 
 const ROOT = path.resolve(import.meta.dirname, "..");
@@ -19,37 +20,32 @@ app.get("/", (c) => {
 app.get("/health", (c) => c.json({ ok: true }));
 app.get("/skills", (c) => { c.header("Cache-Control", "no-store"); return c.json(loadSkills()); });
 
-// 样例库：清单（补 bytes/存在性）+ 单文件静态服务
+// 样例库：精品 + 每次创作落盘，清单补 bytes
 app.get("/samples", (c) => {
-  const manifestPath = path.join(ROOT, "samples", "manifest.json");
   c.header("Cache-Control", "no-store");
-  if (!fs.existsSync(manifestPath)) return c.json([]);
-  let list: Array<Record<string, unknown>>;
-  try {
-    list = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
-  } catch {
-    return c.json([]);
-  }
-  if (!Array.isArray(list)) list = [];
-  const enriched = list.map((s) => {
-    const slug = String(s.slug || "");
-    const file = path.join(ROOT, "samples", `${slug}.html`);
-    let bytes = typeof s.bytes === "number" ? s.bytes : 0;
+  const enriched = listGallery().map((s) => {
+    const file = resolveSampleFile(`${s.slug}.html`);
+    let bytes = 0;
     let ok = s.ok !== false;
-    if (fs.existsSync(file)) {
-      bytes = fs.statSync(file).size;
-    } else {
-      ok = false;
-    }
-    return { ...s, bytes, ok, file: `${slug}.html` };
+    if (file) bytes = fs.statSync(file).size;
+    else ok = false;
+    return { ...s, bytes, ok, file: `${s.slug}.html` };
   });
   return c.json(enriched);
 });
+app.get("/samples/versions/:slug/:ver", (c) => {
+  const slug = c.req.param("slug");
+  const ver = c.req.param("ver").replace(/\.html$/i, "");
+  if (!/^[a-z0-9-]+$/i.test(slug) || !/^v\d+$/i.test(ver)) return c.text("bad request", 400);
+  const p = path.join(ROOT, "samples", "versions", slug, `${ver}.html`);
+  if (!fs.existsSync(p)) return c.text("not found", 404);
+  c.header("Cache-Control", "no-store");
+  return c.html(fs.readFileSync(p, "utf8"));
+});
 app.get("/samples/:file", (c) => {
   const file = c.req.param("file");
-  if (!/^[\w.-]+\.html$/.test(file)) return c.text("bad request", 400);
-  const p = path.join(ROOT, "samples", file);
-  if (!fs.existsSync(p)) return c.text("not found", 404);
+  const p = resolveSampleFile(file);
+  if (!p) return c.text("not found", 404);
   c.header("Cache-Control", "no-store");
   return c.html(fs.readFileSync(p, "utf8"));
 });
@@ -70,7 +66,7 @@ app.get("/diagram-preview/:file", (c) => {
   return c.html(fs.readFileSync(p, "utf8"));
 });
 
-function createPayload(res: Awaited<ReturnType<typeof createTeachingAid>>) {
+function createPayload(res: Awaited<ReturnType<typeof createTeachingAid>>, topic: string) {
   if (!res.ok) {
     return {
       ok: false,
@@ -79,6 +75,19 @@ function createPayload(res: Awaited<ReturnType<typeof createTeachingAid>>) {
       error: res.error,
       toolCalls: res.toolCalls,
     };
+  }
+  let gallerySlug = res.fromSample ? res.sampleSlug : undefined;
+  if (!res.fromSample && res.html) {
+    const aud = res.report?.audience as
+      | { ageLabel?: string; ageBand?: string; scenes?: string[] }
+      | undefined;
+    const item = publishCreatedAid({
+      html: res.html,
+      topic,
+      type: res.type,
+      audience: aud,
+    });
+    gallerySlug = item.slug;
   }
   return {
     ok: true,
@@ -91,6 +100,8 @@ function createPayload(res: Awaited<ReturnType<typeof createTeachingAid>>) {
     html: res.html,
     fromSample: res.fromSample === true,
     sampleSlug: res.sampleSlug,
+    gallerySlug,
+    galleryUrl: gallerySlug ? `/samples/${gallerySlug}.html` : undefined,
     audience: res.report?.audience,
     quality: res.report?.quality,
     note: res.report?.note,
@@ -118,7 +129,7 @@ app.post("/create", async (c) => {
 
   if (!wantStream) {
     const res = await createTeachingAid(String(text).trim(), module, skillId);
-    const payload = createPayload(res);
+    const payload = createPayload(res, String(text).trim());
     return c.json(payload, res.ok ? 200 : 500);
   }
 
@@ -134,11 +145,11 @@ app.post("/create", async (c) => {
       void writeLine(ev);
     });
     await queue;
-    await writeLine({ type: "done", result: createPayload(res) });
+    await writeLine({ type: "done", result: createPayload(res, String(text).trim()) });
   });
 });
 
-const port = Number(process.env.PORT) || 3000;
+const port = Number(process.env.PORT) || 3001;
 serve({ fetch: app.fetch, port }, (info) => {
   console.log(`courseware server listening on http://localhost:${info.port}`);
 });

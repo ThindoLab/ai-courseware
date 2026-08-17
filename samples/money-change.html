@@ -4,280 +4,575 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>超市找零 · 元角分</title>
-<!-- 题型：生活数学·找零 / 核心认知动作：比较·减法可视化 / 年龄：6-9 岁 / 场景：家庭+生活 -->
+<!-- 题型：生活数学·找零 / 核心认知动作：付−价=找零 可视化 / 年龄：7-9 岁 / 场景：家庭+教室 / 无外搜 -->
 <style>
 :root{
-  --accent:#0ea5e9; --ok:#10b981; --warn:#f59e0b; --bad:#ef4444;
-  --ink:#1f2a44; --muted:#667085; --line:#dbeafe; --ease:cubic-bezier(0.25,1,0.5,1);
+  --accent:#2f6fbf; --accent-deep:#1d4e8f; --accent-soft:#e7f0fb;
+  --ok:#2fbf71; --ok-deep:#1e8a50; --ok-soft:#e3f7ec;
+  --bad:#e85d5d; --bad-soft:#fdeaea;
+  --gold:#f2b94b; --gold-deep:#b97f14; --gold-soft:#fdf3dd;
+  --ink:#1e3a5f; --muted:#5b7085; --line:#d8e2ee; --card:#fff;
+  --ease:cubic-bezier(0.25,1,0.5,1);
   --touch:52px;
+  --radius:18px;
 }
 *{box-sizing:border-box}
-html,body{margin:0}
+html,body{height:100%;margin:0;overflow:hidden}
 body{
   font-family:-apple-system,"PingFang SC","Microsoft YaHei",system-ui,sans-serif;
-  color:var(--ink); background:linear-gradient(160deg,#e0f2fe,#fef9c3);
-  min-height:100vh; padding:14px 12px 28px;
+  color:var(--ink); background:linear-gradient(165deg,#e7f0fb 0%,#f6fbf4 55%,#fdf3dd 100%);
+  height:100dvh; display:flex; flex-direction:column;
+  padding:clamp(8px,1.5vh,16px) clamp(10px,1.8vw,22px);
 }
 .card{
-  max-width:760px; margin:0 auto; background:#fff; border:1px solid var(--line);
-  border-radius:20px; box-shadow:0 12px 30px rgba(14,165,233,.12); padding:18px 16px 22px;
-  animation:fadeInUp .5s var(--ease) both;
+  flex:1 1 auto; min-height:0; width:100%; max-width:min(1120px,100%);
+  margin:0 auto; background:var(--card); border:1px solid var(--line);
+  border-radius:var(--radius); box-shadow:0 14px 34px rgba(30,58,95,.12);
+  display:flex; flex-direction:column; overflow:hidden;
+  padding:clamp(12px,1.8vh,22px) clamp(14px,2vw,28px) clamp(10px,1.4vh,18px);
 }
-.topbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
-.topbar h1{margin:0;font-size:24px;font-weight:800}
-.badge{font-size:14px;font-weight:700;color:#0369a1;background:#e0f2fe;padding:5px 12px;border-radius:999px}
-.mode{margin-left:auto;font-size:14px;color:var(--muted);display:flex;gap:6px;align-items:center;cursor:pointer}
-.mode input{width:18px;height:18px}
+.topbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;flex:none;margin-bottom:8px}
+.topbar h1{margin:0;font-size:clamp(22px,2.6vw,30px);font-weight:800}
+.badge{font-size:15px;font-weight:700;color:var(--accent-deep);background:var(--accent-soft);padding:6px 14px;border-radius:999px}
+.step-dots{margin-left:auto;display:flex;gap:8px;align-items:center}
+.step-dots button{
+  width:var(--touch);height:var(--touch);border-radius:50%;border:2px solid var(--line);
+  background:#fff;color:var(--muted);font-size:17px;font-weight:800;cursor:pointer;font-family:inherit;
+}
+.step-dots button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
 .story{
-  background:linear-gradient(135deg,#e0f2fe,#fef9c3); border-left:5px solid var(--accent);
-  border-radius:0 14px 14px 0; padding:12px 14px; margin-bottom:14px;
-  font-size:16px; line-height:1.7; display:flex; gap:12px;
+  flex:none; background:linear-gradient(135deg,var(--accent-soft),var(--gold-soft));
+  border-left:6px solid var(--accent); border-radius:0 14px 14px 0;
+  padding:10px 14px; margin-bottom:10px; font-size:clamp(18px,1.8vw,21px); line-height:1.55;
+  display:flex; gap:12px; align-items:center;
 }
-.story .m{font-size:42px;flex-shrink:0}
+.story .m{font-size:40px;flex-shrink:0;line-height:1}
 .story p{margin:0}
 .stage{
-  background:linear-gradient(180deg,#f0f9ff,#fffbeb); border:1px solid var(--line);
-  border-radius:16px; padding:14px; margin-bottom:14px;
+  flex:1 1 auto; min-height:0; display:flex; flex-direction:column; justify-content:center;
+  background:linear-gradient(180deg,#f0f7ff,#fbfff8); border:1px solid var(--line);
+  border-radius:16px; padding:10px 12px; margin-bottom:10px; overflow:hidden;
 }
-.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-@media(max-width:560px){.row{grid-template-columns:1fr}}
-.box{background:#fff;border:1px dashed #bae6fd;border-radius:14px;padding:12px;text-align:center}
-.box h3{margin:0 0 8px;font-size:15px;color:var(--muted)}
-.price{font-size:32px;font-weight:800;color:#0369a1;font-variant-numeric:tabular-nums}
-.coins{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;min-height:48px;margin-top:8px}
-.coin{
-  width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;
-  font-size:13px;font-weight:800;color:#78350f;background:linear-gradient(145deg,#fde68a,#f59e0b);
-  border:2px solid #d97706; box-shadow:0 2px 0 #b45309;
-  transition:transform .35s var(--ease), opacity .35s var(--ease);
-  opacity:0; transform:scale(.5);
+.scene{
+  flex:1 1 auto; min-height:0; display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
 }
-.coin.in{opacity:1;transform:scale(1)}
-.coin.fly{animation:pop .4s var(--ease)}
-.coin.change{background:linear-gradient(145deg,#bbf7d0,#34d399);border-color:#059669;color:#064e3b}
-.arrow{
-  text-align:center; font-size:15px; font-weight:700; color:var(--muted);
-  padding:8px 0; grid-column:1/-1;
+.scene svg{width:100%;height:100%;max-height:100%;min-height:0;display:block}
+.bar-zone{flex:none;margin-top:6px;width:100%;max-width:760px}
+.bar-cap{font-size:15px;font-weight:800;color:var(--muted);margin-bottom:4px}
+.bar-rows{display:flex;flex-direction:column;gap:5px}
+.bar-row{display:grid;grid-template-columns:70px 1fr 62px;gap:8px;align-items:center}
+.bar-row .lab{font-size:15px;font-weight:700;color:var(--muted)}
+.bar-row .val{font-size:clamp(15px,1.5vw,17px);font-weight:800;text-align:right;font-variant-numeric:tabular-nums}
+.bar{height:24px;background:#eef2f7;border-radius:999px;overflow:hidden;position:relative;display:flex}
+.bar>i{display:block;height:100%;transition:width .5s var(--ease)}
+.bar .b-cost{background:var(--gold);border-radius:999px 0 0 999px}
+.bar .b-change{background:var(--ok)}
+.bar .b-paid{background:var(--accent);border-radius:0 999px 999px 0}
+.bar .b-short{background:var(--bad);border-radius:999px}
+.shop-row{
+  flex:none; display:flex; gap:clamp(8px,1.6vw,18px); justify-content:center;
+  flex-wrap:wrap; margin-top:8px;
 }
-.bar-wrap{margin-top:12px;display:flex;flex-direction:column;gap:8px}
-.bar-row{display:grid;grid-template-columns:64px 1fr 48px;gap:8px;align-items:center}
-.bar-row .lab{font-size:13px;font-weight:700;color:var(--muted)}
-.bar-row .val{font-size:14px;font-weight:800;text-align:right;font-variant-numeric:tabular-nums}
-.bar{
-  height:22px; background:#e2e8f0; border-radius:999px; overflow:hidden; position:relative;
+.shop-item{
+  min-height:var(--touch); display:flex; align-items:center; gap:8px;
+  border:2px solid var(--line); border-radius:14px; background:#fff;
+  padding:6px 14px; cursor:pointer; font-family:inherit; font-size:clamp(16px,1.6vw,19px);
+  font-weight:700; color:var(--ink); transition:border-color .25s,background .25s,transform .15s;
 }
-.bar > i{display:block;height:100%;width:0;border-radius:999px;transition:width .45s var(--ease)}
-.bar .cost{background:#fbbf24}
-.bar .paid{background:#38bdf8}
-.bar .chg{background:#34d399}
-.bar .short{background:#f87171}
-.ctrl{display:flex;flex-direction:column;gap:12px;margin-bottom:12px}
-.field{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap}
-.field label{font-size:16px;font-weight:700}
-.stepper{display:flex;align-items:center;gap:8px}
-.stepper button{
+.shop-item .ic{font-size:clamp(22px,2.4vw,30px)}
+.shop-item .pr{color:var(--accent-deep);font-weight:800}
+.shop-item.on{border-color:var(--accent);background:var(--accent-soft);transform:translateY(-2px)}
+.money-panel{
+  flex:none; margin-top:8px; display:flex; flex-direction:column; gap:6px;
+}
+.money-cap{font-size:15px;font-weight:800;color:var(--muted)}
+.money-btns{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.money-btn{
   min-width:var(--touch); min-height:var(--touch); border-radius:14px; border:2px solid var(--line);
-  background:#fff; font-size:22px; font-weight:800; cursor:pointer; font-family:inherit;
+  background:#fff; cursor:pointer; font-family:inherit; font-size:clamp(16px,1.6vw,19px);
+  font-weight:800; color:var(--gold-deep); display:flex; align-items:center; justify-content:center; gap:4px;
+  transition:border-color .2s,background .2s;
 }
-.stepper .val{min-width:64px; text-align:center; font-size:24px; font-weight:800; color:var(--accent)}
-.btn-row{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+.money-btn .unit{font-size:11px;font-weight:700;color:var(--muted)}
+.money-btn.used{background:var(--gold-soft);border-color:var(--gold);opacity:.9}
+.pay-row{flex:none;display:flex;gap:10px;align-items:center;justify-content:center;margin-top:8px;flex-wrap:wrap}
+.pay-row .pay-stack{display:flex;gap:4px;flex-wrap:wrap;justify-content:center;min-height:44px;align-items:center}
+.pay-row .pay-note{
+  min-height:44px; padding:8px 14px; border-radius:12px; background:var(--gold-soft);
+  border:2px solid var(--gold); font-size:clamp(15px,1.5vw,18px); font-weight:800; color:var(--gold-deep);
+  display:flex; align-items:center; justify-content:center;
+}
+.pay-row .empty-tip{color:var(--muted);font-weight:600}
+.ctrl{flex:none;display:flex;gap:10px;justify-content:center;margin-top:10px;flex-wrap:wrap}
 .btn{
-  min-height:var(--touch); padding:12px 18px; border-radius:14px; border:2px solid var(--line);
-  background:#fff; font-size:16px; font-weight:700; cursor:pointer; font-family:inherit;
+  min-height:var(--touch); padding:12px 22px; border-radius:14px; border:2px solid var(--line);
+  background:#fff; font-size:clamp(17px,1.7vw,20px); font-weight:700; cursor:pointer; font-family:inherit;
 }
-.btn.primary{background:linear-gradient(135deg,var(--accent),#0284c7);color:#fff;border-color:transparent}
-.feedback{min-height:64px;border-radius:14px;padding:12px;background:#f8fafc;border:1px solid var(--line);font-size:16px;line-height:1.6;margin-bottom:10px}
-.feedback.ok{background:#ecfdf5;border-color:#6ee7b7}
-.feedback.bad{background:#fff7ed;border-color:#fcd34d}
-.thinking{background:#fffbeb;border-radius:12px;padding:10px 12px;font-size:15px;border:1px dashed #fcd34d;line-height:1.6}
-.thinking .tag{font-weight:800;color:#b45309}
-.say{font-size:15px;margin-top:8px;min-height:22px}
-@keyframes fadeInUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
-@keyframes pop{0%{transform:scale(.6)}70%{transform:scale(1.15)}to{transform:scale(1)}}
-@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
-body.static *{animation:none!important;transition:none!important}
-body.static .coin{opacity:1;transform:none}
+.btn.primary{background:var(--accent);color:#fff;border-color:transparent;box-shadow:0 4px 0 var(--accent-deep)}
+.btn.ok{background:var(--ok);color:#fff;border-color:transparent;box-shadow:0 4px 0 var(--ok-deep)}
+.feedback{
+  flex:none; min-height:58px; border-radius:14px; padding:10px 14px; background:#f6f9fc;
+  border:1px solid var(--line); font-size:clamp(18px,1.8vw,21px); line-height:1.5; margin-top:10px;
+  display:flex; align-items:center; gap:10px;
+}
+.feedback .fb-ic{font-size:28px;flex-shrink:0}
+.feedback.ok{background:var(--ok-soft);border-color:var(--ok)}
+.feedback.bad{background:var(--bad-soft);border-color:var(--bad)}
+.feedback.info{background:var(--accent-soft);border-color:var(--accent)}
+.feedback .fb-txt{flex:1}
+.shake{animation:shake .4s var(--ease)}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}50%{transform:translateX(8px)}75%{transform:translateX(-5px)}}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}
+}
+body.static *,body.static *::before,body.static *::after{animation:none!important;transition:none!important}
+@media (max-width:640px){
+  .bar-row{grid-template-columns:58px 1fr 54px}
+  .bar-row .lab{font-size:13px}
+  .story .m{font-size:32px}
+}
+</style>
+<style id="aid-fit">/* AID_FIT_V1 */
+html,body{height:100%!important;max-height:100dvh!important;overflow:hidden!important}
+body{min-height:100dvh!important;height:100dvh!important;display:flex!important;flex-direction:column!important;box-sizing:border-box!important}
+body>.card,main.card{flex:1 1 auto!important;min-height:0!important;width:100%!important;max-width:min(1120px,100%)!important;margin:0 auto!important;display:flex!important;flex-direction:column!important;overflow:hidden!important}
+.stage,.scene{flex:1 1 40%!important;min-height:min(220px,34vh)!important;overflow:hidden!important;display:flex!important;flex-direction:column!important;justify-content:center!important}
+.scene svg{flex:1 1 auto;width:100%!important;height:100%!important;max-height:100%!important;min-height:0}
+.ctrl,.choices,.btn-row,.topbar,.feedback,.shop-row,.money-panel,.pay-row,.bar-zone{flex:none}
+html.aid-compact .story{display:none!important}
+html.aid-compact .feedback{min-height:0!important;padding:8px 10px!important;margin:6px 0!important;font-size:16px!important}
+html.aid-compact h1{font-size:clamp(18px,2.2vw,22px)!important}
+html.aid-compact .btn{min-height:46px;padding:8px 14px;font-size:16px!important}
+html.aid-compact .shop-item,.html.aid-compact .money-btn{min-height:44px;font-size:15px!important}
+html.aid-compact .bar-row .val{font-size:14px!important}
+html.aid-tight .bar-zone{display:none!important}
+html.aid-tight .story{display:none!important}
+html.aid-tight .stage{min-height:min(190px,30vh)!important}
 </style>
 </head>
 <body>
 <main class="card">
   <div class="topbar">
-    <h1>超市找零</h1>
-    <span class="badge">6–9 岁 · 生活数学</span>
-    <label class="mode"><input type="checkbox" id="staticMode"> 静态模式</label>
+    <h1>🛒 超市找零</h1>
+    <span class="badge">7–9 岁 · 生活数学</span>
+    <div class="step-dots" aria-label="关卡">
+      <button type="button" id="goPrev" aria-label="上一关">‹</button>
+      <button type="button" id="goNext" aria-label="下一关">›</button>
+    </div>
   </div>
   <div class="story">
-    <div class="m" id="mascot">🧒</div>
-    <p>妈妈让你去买东西。商品<strong>多少钱</strong>、你付了<strong>多少</strong>、应找回<strong>多少</strong>？拖滑块改数字，看图里的「钱条」怎么变。</p>
+    <div class="m" id="mascot">👧</div>
+    <p id="storyTxt">收银台前：<strong>点一个商品</strong>，再<strong>点钱币</strong>付钱。付的钱够了，收银机就把<strong>多出来的钱找回来</strong>。</p>
   </div>
-  <div class="stage" role="img" aria-label="找零图解：付款条与商品价对比">
-    <div class="row">
-      <div class="box">
-        <h3>🛒 商品价钱</h3>
-        <div class="price" id="costShow">¥8</div>
-        <div class="coins" id="costCoins" aria-hidden="true"></div>
-      </div>
-      <div class="box">
-        <h3>💵 你付的钱</h3>
-        <div class="price" id="payShow">¥10</div>
-        <div class="coins" id="payCoins" aria-hidden="true"></div>
-      </div>
+  <div class="stage">
+    <div class="scene" role="img" aria-label="超市收银台找零图解">
+      <svg viewBox="0 0 940 330" preserveAspectRatio="xMidYMid meet" id="sceneSvg">
+        <defs>
+          <linearGradient id="tillGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#ffffff"/>
+            <stop offset="1" stop-color="#e7f0fb"/>
+          </linearGradient>
+        </defs>
+        <!-- 货架 -->
+        <g id="shelf">
+          <rect x="20" y="150" width="150" height="110" rx="10" fill="#f3efe6" stroke="#d8cfbd" stroke-width="2"/>
+          <line x1="30" y1="190" x2="160" y2="190" stroke="#d8cfbd" stroke-width="2"/>
+          <line x1="30" y1="230" x2="160" y2="230" stroke="#d8cfbd" stroke-width="2"/>
+        </g>
+        <!-- 商品（随关卡换图） -->
+        <g id="goods">
+          <g id="gItem" transform="translate(48,158)">
+            <circle id="gShape1" cx="26" cy="20" r="14" fill="#f8d9a0" stroke="#c98a2e" stroke-width="2"/>
+            <path id="gShape2" d="M20 20 q6 -10 12 0" fill="none" stroke="#6aa84f" stroke-width="3" stroke-linecap="round"/>
+            <rect id="gStem" x="10" y="6" width="3" height="8" rx="1.5" fill="#6aa84f"/>
+          </g>
+          <g id="priceTag">
+            <rect x="46" y="252" width="98" height="34" rx="10" fill="#fff" stroke="#f2b94b" stroke-width="2"/>
+            <text id="priceTxt" x="95" y="276" text-anchor="middle" font-size="20" font-weight="800" fill="#b97f14" font-family="inherit">¥5</text>
+          </g>
+        </g>
+        <!-- 收银台 -->
+        <rect x="250" y="210" width="440" height="58" rx="12" fill="#d9e4f1" stroke="#b9cae2" stroke-width="2"/>
+        <!-- 收银机 -->
+        <g id="till">
+          <rect x="310" y="120" width="150" height="92" rx="12" fill="url(#tillGrad)" stroke="#b9cae2" stroke-width="2"/>
+          <rect x="326" y="132" width="118" height="46" rx="8" fill="#eef4fc" stroke="#b9cae2" stroke-width="2"/>
+          <text id="tillScreen" x="385" y="162" text-anchor="middle" font-size="22" font-weight="800" fill="#1d4e8f" font-family="inherit">¥0</text>
+          <rect x="330" y="184" width="110" height="18" rx="9" fill="#cfe3f7"/>
+          <rect id="slot" x="336" y="182" width="98" height="12" rx="6" fill="#9db8d8"/>
+          <text x="348" y="212" font-size="12" fill="#5b7085" font-weight="700" font-family="inherit">找零口</text>
+        </g>
+        <!-- 收银员豆人 -->
+        <g id="cashier">
+          <g fill="#1e3a5f" stroke="#1e3a5f" stroke-width="2.4" stroke-linecap="round">
+            <circle cx="470" cy="52" r="17"/>
+            <path d="M470 69 V104 M470 76 L452 92 M470 76 L488 92 M470 104 L456 128 M470 104 L484 128"/>
+            <circle cx="464" cy="48" r="2.6" fill="#fff" stroke="none"/>
+            <circle cx="477" cy="48" r="2.6" fill="#fff" stroke="none"/>
+          </g>
+          <path d="M452 40 q18 -14 36 0 q-18 -8 -36 0" fill="#2f6fbf" stroke="none"/>
+        </g>
+        <!-- 小朋友豆人 -->
+        <g id="kid">
+          <g fill="#1e3a5f" stroke="#1e3a5f" stroke-width="2.4" stroke-linecap="round">
+            <circle cx="800" cy="56" r="17"/>
+            <path d="M800 73 V108 M800 80 L782 96 M800 80 L818 96 M800 108 L786 132 M800 108 L814 132"/>
+            <circle cx="794" cy="52" r="2.6" fill="#fff" stroke="none"/>
+            <circle cx="807" cy="52" r="2.6" fill="#fff" stroke="none"/>
+          </g>
+          <path d="M788 42 q12 -12 24 0 q-12 -6 -24 0" fill="#e85d5d" stroke="none"/>
+          <rect x="808" y="82" width="16" height="20" rx="5" fill="#e85d5d" stroke="#c74444" stroke-width="2"/>
+        </g>
+        <!-- 付款中的钱币（飞行） -->
+        <g id="payFly" aria-hidden="true"></g>
+        <!-- 找零弹出的钱币 -->
+        <g id="changeFly" aria-hidden="true"></g>
+        <!-- 图例 -->
+        <g id="legend">
+          <circle cx="560" cy="70" r="9" fill="#f2b94b"/>
+          <text x="574" y="75" font-size="15" font-weight="700" fill="#5b7085" font-family="inherit">价钱</text>
+          <circle cx="640" cy="70" r="9" fill="#2fbf71"/>
+          <text x="654" y="75" font-size="15" font-weight="700" fill="#5b7085" font-family="inherit">找回</text>
+          <circle cx="720" cy="70" r="9" fill="#2f6fbf"/>
+          <text x="734" y="75" font-size="15" font-weight="700" fill="#5b7085" font-family="inherit">你付的</text>
+        </g>
+        <!-- 关系式 -->
+        <text id="formula" x="650" y="316" text-anchor="middle" font-size="20" font-weight="800" fill="#1e3a5f" font-family="inherit">找回 = 你付的 − 价钱</text>
+      </svg>
     </div>
-    <div class="arrow" id="relation">付的 ≥ 价钱 才能买 · 找回 = 付的 − 价钱</div>
-    <div class="bar-wrap" aria-hidden="true">
-      <div class="bar-row">
-        <span class="lab">价钱</span>
-        <div class="bar"><i class="cost" id="barCost"></i></div>
-        <span class="val" id="barCostV">0</span>
+    <div class="bar-zone">
+      <div class="bar-cap">💰 同一把尺子量三段：绿条 = 蓝条 − 黄条</div>
+      <div class="bar-rows" aria-hidden="true">
+        <div class="bar-row">
+          <span class="lab">价钱</span>
+          <div class="bar"><i class="b-cost" id="barCost" style="width:0%"></i></div>
+          <span class="val" id="barCostV">¥0</span>
+        </div>
+        <div class="bar-row">
+          <span class="lab">找回</span>
+          <div class="bar"><i class="b-change" id="barChange" style="width:0%"></i><i class="b-short" id="barShort" style="width:0%"></i></div>
+          <span class="val" id="barChangeV">—</span>
+        </div>
+        <div class="bar-row">
+          <span class="lab">你付的</span>
+          <div class="bar"><i class="b-paid" id="barPaid" style="width:0%"></i></div>
+          <span class="val" id="barPaidV">¥0</span>
+        </div>
       </div>
-      <div class="bar-row">
-        <span class="lab">付款</span>
-        <div class="bar"><i class="paid" id="barPaid"></i></div>
-        <span class="val" id="barPaidV">0</span>
-      </div>
-      <div class="bar-row">
-        <span class="lab">找零</span>
-        <div class="bar"><i class="chg" id="barChg"></i></div>
-        <span class="val" id="barChgV">0</span>
-      </div>
-    </div>
-    <div class="box" style="margin-top:12px">
-      <h3>找给你</h3>
-      <div class="price" id="chgShow" style="color:#059669">¥2</div>
-      <div class="coins" id="chgCoins"></div>
     </div>
   </div>
-  <div class="ctrl">
-    <div class="field">
-      <label for="cost">价钱 ¥</label>
-      <div class="stepper">
-        <button type="button" id="costMinus" aria-label="价钱减1">−</button>
-        <span class="val" id="costVal">8</span>
-        <button type="button" id="costPlus" aria-label="价钱加1">+</button>
-      </div>
-      <input type="range" id="cost" min="1" max="20" value="8" aria-label="商品价钱">
-    </div>
-    <div class="field">
-      <label for="pay">付款 ¥</label>
-      <div class="stepper">
-        <button type="button" id="payMinus" aria-label="付款减1">−</button>
-        <span class="val" id="payVal">10</span>
-        <button type="button" id="payPlus" aria-label="付款加1">+</button>
-      </div>
-      <input type="range" id="pay" min="1" max="20" value="10" aria-label="付款金额">
-    </div>
-    <div class="btn-row">
-      <button type="button" class="btn primary" id="btnCheck">✓ 我算对了吗</button>
-      <button type="button" class="btn" id="btnReset">↻ 重置</button>
-      <button type="button" class="btn" id="btnSay">🗣️ 我会说</button>
+  <div class="shop-row" id="shopRow"></div>
+  <div class="money-panel">
+    <div class="money-cap" id="moneyCap">🧾 点钱币付钱（要凑够价钱哦）</div>
+    <div class="money-btns" id="moneyBtns"></div>
+    <div class="pay-row">
+      <span class="pay-stack" id="payStack"><span class="empty-tip">还没付钱</span></span>
+      <button type="button" class="btn primary" id="btnPay">💸 付款</button>
+      <button type="button" class="btn" id="btnClear">↻ 重选钱</button>
     </div>
   </div>
-  <div class="feedback" id="feedback" aria-live="polite">调价钱和付款，看绿色「找零」条有多长。</div>
-  <p class="thinking"><span class="tag">我怎么想：</span><span id="thinkText">找回的钱 = 我付的 − 商品价钱。付不够就买不成。</span></p>
-  <div class="say" id="sayBox"></div>
+  <div class="feedback" id="feedback" aria-live="polite">
+    <span class="fb-ic" id="fbIc">🛒</span>
+    <span class="fb-txt" id="fbTxt">先点一个商品，看看它卖多少钱。</span>
+  </div>
 </main>
 <script>
 (function(){
-  let cost=8, pay=10, reduced=false;
-  const $ = id => document.getElementById(id);
+  "use strict";
+  var $ = function(id){ return document.getElementById(id); };
+  var reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  function change(){ return pay - cost; }
-
-  function coinStack(n, el, cls){
-    el.innerHTML = '';
-    const count = Math.min(Math.max(n,0), 20);
-    for(let i=0;i<count;i++){
-      const c = document.createElement('div');
-      c.className = 'coin' + (cls? ' '+cls : '');
-      c.textContent = '1';
-      el.appendChild(c);
-      if(!reduced) setTimeout(()=>{ c.classList.add('in'); if(cls) c.classList.add('fly'); }, i*15);
-      else c.classList.add('in');
+  /* 关卡数据 */
+  var STAGES = [
+    {
+      name:'整元关',
+      goods:[
+        {ic:'🍎', name:'苹果', yuan:5, jiao:0},
+        {ic:'✏️', name:'铅笔', yuan:3, jiao:0},
+        {ic:'🥛', name:'牛奶', yuan:12, jiao:0},
+        {ic:'🧸', name:'小熊', yuan:18, jiao:0}
+      ],
+      denoms:[{v:1,t:'元'},{v:5,t:'元'},{v:10,t:'元'},{v:20,t:'元'}],
+      story:'第一关：都是整元商品。点商品，再点钱币付钱，看收银机找多少。'
+    },
+    {
+      name:'角币关',
+      goods:[
+        {ic:'🍞', name:'面包', yuan:3, jiao:5},
+        {ic:'🥬', name:'青菜', yuan:2, jiao:8},
+        {ic:'🧃', name:'果汁', yuan:6, jiao:5},
+        {ic:'🍪', name:'饼干', yuan:4, jiao:5}
+      ],
+      denoms:[{v:1,t:'元'},{v:5,t:'元'},{v:10,t:'元'},{v:5,t:'角'}],
+      story:'第二关：价钱带「角」了。1 元 = 10 角。付整元，找回的钱里有角。'
+    },
+    {
+      name:'举一反三',
+      goods:[
+        {ic:'🍉', name:'西瓜', yuan:9, jiao:5},
+        {ic:'📚', name:'图画书', yuan:15, jiao:0},
+        {ic:'🧢', name:'帽子', yuan:11, jiao:5},
+        {ic:'🎁', name:'礼物盒', yuan:20, jiao:0}
+      ],
+      denoms:[{v:1,t:'元'},{v:5,t:'元'},{v:10,t:'元'},{v:20,t:'元'},{v:5,t:'角'}],
+      story:'举一反三：换成新的商品，方法一样：找回 = 你付的 − 价钱。'
     }
-    if(n>20){
-      const more = document.createElement('div');
-      more.className = 'coin in';
-      more.textContent = '+';
-      el.appendChild(more);
+  ];
+
+  var st = 0;            /* 关卡 */
+  var gi = 0;            /* 商品下标 */
+  var paid = [];         /* 已选整元面额 */
+  var hasJiao = false;   /* 是否选了角币 */
+  var state = 'pick';    /* pick 选钱中 / paid 付款成功 */
+
+  function priceYuan(g){ return g.yuan + g.jiao/10; }
+  function priceJiao(g){ return g.yuan*10 + g.jiao; }
+  function payYuan(){ return paid.reduce(function(a,b){return a+b;},0) + (hasJiao?0.5:0); }
+  function payJiao(){ return Math.round(payYuan()*10); }
+
+  function fmtYuan(v){
+    var j = Math.round(v*10);
+    var y = Math.floor(j/10), jj = j%10;
+    if(jj===0) return '¥'+y;
+    return '¥'+y+'元'+jj+'角';
+  }
+  function fmtJiao(j){
+    var y = Math.floor(j/10), jj = j%10;
+    if(jj===0) return '¥'+y;
+    return '¥'+y+'元'+jj+'角';
+  }
+
+  /* ---------- 商品选择 ---------- */
+  function renderShop(){
+    var row = $('shopRow'); row.innerHTML='';
+    STAGES[st].goods.forEach(function(g,i){
+      var b=document.createElement('button');
+      b.type='button'; b.className='shop-item'+(i===gi?' on':'');
+      b.innerHTML='<span class="ic">'+g.ic+'</span><span>'+g.name+'</span><span class="pr">'+fmtYuan(priceYuan(g))+'</span>';
+      b.onclick=function(){ gi=i; renderShop(); resetPay(true); };
+      row.appendChild(b);
+    });
+  }
+  function renderMoney(){
+    var box=$('moneyBtns'); box.innerHTML='';
+    STAGES[st].denoms.forEach(function(d){
+      var b=document.createElement('button');
+      b.type='button'; b.className='money-btn';
+      var used = d.t==='角' ? hasJiao : paid.indexOf(d.v)>-1;
+      if(used) b.classList.add('used');
+      b.innerHTML=(d.t==='角'?'<span>5</span><span class="unit">角</span>':'<span>'+d.v+'</span><span class="unit">元</span>');
+      b.onclick=function(){
+        if(d.t==='角'){ hasJiao=!hasJiao; }
+        else {
+          var idx=paid.indexOf(d.v);
+          if(idx>-1) paid.splice(idx,1); else paid.push(d.v);
+        }
+        state='pick';
+        renderMoney(); renderPay(); updateBars(); updateScene();
+        feedbackInfo('点好的钱会飞进收银机。可以继续点钱或直接「付款」。');
+      };
+      box.appendChild(b);
+    });
+  }
+  function renderPay(){
+    var stack=$('payStack');
+    if(paid.length===0 && !hasJiao){ stack.innerHTML='<span class="empty-tip">还没付钱</span>'; return; }
+    stack.innerHTML='';
+    var list = paid.slice().sort(function(a,b){return a-b;});
+    list.forEach(function(v){
+      var n=document.createElement('span');
+      n.className='pay-note'; n.textContent='¥'+v;
+      stack.appendChild(n);
+    });
+    if(hasJiao){
+      var n=document.createElement('span');
+      n.className='pay-note'; n.textContent='5角';
+      stack.appendChild(n);
+    }
+    if(list.length+(hasJiao?1:0) > 6){
+      var more=document.createElement('span');
+      more.className='pay-note'; more.textContent='共 '+fmtYuan(payYuan());
+      stack.appendChild(more);
     }
   }
 
-  function sync(){
-    cost = +$('cost').value; pay = +$('pay').value;
-    $('costVal').textContent = cost; $('payVal').textContent = pay;
-    $('costShow').textContent = '¥'+cost;
-    $('payShow').textContent = '¥'+pay;
-    const ch = change();
-    const max = Math.max(cost, pay, 1);
-    // 三条独立条：同刻度对比，避免叠在一根里看不清
-    $('barCost').style.width = (cost/max*100)+'%';
-    $('barPaid').style.width = (pay/max*100)+'%';
-    $('barCostV').textContent = '¥'+cost;
-    $('barPaidV').textContent = '¥'+pay;
-    if(ch>=0){
-      $('barChg').className = 'chg';
-      $('barChg').style.width = (ch/max*100)+'%';
-      $('barChgV').textContent = '¥'+ch;
-      $('chgShow').textContent = '¥'+ch;
-      $('chgShow').style.color = '#059669';
-      $('relation').textContent = '付的 ¥'+pay+' − 价钱 ¥'+cost+' = 找回 ¥'+ch;
-      $('relation').style.color = '#059669';
-      coinStack(ch, $('chgCoins'), 'change');
-      $('thinkText').textContent = '三条分开看：绿条=付款比价钱多出来的部分（找零）。';
+  function resetPay(soft){
+    paid=[]; hasJiao=false; state='pick';
+    renderMoney(); renderPay(); updateBars(); updateScene();
+    if(!soft) feedbackInfo('重新选钱。');
+  }
+
+  /* ---------- 金额条 ---------- */
+  function barPct(v,total){
+    if(total<=0) return 0;
+    return Math.min(100, Math.round(v/total*100));
+  }
+  function updateBars(){
+    var g=STAGES[st].goods[gi];
+    var costJ=priceJiao(g), payJ=payJiao(), chgJ=Math.max(0,payJ-costJ);
+    var total=Math.max(costJ,payJ,1);
+    $('barCost').style.width=barPct(costJ,total)+'%';
+    $('barCostV').textContent=fmtJiao(costJ);
+    $('barPaid').style.width=barPct(payJ,total)+'%';
+    $('barPaidV').textContent=payJ===0?'¥0':fmtJiao(payJ);
+    if(payJ>=costJ){
+      $('barChange').style.width=barPct(chgJ,total)+'%';
+      $('barShort').style.width='0%';
+      $('barChangeV').textContent=fmtJiao(chgJ);
     } else {
-      $('barChg').className = 'short';
-      $('barChg').style.width = ((-ch)/max*100)+'%';
-      $('barChgV').textContent = '差¥'+(-ch);
-      $('chgShow').textContent = '不够';
-      $('chgShow').style.color = '#dc2626';
-      $('relation').textContent = '付的 ¥'+pay+' 比价钱 ¥'+cost+' 少 ¥'+(-ch)+'，还差钱';
-      $('relation').style.color = '#dc2626';
-      $('chgCoins').innerHTML = '';
-      $('thinkText').textContent = '红条表示还差多少。把付款调到 ≥ 价钱，绿条才会出现。';
+      $('barChange').style.width='0%';
+      $('barShort').style.width=barPct(costJ-payJ,total)+'%';
+      $('barChangeV').textContent='差'+fmtJiao(costJ-payJ);
     }
-    coinStack(cost, $('costCoins'), '');
-    coinStack(pay, $('payCoins'), '');
-    $('feedback').className = 'feedback';
-    $('feedback').textContent = '调价钱和付款，看绿色「找零」条有多长。';
-    $('sayBox').textContent = '';
   }
 
-  function bindStep(minus, plus, range, delta){
-    $(minus).onclick = ()=>{ range.value = Math.max(+range.min, +range.value-delta); sync(); };
-    $(plus).onclick = ()=>{ range.value = Math.min(+range.max, +range.value+delta); sync(); };
-    range.oninput = sync;
+  /* ---------- SVG 场景同步 ---------- */
+  function updateScene(){
+    var g=STAGES[st].goods[gi];
+    $('priceTxt').textContent=fmtYuan(priceYuan(g));
+    $('tillScreen').textContent = payJiao()===0 ? '¥0' : '收 '+fmtJiao(payJiao());
+    $('formula').textContent = state==='paid'
+      ? '找回 '+fmtJiao(Math.max(0,payJiao()-priceJiao(g)))+' = 你付的 '+fmtJiao(payJiao())+' − 价钱 '+fmtJiao(priceJiao(g))
+      : '找回 = 你付的 − 价钱';
   }
-  bindStep('costMinus','costPlus',$('cost'),1);
-  bindStep('payMinus','payPlus',$('pay'),1);
 
-  $('btnReset').onclick = ()=>{
-    $('cost').value=8; $('pay').value=10; sync();
-  };
-  $('btnCheck').onclick = ()=>{
-    const ch = change();
-    if(ch>=0){
-      $('feedback').className = 'feedback ok';
-      $('feedback').textContent = '对：找回 '+ch+' 元。图里绿色段就是多付的部分被「退」回来。';
-    } else {
-      $('feedback').className = 'feedback bad';
-      $('feedback').textContent = '你付了 ¥'+pay+'，商品 ¥'+cost+'。差异：还差 ¥'+(-ch)+'。下一步：把付款调到 ≥ 价钱，再看找零。';
+  /* ---------- 动画：付款飞行 ---------- */
+  function flyPaid(){
+    var payJ=payJiao();
+    var ns='http://www.w3.org/2000/svg';
+    var fly=$('payFly'); fly.innerHTML='';
+    var count=Math.min(6, Math.max(1, Math.ceil(payJ/10)));
+    for(var i=0;i<count;i++){
+      var r=document.createElementNS(ns,'rect');
+      r.setAttribute('x', 792+ (i%3)*3);
+      r.setAttribute('y', 74 - i*4);
+      r.setAttribute('width','22'); r.setAttribute('height','13'); r.setAttribute('rx','3');
+      r.setAttribute('fill', i%2?'#8fd3ff':'#bae6fd');
+      r.setAttribute('stroke','#2f6fbf'); r.setAttribute('stroke-width','1.5');
+      fly.appendChild(r);
+      var tx=344+ (i%3)*30, ty=136 + Math.floor(i/3)*18;
+      if(reduced){ r.setAttribute('x',tx); r.setAttribute('y',ty); }
+      else {
+        r.style.transition='x .7s '+ (i*0.06) +'s cubic-bezier(.25,1,.5,1), y .7s '+ (i*0.06) +'s cubic-bezier(.25,1,.5,1)';
+        setTimeout(function(el,tx2,ty2){
+          el.setAttribute('x',tx2); el.setAttribute('y',ty2);
+        },60,r,tx,ty);
+      }
     }
-  };
-  $('btnSay').onclick = ()=>{
-    const ch = change();
-    $('sayBox').textContent = ch>=0
-      ? '我会说：付 '+pay+' 元，东西 '+cost+' 元，找回 '+(pay-cost)+' 元。'
-      : '我会说：钱不够，还差 '+(-ch)+' 元才能买。';
-  };
-  $('staticMode').onchange = e=>{
-    reduced = e.target.checked;
-    document.body.classList.toggle('static', reduced);
-    sync();
-  };
-  if(matchMedia('(prefers-reduced-motion: reduce)').matches){
-    $('staticMode').checked = true; reduced = true; document.body.classList.add('static');
   }
-  sync();
+  function flyChange(){
+    var g=STAGES[st].goods[gi];
+    var chgJ=Math.max(0, payJiao()-priceJiao(g));
+    if(chgJ===0) return;
+    var ns='http://www.w3.org/2000/svg';
+    var fly=$('changeFly'); fly.innerHTML='';
+    var count=Math.min(5, Math.max(1, Math.ceil(chgJ/12)));
+    for(var i=0;i<count;i++){
+      var c=document.createElementNS(ns,'circle');
+      c.setAttribute('cx', 380+ (i%2)*18);
+      c.setAttribute('cy', 196);
+      c.setAttribute('r','9');
+      c.setAttribute('fill','#7ee2ab'); c.setAttribute('stroke','#1e8a50'); c.setAttribute('stroke-width','2');
+      fly.appendChild(c);
+      var tx=780+ (i%3)*12, ty=70 + i*6;
+      if(reduced){ c.setAttribute('cx',tx); c.setAttribute('cy',ty); }
+      else {
+        c.style.transition='cx .8s '+ (0.75 + i*0.12) +'s cubic-bezier(.25,1,.5,1), cy .8s '+ (0.75 + i*0.12) +'s cubic-bezier(.25,1,.5,1)';
+        setTimeout(function(el,tx2,ty2){
+          el.setAttribute('cx',tx2); el.setAttribute('cy',ty2);
+        },80,c,tx,ty);
+      }
+    }
+  }
+
+  /* ---------- 反馈 ---------- */
+  function feedback(kind, ic, txt){
+    var fb=$('feedback');
+    fb.className='feedback '+kind;
+    fb.classList.remove('shake'); void fb.offsetWidth; fb.classList.add('shake');
+    $('fbIc').textContent=ic; $('fbTxt').textContent=txt;
+  }
+  function feedbackInfo(t){ feedback('info','🛒',t); }
+
+  /* ---------- 付款 ---------- */
+  $('btnPay').onclick=function(){
+    var g=STAGES[st].goods[gi];
+    var payJ=payJiao(), costJ=priceJiao(g);
+    if(payJ===0){
+      feedback('bad','🙅','还没有付钱。先点下面的钱币，凑够价钱再付款。');
+      return;
+    }
+    if(payJ<costJ){
+      var short=costJ-payJ;
+      feedback('bad','❌','还差 '+fmtJiao(short)+'，收银机不卖。价钱是 '+fmtJiao(costJ)+'，你才付了 '+fmtJiao(payJ)+'，找回条上红色的缺口就是还差的钱。再点钱币补上，红色就会消失。');
+      updateBars(); updateScene();
+      return;
+    }
+    state='paid';
+    updateBars(); updateScene();
+    flyPaid();
+    var chg=payJ-costJ;
+    var delay = reduced? 0 : 900;
+    setTimeout(function(){
+      flyChange();
+      updateBars(); updateScene();
+      if(chg===0){
+        feedback('ok','🎯','刚好付够，一分不多不用找。你付的 = 价钱，绿条是 0。');
+      } else {
+        feedback('ok','🎉','叮！收银机找给你 '+fmtJiao(chg)+'。看三条条：蓝色（你付的）减去黄色（价钱），多出来的绿色就是找回的钱。');
+      }
+    }, delay);
+  };
+  $('btnClear').onclick=function(){ resetPay(false); };
+
+  /* ---------- 关卡切换 ---------- */
+  function loadStage(next){
+    st=next;
+    gi=0; paid=[]; hasJiao=false; state='pick';
+    $('storyTxt').textContent=STAGES[st].story;
+    $('moneyCap').textContent = st===0 ? '🧾 点钱币付钱（要凑够价钱哦）' : '🧾 点钱币付钱（可以换着凑）';
+    renderShop(); renderMoney(); renderPay();
+    updateBars(); updateScene();
+    feedbackInfo(st===2 ? '最后一关：自己挑商品付钱，说说找回多少。' : '点一个商品，再点钱币付款。');
+  }
+  $('goPrev').onclick=function(){ loadStage((st+STAGES.length-1)%STAGES.length); };
+  $('goNext').onclick=function(){ loadStage((st+1)%STAGES.length); };
+
+  loadStage(0);
+})();
+</script>
+<script id="aid-fit-js">/* AID_FIT_V1 */
+(function(){
+  var html=document.documentElement;
+  function measure(){
+    var card=document.querySelector("main.card, body>.card");
+    if(!card) return;
+    html.classList.remove("aid-compact","aid-tight");
+    card.style.overflowY="hidden";
+    void card.offsetHeight;
+    var stage=card.querySelector(".stage,.scene");
+    var stageH=stage?stage.clientHeight:999;
+    if(card.scrollHeight>card.clientHeight+8 || stageH<240 || innerHeight<820) html.classList.add("aid-compact");
+    void card.offsetHeight;
+    stageH=stage?stage.clientHeight:999;
+    if(card.scrollHeight>card.clientHeight+8 || stageH<190) html.classList.add("aid-tight");
+    void card.offsetHeight;
+    if(card.scrollHeight>card.clientHeight+8) card.style.overflowY="auto";
+  }
+  addEventListener("resize",measure);
+  addEventListener("load",measure);
+  if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",measure);
+  else requestAnimationFrame(measure);
+  setTimeout(measure,80);
+  setTimeout(measure,400);
+  var card=document.querySelector("main.card, body>.card");
+  if(card && typeof MutationObserver==="function"){
+    var t;
+    new MutationObserver(function(){
+      clearTimeout(t); t=setTimeout(measure,40);
+    }).observe(card,{childList:true,subtree:true,characterData:true});
+  }
 })();
 </script>
 </body>

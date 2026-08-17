@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta name="aid-version" content="v2">
+<meta name="aid-version-at" content="2026-08-14T08:25:38">
+<meta name="aid-version-note" content="当前稿">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>小闹钟认时间</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  :root{
+    --bg:#FFF8EC; --card:#FFFFFF; --ink:#3A2E1E; --muted:#8A7A5E;
+    --sun:#F2A93B; --sun-soft:#FFE7BD; --teal:#2EC4B6; --teal-soft:#D7F6F2;
+    --sky:#4A90D9; --sky-soft:#E1EEFF;
+    --red:#E8574C; --red-soft:#FFE7E4;
+    --green:#3BA55D; --green-soft:#DFF5E6;
+    --shadow:0 6px 18px rgba(90,60,20,.10);
+  }
+  html,body{ height:100%; }
+  body{
+    background: var(--bg);
+    color: var(--ink);
+    font-family:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,-apple-system,sans-serif;
+    min-height:100dvh;
+    display:flex; align-items:center; justify-content:center;
+    padding:12px;
+    font-size:16px;
+    line-height:1.5;
+  }
+  #app{ width:100%; max-width:900px; }
+
+  /* ---------- 通用卡片 ---------- */
+  .screen{ display:none; width:100%; }
+  .screen.show{ display:block; animation:fadeIn .35s ease; }
+  @keyframes fadeIn{ from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:none;} }
+
+  .card{
+    background:var(--card); border-radius:26px; box-shadow:var(--shadow);
+    padding:22px;
+  }
+
+  .btn{
+    border:none; border-radius:18px; cursor:pointer;
+    font-size:20px; font-weight:700; color:#fff;
+    min-height:56px; padding:10px 22px;
+    font-family:inherit;
+    transition:transform .12s ease, box-shadow .12s ease, opacity .2s;
+    box-shadow:0 4px 0 rgba(0,0,0,.12);
+  }
+  .btn:active{ transform:translateY(3px); box-shadow:0 1px 0 rgba(0,0,0,.12); }
+  .btn-sun{ background:var(--sun); }
+  .btn-teal{ background:var(--teal); }
+  .btn-sky{ background:var(--sky); }
+  .btn-ghost{ background:transparent; color:var(--muted); box-shadow:none; font-size:16px; min-height:44px; }
+  .btn:disabled{ opacity:.4; cursor:not-allowed; transform:none; }
+
+  .big{ font-size:24px; }
+
+  /* ---------- 首页 ---------- */
+  .home-hero{ text-align:center; }
+  .home-hero h1{ font-size:34px; letter-spacing:2px; margin:6px 0 4px; }
+  .home-hero .sub{ color:var(--muted); font-size:18px; margin-bottom:14px; }
+  .roadmap{ display:flex; justify-content:center; gap:10px; flex-wrap:wrap; margin:14px 0 20px; }
+  .chip{
+    background:var(--sun-soft); color:#6B4A0A; border-radius:999px;
+    padding:6px 14px; font-size:16px; font-weight:700;
+  }
+  .chip.s2{ background:var(--teal-soft); color:#0B5D56; }
+  .chip.s3{ background:var(--sky-soft); color:#1B4A7A; }
+  .mini-clock{ width:160px; margin:0 auto; display:block; }
+
+  /* ---------- 演示遮罩 ---------- */
+  .overlay{
+    position:fixed; inset:0; z-index:60;
+    background:rgba(255,248,236,.96);
+    display:none; align-items:center; justify-content:center; padding:16px;
+  }
+  .overlay.show{ display:flex; }
+  .demo-card{ text-align:center; max-width:420px; }
+  .demo-clock{ width:230px; margin:0 auto; display:block; }
+  #demoText{
+    font-size:22px; font-weight:700; min-height:66px;
+    display:flex; align-items:center; justify-content:center;
+    margin:12px 0;
+  }
+  .demo-btns{ display:flex; justify-content:center; gap:12px; margin-top:8px; }
+
+  /* ---------- 关卡说明 ---------- */
+  .intro-card{ text-align:center; padding:30px 22px; }
+  .intro-card .lvl-name{ font-size:20px; color:var(--muted); font-weight:700; }
+  .intro-card h2{ font-size:30px; margin:4px 0 10px; }
+  .intro-card .goal{
+    background:var(--sun-soft); border-radius:16px; padding:12px 16px;
+    font-size:19px; font-weight:700; color:#6B4A0A; margin:10px 0 22px;
+  }
+
+  /* ---------- 闯关舞台 ---------- */
+  .quiz-head{
+    display:flex; align-items:center; justify-content:space-between;
+    margin-bottom:10px;
+  }
+  .lvl-tag{ font-size:17px; font-weight:800; color:var(--muted); }
+  .dots{ display:flex; gap:6px; align-items:center; }
+  .dot{ width:13px; height:13px; border-radius:50%; background:#E8DCC2; }
+  .dot.on{ background:var(--sun); }
+  .stars{ font-size:18px; font-weight:800; color:#B7791F; }
+
+  .stage{
+    position:relative;
+    display:flex; gap:18px; align-items:stretch;
+    flex-wrap:wrap; justify-content:center;
+  }
+  .clock-wrap{
+    flex:0 1 380px; min-width:260px;
+    background:var(--card); border-radius:26px; box-shadow:var(--shadow);
+    padding:14px 12px 12px; text-align:center;
+  }
+  #clock{ width:min(62vw,300px); margin:0 auto; display:block; touch-action:manipulation; }
+  #bubble{
+    margin-top:8px; font-size:20px; font-weight:800;
+    background:var(--sun-soft); color:#6B4A0A;
+    border-radius:16px; padding:10px 14px; min-height:44px;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .panel{ flex:1 1 320px; min-width:260px; display:flex; flex-direction:column; gap:12px; }
+  .lcd{
+    background:#1F3A2E; color:#8CFFC0; font-weight:800;
+    border-radius:14px; padding:10px 14px; text-align:center;
+    font-size:26px; letter-spacing:3px; font-family:"Courier New",monospace;
+  }
+  .lcd .lbl{ font-size:14px; letter-spacing:1px; color:#6FB98F; display:block; }
+
+  .target-card{
+    background:var(--sky-soft); border-radius:18px; padding:14px;
+    text-align:center;
+  }
+  .target-card .t-label{ font-size:17px; font-weight:800; color:#1B4A7A; }
+  .target-card .t-time{ font-size:36px; font-weight:900; color:#10345E; letter-spacing:2px; }
+
+  .options{ display:flex; flex-direction:column; gap:10px; }
+  .opt{
+    background:var(--card); border:3px solid #EBDDC0; color:var(--ink);
+    border-radius:18px; font-size:24px; font-weight:800;
+    min-height:60px; padding:8px 18px; cursor:pointer; font-family:inherit;
+    transition:transform .1s ease, border-color .2s, background .2s, opacity .2s;
+    box-shadow:0 3px 0 rgba(0,0,0,.06);
+  }
+  .opt:active{ transform:translateY(2px); }
+  .opt.wrong-mark{ opacity:.35; border-color:#E8DCC2; background:#F6EFDF; }
+  .opt:hover:not(:disabled){ border-color:var(--sun); }
+
+  .set-btns{ display:flex; gap:10px; }
+  .set-btns .btn{ flex:1; }
+  .btn.half-on{ outline:4px solid var(--sky); outline-offset:2px; }
+  .hour-grid{ display:grid; grid-template-columns:repeat(6,1fr); gap:8px; }
+  .hour-btn{
+    background:var(--teal-soft); color:#0B5D56; border:none; border-radius:14px;
+    font-size:19px; font-weight:800; min-height:46px; cursor:pointer; font-family:inherit;
+    transition:transform .1s ease, background .2s;
+  }
+  .hour-btn:active{ transform:translateY(2px); }
+  .hour-btn.hour-on{ background:var(--teal); color:#fff; }
+
+  /* ---------- 反馈层 ---------- */
+  #feedback{
+    position:absolute; inset:0; z-index:30;
+    display:none; align-items:center; justify-content:center;
+    background:rgba(255,248,236,.88); border-radius:26px; padding:16px;
+  }
+  #feedback.show{ display:flex; }
+  .fb-card{ max-width:440px; width:100%; text-align:center; padding:20px; }
+  .fb-card.ok{ background:var(--green-soft); border:3px solid var(--green); }
+  .fb-card.no{ background:var(--red-soft); border:3px solid var(--red); }
+  .fb-title{ font-size:26px; font-weight:900; margin-bottom:8px; }
+  .fb-msg{ font-size:18px; font-weight:600; margin-bottom:14px; }
+  .fb-msg b{ color:var(--red); }
+  .fb-msg .okword{ color:var(--green); }
+
+  /* ---------- 通关 / 完成 ---------- */
+  .done-card{ text-align:center; padding:28px 22px; }
+  .done-card h2{ font-size:30px; margin-bottom:6px; }
+  .done-stars{ font-size:40px; margin:10px 0 16px; }
+  .think-card{
+    background:var(--teal-soft); border-radius:18px; padding:18px; margin:18px 0;
+    text-align:left;
+  }
+  .think-card .q{ font-size:19px; font-weight:800; color:#0B5D56; }
+  .think-card .a{ font-size:19px; font-weight:800; color:#0B5D56; margin-top:10px; display:none; }
+  .think-card .a.show{ display:block; animation:fadeIn .4s ease; }
+
+  @media (max-width:560px){
+    .home-hero h1{ font-size:28px; }
+    .stage{ gap:12px; }
+    .panel{ gap:10px; }
+    .hour-grid{ grid-template-columns:repeat(6,1fr); gap:6px; }
+    .hour-btn{ min-height:42px; font-size:17px; }
+    #clock{ width:min(78vw,280px); }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *,*::before,*::after{ transition:none !important; animation:none !important; }
+  }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ===== 演示遮罩 ===== -->
+  <div id="demo" class="overlay">
+    <div class="demo-card">
+      <svg class="demo-clock" viewBox="0 0 200 200" aria-hidden="true">
+        <rect x="16" y="32" width="168" height="126" rx="26" fill="#FFD166" stroke="#E0A62E" stroke-width="3"/>
+        <circle cx="38" cy="28" r="15" fill="#FFB703"/>
+        <circle cx="162" cy="28" r="15" fill="#FFB703"/>
+        <circle cx="100" cy="98" r="66" fill="#FFF6D8" stroke="#F2B33D" stroke-width="4"/>
+        <g id="demoNums" font-size="15" font-weight="800" fill="#3A2E1E" text-anchor="middle">
+          <text x="100" y="47">12</text><text x="126" y="54">1</text><text x="145" y="73">2</text>
+          <text x="152" y="99">3</text><text x="145" y="125">4</text><text x="126" y="144">5</text>
+          <text x="100" y="151">6</text><text x="74" y="144">7</text><text x="55" y="125">8</text>
+          <text x="48" y="99">9</text><text x="55" y="73">10</text><text x="74" y="54">11</text>
+        </g>
+        <g id="demoHourHand" class="hand" style="transform-box:view-box; transform-origin:100px 98px;">
+          <line x1="100" y1="98" x2="100" y2="73" stroke="#118AB2" stroke-width="7" stroke-linecap="round"/>
+        </g>
+        <g id="demoMinuteHand" class="hand" style="transform-box:view-box; transform-origin:100px 98px;">
+          <line x1="100" y1="98" x2="100" y2="59" stroke="#EF476F" stroke-width="4" stroke-linecap="round"/>
+        </g>
+        <circle cx="100" cy="98" r="5" fill="#3A2E1E"/>
+      </svg>
+      <p id="demoText">小闹钟来啦！</p>
+      <div class="demo-btns">
+        <button class="btn btn-ghost" id="demoSkip">跳过</button>
+        <button class="btn btn-sun" id="demoNext" style="display:none;">开始学习 ▶</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 首页 ===== -->
+  <section id="screen-home" class="screen show">
+    <div class="card home-hero">
+      <svg class="mini-clock" viewBox="0 0 200 200" aria-hidden="true">
+        <rect x="16" y="32" width="168" height="126" rx="26" fill="#FFD166" stroke="#E0A62E" stroke-width="3"/>
+        <circle cx="38" cy="28" r="15" fill="#FFB703"/>
+        <circle cx="162" cy="28" r="15" fill="#FFB703"/>
+        <circle cx="100" cy="98" r="66" fill="#FFF6D8" stroke="#F2B33D" stroke-width="4"/>
+        <g font-size="15" font-weight="800" fill="#3A2E1E" text-anchor="middle">
+          <text x="100" y="47">12</text><text x="126" y="54">1</text><text x="145" y="73">2</text>
+          <text x="152" y="99">3</text><text x="145" y="125">4</text><text x="126" y="144">5</text>
+          <text x="100" y="151">6</text><text x="74" y="144">7</text><text x="55" y="125">8</text>
+          <text x="48" y="99">9</text><text x="55" y="73">10</text><text x="74" y="54">11</text>
+        </g>
+        <g style="transform-box:view-box; transform-origin:100px 98px; transform:rotate(210deg);">
+          <line x1="100" y1="98" x2="100" y2="73" stroke="#118AB2" stroke-width="7" stroke-linecap="round"/>
+        </g>
+        <g style="transform-box:view-box; transform-origin:100px 98px; transform:rotate(0deg);">
+          <line x1="100" y1="98" x2="100" y2="59" stroke="#EF476F" stroke-width="4" stroke-linecap="round"/>
+        </g>
+        <circle cx="100" cy="98" r="5" fill="#3A2E1E"/>
+      </svg>
+      <h1>小闹钟认时间</h1>
+      <p class="sub">短针看几点 · 长针看几分</p>
+      <div class="roadmap">
+        <span class="chip">① 认识整点</span>
+        <span class="chip s2">② 认识半点</span>
+        <span class="chip s3">③ 拨一拨</span>
+      </div>
+      <button class="btn btn-sun big" id="btnStart">开始学习 ▶</button>
+    </div>
+  </section>
+
+  <!-- ===== 关卡说明 ===== -->
+  <section id="screen-intro" class="screen">
+    <div class="card intro-card">
+      <p class="lvl-name" id="introLvl">第一关</p>
+      <h2 id="introName">认识整点</h2>
+      <div class="goal" id="introGoal">长针指 12，短针指几就是几点</div>
+      <button class="btn btn-sun big" id="btnGo">开始挑战 ▶</button>
+    </div>
+  </section>
+
+  <!-- ===== 闯关舞台 ===== -->
+  <section id="screen-quiz" class="screen">
+    <div class="quiz-head">
+      <span class="lvl-tag" id="lvlTag">第一关 · 整点</span>
+      <span class="dots" id="dots"></span>
+      <span class="stars" id="starsLabel">⭐ 0</span>
+    </div>
+    <div class="stage">
+      <div class="clock-wrap">
+        <svg id="clock" viewBox="0 0 200 200" aria-label="小闹钟钟面">
+          <rect x="16" y="32" width="168" height="126" rx="26" fill="#FFD166" stroke="#E0A62E" stroke-width="3"/>
+          <circle cx="38" cy="28" r="15" fill="#FFB703"/>
+          <circle cx="162" cy="28" r="15" fill="#FFB703"/>
+          <circle cx="100" cy="98" r="66" fill="#FFF6D8" stroke="#F2B33D" stroke-width="4"/>
+          <g id="numGroup" font-size="16" font-weight="800" fill="#3A2E1E" text-anchor="middle" style="cursor:pointer;">
+            <g data-h="12"><circle cx="100" cy="47" r="20" fill="transparent"/><text x="100" y="52">12</text></g>
+            <g data-h="1"><circle cx="126" cy="54" r="20" fill="transparent"/><text x="126" y="59">1</text></g>
+            <g data-h="2"><circle cx="145" cy="73" r="20" fill="transparent"/><text x="145" y="78">2</text></g>
+            <g data-h="3"><circle cx="152" cy="98" r="20" fill="transparent"/><text x="152" y="103">3</text></g>
+            <g data-h="4"><circle cx="145" cy="123" r="20" fill="transparent"/><text x="145" y="128">4</text></g>
+            <g data-h="5"><circle cx="126" cy="142" r="20" fill="transparent"/><text x="126" y="147">5</text></g>
+            <g data-h="6"><circle cx="100" cy="149" r="20" fill="transparent"/><text x="100" y="154">6</text></g>
+            <g data-h="7"><circle cx="74" cy="142" r="20" fill="transparent"/><text x="74" y="147">7</text></g>
+            <g data-h="8"><circle cx="55" cy="123" r="20" fill="transparent"/><text x="55" y="128">8</text></g>
+            <g data-h="9"><circle cx="48" cy="98" r="20" fill="transparent"/><text x="48" y="103">9</text></g>
+            <g data-h="10"><circle cx="55" cy="73" r="20" fill="transparent"/><text x="55" y="78">10</text></g>
+            <g data-h="11"><circle cx="74" cy="54" r="20" fill="transparent"/><text x="74" y="59">11</text></g>
+          </g>
+          <g id="hourHand" class="hand" style="transform-box:view-box; transform-origin:100px 98px; transition:transform .7s cubic-bezier(.4,1.5,.5,1);">
+            <line x1="100" y1="98" x2="100" y2="73" stroke="#118AB2" stroke-width="7" stroke-linecap="round"/>
+          </g>
+          <g id="minuteHand" class="hand" style="transform-box:view-box; transform-origin:100px 98px; transition:transform .7s cubic-bezier(.4,1.5,.5,1);">
+            <line x1="100" y1="98" x2="100" y2="59" stroke="#EF476F" stroke-width="4" stroke-linecap="round"/>
+          </g>
+          <circle cx="100" cy="98" r="5" fill="#3A2E1E"/>
+        </svg>
+        <div id="bubble">小闹钟现在是几点？</div>
+      </div>
+
+      <div class="panel">
+        <div id="quizPanel"></div>
+        <div id="setPanel" style="display:none;"></div>
+      </div>
+
+      <div id="feedback">
+        <div class="fb-card" id="fbCard">
+          <div class="fb-title" id="fbTitle"></div>
+          <div class="fb-msg" id="fbMsg"></div>
+          <button class="btn btn-sun" id="fbBtn">再试一次</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 通关 ===== -->
+  <section id="screen-done" class="screen">
+    <div class="card done-card">
+      <h2 id="doneTitle">第一关完成！</h2>
+      <p id="doneSub" style="color:var(--muted); font-size:18px;">你已经会认整点啦</p>
+      <div class="done-stars" id="doneStars">⭐</div>
+      <button class="btn btn-sun big" id="btnNext">下一关 ▶</button>
+    </div>
+  </section>
+
+  <!-- ===== 全部完成 ===== -->
+  <section id="screen-final" class="screen">
+    <div class="card done-card">
+      <h2>全部完成！🎉</h2>
+      <p style="color:var(--muted); font-size:18px;">小闹钟给你点赞！</p>
+      <div class="done-stars" id="finalStars">⭐</div>
+      <div class="think-card">
+        <p class="q">🤔 举一反三：长针指到 6，短针指在 3 和 4 的中间，是几点？</p>
+        <button class="btn btn-teal" id="btnThink" style="margin-top:12px;">我想好了</button>
+        <p class="a" id="thinkAnswer">是 <b>3 点半</b>！长针指 6 就是半点，短针走过 3 还没到 4，所以是 3 点半。✅</p>
+      </div>
+      <button class="btn btn-sky big" id="btnAgain">再玩一次 🔄</button>
+    </div>
+  </section>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var $ = function(id){ return document.getElementById(id); };
+  var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  var S = {
+    screen:"home", level:0, round:0, stars:0,
+    q:null,           // {h,min,opts,tried}
+    set:{h:12, half:false},
+    target:null,      // {h, half}
+    hourDeg:0, minDeg:0,
+    quizTotal:4
+  };
+
+  var LEVELS = [
+    {tag:"第一关 · 整点", name:"认识整点", goal:"长针指 12，短针指几就是几点",
+     sub:"你已经会认整点啦"},
+    {tag:"第二关 · 半点", name:"认识半点", goal:"长针指 6 就是半点，短针走过几就是几点半",
+     sub:"你已经会认半点啦"},
+    {tag:"第三关 · 拨一拨", name:"拨一拨", goal:"帮小闹钟把针拨到它说的时间",
+     sub:"你都会自己拨钟啦"}
+  ];
+
+  /* ---------- 声音 ---------- */
+  var actx = null;
+  function beep(freq, dur, delay){
+    try{
+      actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+      var t0 = actx.currentTime + (delay||0);
+      var o = actx.createOscillator(), g = actx.createGain();
+      o.type = "sine"; o.frequency.value = freq;
+      g.gain.setValueAtTime(0.0001, t0);
+      g.gain.exponentialRampToValueAtTime(0.18, t0+0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0+dur);
+      o.connect(g); g.connect(actx.destination);
+      o.start(t0); o.stop(t0+dur);
+    }catch(e){}
+  }
+  function soundOk(){ beep(660,.18,0); beep(880,.28,.16); }
+  function soundNo(){ beep(220,.28,0); }
+
+  /* ---------- 页面切换 ---------- */
+  var screens = ["home","intro","quiz","done","final"];
+  function show(name){
+    S.screen = name;
+    screens.forEach(function(s){ $("screen-"+s).classList.toggle("show", s===name); });
+  }
+
+  /* ---------- 演示 ---------- */
+  function startDemo(){
+    $("demo").classList.add("show");
+    var hHand = $("demoHourHand"), mHand = $("demoMinuteHand");
+    var set = function(el,deg){ el.style.transform = "rotate("+deg+"deg)"; };
+    var txt = $("demoText"), next = $("demoNext");
+    next.style.display = "none";
+    if(reduceMotion){
+      set(hHand, 210); set(mHand, 0);
+      txt.textContent = "短针指几就是几点，长针指 12 是整点 → 这就是 7 点整。";
+      next.style.display = "inline-block";
+      return;
+    }
+    var steps = [
+      [700, 0, "小闹钟来啦！先看长针（粉红的那根）。"],
+      [2600, 0, "长针指到 12，就是整点。✅"],
+      [4800, 210, "再看短针（蓝色）：它指着 7。"],
+      [7000, 210, "短针指几就是几点 → 7 点整！🎉"]
+    ];
+    steps.forEach(function(st, i){
+      setTimeout(function(){
+        set(hHand, st[1]); set(mHand, 0);
+        txt.textContent = st[2];
+        if(i===3){ soundOk(); next.style.display="inline-block"; }
+      }, st[0]);
+    });
+  }
+  $("demoSkip").addEventListener("click", function(){ closeDemo(); });
+  $("demoNext").addEventListener("click", function(){ closeDemo(); });
+  function closeDemo(){
+    $("demo").classList.remove("show");
+    show("intro");
+    setupIntro();
+  }
+
+  /* ---------- 首页 / 关卡说明 ---------- */
+  $("btnStart").addEventListener("click", function(){ startDemo(); });
+
+  function setupIntro(){
+    var L = LEVELS[S.level];
+    $("introLvl").textContent = "第 " + (S.level+1) + " 关";
+    $("introName").textContent = L.name;
+    $("introGoal").textContent = L.goal;
+  }
+  $("btnGo").addEventListener("click", function(){
+    S.round = 0;
+    if(S.level === 2){ startSetRound(); } else { newQuestion(); }
+    show("quiz");
+    renderQuizHead();
+  });
+
+  /* ---------- 表盘指针 ---------- */
+  function degFor(h, half){
+    return (h % 12) * 30 + (half ? 15 : 0);
+  }
+  function setHands(h, half, animate){
+    var hd = degFor(h, half), md = half ? 180 : 0;
+    var hEl = $("hourHand"), mEl = $("minuteHand");
+    if(animate && !reduceMotion){
+      // 用累计角度实现顺/逆时针就近旋转
+      var dh = shortestDelta(S.hourDeg, hd), dm = shortestDelta(S.minDeg, md);
+      S.hourDeg += dh; S.minDeg += dm;
+      hEl.style.transform = "rotate("+S.hourDeg+"deg)";
+      mEl.style.transform = "rotate("+S.minDeg+"deg)";
+    } else {
+      S.hourDeg = hd; S.minDeg = md;
+      hEl.style.transform = "rotate("+hd+"deg)";
+      mEl.style.transform = "rotate("+md+"deg)";
+    }
+  }
+  function shortestDelta(from, to){
+    var d = ((to - from) % 360 + 540) % 360 - 180;
+    return d;
+  }
+  function resetDeg(){ S.hourDeg = 0; S.minDeg = 0; }
+
+  /* ---------- 闯关：看钟选时间 ---------- */
+  function randInt(a,b){ return a + Math.floor(Math.random()*(b-a+1)); }
+  function nextH(h){ return h===12 ? 1 : h+1; }
+  function prevH(h){ return h===1 ? 12 : h-1; }
+  function label(h, min){ return min===0 ? h+"点" : h+"点半"; }
+
+  function newQuestion(){
+    var h = randInt(1,12);
+    if(S.level === 0){
+      S.q = { h:h, min:0, opts:[
+        {h:h,min:0}, {h:nextH(h),min:0}, {h:prevH(h),min:0}
+      ], tried:[] };
+    } else {
+      S.q = { h:h, min:30, opts:[
+        {h:h,min:30}, {h:h,min:0}, {h:nextH(h),min:30}
+      ], tried:[] };
+    }
+    // 打乱选项
+    for(var i=S.q.opts.length-1;i>0;i--){
+      var j = randInt(0,i);
+      var tmp = S.q.opts[i]; S.q.opts[j] = S.q.opts[i]; S.q.opts[i] = tmp;
+    }
+    renderQuiz();
+  }
+
+  function renderQuiz(){
+    $("setPanel").style.display = "none";
+    $("quizPanel").style.display = "block";
+    setHands(S.q.h, S.q.min===30, true);
+    $("bubble").textContent = "小闹钟现在是几点？";
+    var opts = S.q.opts;
+    var html = "";
+    opts.forEach(function(o, idx){
+      var disabled = S.q.tried.indexOf(idx) > -1;
+      html += '<button class="opt'+(disabled?' wrong-mark':'')+'" data-i="'+idx+'"'+(disabled?' disabled':'')+'>'+label(o.h,o.min)+'</button>';
+    });
+    $("quizPanel").innerHTML = html;
+    var btns = $("quizPanel").querySelectorAll(".opt");
+    for(var k=0;k<btns.length;k++){
+      btns[k].addEventListener("click", function(){
+        onOption(parseInt(this.getAttribute("data-i"),10));
+      });
+    }
+    hideFeedback();
+  }
+
+  function onOption(idx){
+    var picked = S.q.opts[idx];
+    if(S.q.tried.indexOf(idx) > -1) return;
+    if(picked.h === S.q.h && picked.min === S.q.min){
+      soundOk();
+      S.stars++;
+      var msg = "对啦！长针指 "+(S.q.min===0?"12，短针指 ":"6，短针走过 ")+S.q.h+" → "+label(S.q.h,S.q.min)+"！";
+      showFeedback("ok", "太棒了！⭐", msg, S.round >= S.quizTotal-1 ? "完成本关 ▶" : "下一题 ▶", function(){
+        if(S.round >= S.quizTotal-1){ levelDone(); } else { S.round++; renderQuizHead(); newQuestion(); }
+      });
+    } else {
+      soundNo();
+      S.q.tried.push(idx);
+      renderQuizMark();
+      var msg = explain(S.q, picked);
+      showFeedback("no", "再想想…", msg, "再试一次", function(){
+        hideFeedback();
+      });
+    }
+  }
+  function renderQuizMark(){
+    var btns = $("quizPanel").querySelectorAll(".opt");
+    for(var i=0;i<btns.length;i++){
+      if(S.q.tried.indexOf(i)>-1){ btns[i].disabled = true; btns[i].classList.add("wrong-mark"); }
+    }
+  }
+
+  function explain(q, picked){
+    var correctLabel = label(q.h, q.min);
+    var pickedLabel = label(picked.h, picked.min);
+    if(q.min === 30){
+      if(picked.min === 0){
+        return "看长针：它指到 <b>6</b>，不是 12，所以不是整点哦。<br>短针已经走过 "+q.h+" → 是 <span class='okword'>"+correctLabel+"</span>，不是 "+pickedLabel+"。";
+      }
+      return "短针才走到 "+q.h+" 和 "+nextH(q.h)+" 的中间，还没到 "+nextH(q.h)+" → 是 <span class='okword'>"+correctLabel+"</span>，不是 "+pickedLabel+"。";
+    }
+    if(picked.h > q.h){
+      return "短针才指着 "+q.h+"，还没走到 "+picked.h+" → 是 <span class='okword'>"+correctLabel+"</span>，不是 "+pickedLabel+"。";
+    }
+    return "短针已经走过 "+picked.h+"，现在指着 "+q.h+" → 是 <span class='okword'>"+correctLabel+"</span>，不是 "+pickedLabel+"。";
+  }
+
+  /* ---------- 闯关：拨一拨 ---------- */
+  function startSetRound(){
+    $("quizPanel").style.display = "none";
+    $("setPanel").style.display = "block";
+    S.target = { h: randInt(1,12), half: (S.round % 2 === 1) };
+    S.set = { h: 12, half: false };
+    resetDeg();
+    setHands(12, false, false);
+    renderSet();
+  }
+
+  function renderSet(){
+    $("bubble").textContent = "帮我把针拨到 " + label(S.target.h, S.target.half?30:0) + "！";
+    $("setPanel").innerHTML =
+      '<div class="target-card">' +
+        '<span class="t-label">请拨到</span><br>' +
+        '<span class="t-time">' + label(S.target.h, S.target.half?30:0) + '</span>' +
+      '</div>' +
+      '<div class="lcd"><span class="lbl">现在</span>' + label(S.set.h, S.set.half?30:0) + '</div>' +
+      '<p style="font-size:16px; font-weight:700; color:var(--muted);">① 点钟面上的数字，或点下面的数字按钮</p>' +
+      '<div class="hour-grid" id="hourGrid"></div>' +
+      '<p style="font-size:16px; font-weight:700; color:var(--muted);">② 再选整点还是半点</p>' +
+      '<div class="set-btns">' +
+        '<button class="btn btn-sky'+(S.set.half?'':' half-on')+'" id="btnFull">整点</button>' +
+        '<button class="btn btn-sky'+(S.set.half?' half-on':'')+'" id="btnHalf">半点</button>' +
+      '</div>';
+    // 数字按钮
+    var grid = $("hourGrid");
+    for(var h=1; h<=12; h++){
+      var b = document.createElement("button");
+      b.className = "hour-btn" + (S.set.h===h ? " hour-on" : "");
+      b.textContent = h;
+      b.addEventListener("click", (function(hh){ return function(){ pickHour(hh); }; })(h));
+      grid.appendChild(b);
+    }
+    $("btnFull").addEventListener("click", function(){ pickHalf(false); });
+    $("btnHalf").addEventListener("click", function(){ pickHalf(true); });
+    // 钟面数字也可点
+    var nums = $("numGroup").querySelectorAll("g[data-h]");
+    for(var i=0;i<nums.length;i++){
+      nums[i].addEventListener("click", (function(hh){ return function(){ pickHour(hh); }; })(parseInt(nums[i].getAttribute("data-h"),10)));
+    }
+    hideFeedback();
+  }
+
+  function pickHour(h){
+    S.set.h = h;
+    setHands(h, S.set.half, true);
+    renderSetMarks();
+    checkSet();
+  }
+  function pickHalf(half){
+    S.set.half = half;
+    setHands(S.set.h, half, true);
+    renderSetMarks();
+    checkSet();
+  }
+  function renderSetMarks(){
+    var gs = $("numGroup").querySelectorAll("g[data-h]");
+    for(var i=0;i<gs.length;i++){
+      var val = parseInt(gs[i].getAttribute("data-h"),10);
+      gs[i].querySelector("text").setAttribute("fill", val===S.set.h ? "#2EC4B6" : "#3A2E1E");
+    }
+    var grid = $("hourGrid");
+    if(grid){
+      var bs = grid.querySelectorAll(".hour-btn");
+      for(var k=0;k<bs.length;k++){
+        bs[k].classList.toggle("hour-on", parseInt(bs[k].textContent,10)===S.set.h);
+      }
+    }
+    var f = $("btnFull"), h2 = $("btnHalf");
+    if(f){ f.classList.toggle("half-on", !S.set.half); }
+    if(h2){ h2.classList.toggle("half-on", S.set.half); }
+    var lcd = document.querySelector("#setPanel .lcd");
+    if(lcd){ lcd.innerHTML = '<span class="lbl">现在</span>' + label(S.set.h, S.set.half?30:0); }
+  }
+  function checkSet(){
+    if(S.set.h === S.target.h && S.set.half === S.target.half){
+      soundOk();
+      S.stars++;
+      showFeedback("ok", "拨对啦！⭐", label(S.target.h, S.target.half?30:0)+"！长针指 "+(S.target.half?"6":"12")+"，短针指 "+S.target.h+"。", S.round >= S.quizTotal-1 ? "完成本关 ▶" : "下一题 ▶", function(){
+        if(S.round >= S.quizTotal-1){ levelDone(); } else { S.round++; renderQuizHead(); startSetRound(); }
+      });
+    }
+  }
+
+  /* ---------- 反馈层 ---------- */
+  function showFeedback(type, title, msg, btnLabel, onBtn){
+    var card = $("fbCard");
+    card.className = "fb-card " + type;
+    $("fbTitle").textContent = title;
+    $("fbMsg").innerHTML = msg;
+    var b = $("fbBtn");
+    b.textContent = btnLabel;
+    b.onclick = function(){ hideFeedback(); onBtn(); };
+    $("feedback").classList.add("show");
+  }
+  function hideFeedback(){ $("feedback").classList.remove("show"); }
+
+  /* ---------- 进度 / 星星 ---------- */
+  function renderQuizHead(){
+    $("lvlTag").textContent = LEVELS[S.level].tag;
+    $("starsLabel").textContent = "⭐ " + S.stars;
+    var dots = "";
+    for(var i=0;i<S.quizTotal;i++){ dots += '<span class="dot'+(i<S.round?' on':'')+'"></span>'; }
+    $("dots").innerHTML = dots;
+  }
+
+  /* ---------- 通关 / 完成 ---------- */
+  function levelDone(){
+    var L = LEVELS[S.level];
+    $("doneTitle").textContent = (S.level+1) + "/3 完成！";
+    $("doneSub").textContent = L.sub;
+    var st = "";
+    for(var i=0;i<S.stars;i++){ st += "⭐"; }
+    $("doneStars").textContent = st || "⭐";
+    $("btnNext").textContent = (S.level >= 2) ? "看看总结 🎉" : "下一关 ▶";
+    show("done");
+  }
+  $("btnNext").addEventListener("click", function(){
+    if(S.level >= 2){ showFinal(); } else { S.level++; setupIntro(); show("intro"); }
+  });
+
+  function showFinal(){
+    var st = "";
+    for(var i=0;i<S.stars;i++){ st += "⭐"; }
+    $("finalStars").textContent = st || "⭐";
+    show("final");
+  }
+  $("btnThink").addEventListener("click", function(){
+    $("thinkAnswer").classList.add("show");
+    $("btnThink").style.display = "none";
+    soundOk();
+  });
+  $("btnAgain").addEventListener("click", function(){
+    S.level = 0; S.round = 0; S.stars = 0;
+    show("home");
+  });
+
+  /* ---------- 初始 ---------- */
+  hideFeedback();
+  resetDeg();
+  setHands(7, false, false);
+})();
+</script>
+</body>
+</html>

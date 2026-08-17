@@ -8,7 +8,7 @@
 git clone https://github.com/ThindoLab/ai-courseware.git
 cd ai-courseware
 npm install
-npm start          # http://localhost:3000
+npm start          # http://localhost:3001
 npm test
 ```
 

@@ -1,0 +1,566 @@
+{
+  "antonym-pair": {
+    "current": "v2",
+    "items": [
+      {
+        "id": "v1",
+        "at": "2026-08-14T08:25:38",
+        "note": "当前稿",
+        "file": "samples/versions/antonym-pair/v1.html"
+      },
+      {
+        "id": "v2",
+        "at": "2026-08-14T08-40-46",
+        "note": "系统重跑 2026-08-14T08-40-46",
+        "file": "samples/versions/antonym-pair/v2.html"
+      }
+    ]
+  },
+  "average": {
+    "current": "v2",
+    "items": [
+      {
+        "id": "v1",
+        "at": "2026-08-14T07-37-00",
+        "note": "整库重跑前的当时当前稿",
+        "file": "samples/versions/average/v1.html"
+      },
+      {
+        "id": "v2",
+        "at": "2026-08-14T08:25:38",
+        "note": "当前稿",
+        "file": "samples/versions/average/v2.html"
+      }
+    ]
+  },
+  "balance-scale": {
+    "current": "v2",
+    "items": [
+      {
+        "id": "v1",
+        "at": "2026-08-14T07-37-00",
+        "note": "整库重跑前的当时当前稿",
+        "file": "samples/versions/balance-scale/v1.html"
+      },
+      {
+        "id": "v2",
+        "at": "2026-08-14T08:25:38",
+        "note": "当前稿",
+        "file": "samples/versions/balance-scale/v2.html"
+      }
+    ]
+  },
+  "brush-steps": {
+    "current": "v3",
+    "items": [
+      {
+        "id": "v1",
+        "at": "2026-08-14T07-37-00",
+        "note": "整库重跑前的当时当前稿",
+        "file": "samples/versions/brush-steps/v1.html"
+      },
+      {
+        "id": "v2",
+        "at": "2026-08-14T08:25:38",
+        "note": "当前稿",
+        "file": "samples/versions/brush-steps/v2.html"
+      },
+      {
+        "id": "v3",
+        "at": "2026-08-14T10-09-13",
+        "note": "系统重跑 2026-08-14T10-09-13",
+        "file": "samples/versions/brush-steps/v3.html"
+      }
+    ]
+  },
+  "chicken-rabbit": {
+    "current": "v2",
+    "items": [
+      {
+        "id": "v1",
+        "at": "2026-08-14T08:25:38",
+        "note": "当前稿",
+        "file": "samples/versions/chicken-rabbit/v1.html"
+      },
+      {
+        "id": "v2",
+        "at": "2026-08-14T08-40-46",
+        "note": "系统重跑 2026-08-14T08-40-46",
+        "file": "samples/versions/chicken-rabbit/v2.html"
+      }
+    ]
+  },
+  "class-vote": {
+    "current": "v2",
+    "items": [
+      {
+        "id": "v1",
+        "at": "2026-08-14T08:25:38",
+        "note": "当前稿",
+        "file": "samples/versions/class-vote/v1.html"
+      },
+      {
+        "id": "v2",
+        "at": "2026-08-14T08-40-46",
+        "note": "系统重跑 2026-08-14T08-40-46",
+        "file": "samples/versions/class-vote/v2.html"
+      }
+    ]
+  },
+  "classroom-hand": {
+    "current": "v2",
+    "items": [
+      {
+        "id": "v1",
+        "at": "2026-08-14T07-37-00",
+        "note": "整库重跑前的当时当前稿",
+        "file": "samples/versions/classroom-hand/v1.html"
+      },
+      {
+        "id": "v2",
+        "at": "2026-08-14T08:25:38",
+        "note": "当前稿",
+        "file": "samples/versions/classroom-hand/v2.html"
+      }
+    ]
+  },
+  "clock-read": {
+    "current": "v3",
+    "items": [
+      {
+        "id": "v1",
+        "at": "2026-08-14T07-37-00",
+        "note": "整库重跑前的当时当前稿",
+        "file": "samples/versions/clock-read/v1.html"
+      },
+      {
+        "id": "v2",
+        "at": "2026-08-14T08:25:38",
+        "note": "当前稿",
+        "file": "samples/versions/clock-read/v2.html"
+      },
+      {
+        "id": "v3",
+        "at": "2026-08-14T10-09-13",
+        "note": "系统重跑 2026-08-14T10-09-13",
+        "file": "samples/versions/clock-read/v3.html"
+      }
+    ]
+  },
+  "color-sort": {
+    "current": "v4",
+    "items": [
+      {
+        "id": "v1",
+        "at": "2026-08-14",
+        "note": "重跑前精品",
+        "file": "samples/versions/color-sort/v1.html"
+      },
+      {
+        "id": "v2",
+        "at": "2026-08-14T07-37-00",
+        "note": "整库重跑前的当时当前稿",
+        "file": "samples/versions/color-sort/v2.html"
+      },
+      {
+        "id": "v3",
+        "at": "2026-08-14T08:25:39",
+        "note": "当前稿",
+        "file": "samples/versions/color-sort/v3.html"
+      },
+      {
+        "id": "v4",
+        "at": "2026-08-14T10-09-13",
+        "note": "系统重跑 2026-08-14T10-09-13",
+        "file": "samples/versions/color-sort/v4.html"
+      }
+    ]
+  },
+  "compare-length": {
+    "current": "v4",
+    "items": [
+      {
+        "id": "v1",
+        "at": "2026-08-14",
+        "note": "重跑前精品",
+        "file": "samples/versions/compare-length/v1.html"
+      },
+      {
+        "id": "v2",
+        "at": "2026-08-14T07-37-00",
+        "note": "整库重跑前的当时当前稿",
+        "file": "samples/versions/compare-length/v2.html"
+      },
+      {
+        "id": "v3",
+        "at": "2026-08-14T08:25:39",
+        "note": "当前稿",
+        "file": "samples/versions/compare-length/v3.html"
+      },
+      {
+        "id": "v4",
+        "at": "2026-08-14T10-09-13",
+        "note": "系统重跑 2026-08-14T10-09-13",
+        "file": "samples/versions/compare-length/v4.html"
+      }
+    ]
+  },
+  "cross-road": {
+    "current": "v2",
+    "items": [
+      {
+        "id": "v1",
+        "at": "2026-08-14T08:25:39",
+        "note": "当前稿",
+        "file": "samples/versions/cross-road/v1.html"
+      },
+      {
+        "id": "v2",
+        "at": "2026-08-14T08-40-46",
+        "note": "系统重跑 2026-08-14T08-40-46",
+        "file": "samples/versions/cross-road/v2.html"
+      }
+    ]
+  },
+  "distance-meet": {
+    "current": "v2",
+    "items": [
+      {
+        "id": "v1",
+        "at": "2026-08-14T08:25:39",
+        "note": "当前稿",
+        "file": "samples/versions/distance-meet/v1.html"
+      },
+      {
+        "id": "v2",
+        "at": "2026-08-14T08-40-46",
+        "note": "系统重跑 2026-08-14T08-40-46",
+        "file": "samples/versions/distance-meet/v2.html"
+      }
+    ]
+  },
+  "fraction": {
+    "current": "v2",
+    "items": [
+      {
+        "id": "v1",
+        "at": "2026-08-14T08:25:39",
+        "note": "当前稿",
+        "file": "samples/versions/fraction/v1.html"
+      },
+      {
+        "id": "v2",
+        "at": "2026-08-14T08-40-46",
+        "note": "系统重跑 2026-08-14T08-40-46",
+        "file": "samples/versions/fraction/v2.html"
+      }
+    ]
+  },
+  "he-bei": {
+    "current": "v2",
+    "items": [
+      {
+        "id": "v1",
+        "at": "2026-08-14T08:25:39",
+        "note": "当前稿",
+        "file": "samples/versions/he-bei/v1.html"
+      },
+      {
+        "id": "v2",
+        "at": "2026-08-14T08-40-46",
+        "note": "系统重跑 2026-08-14T08-40-46",
+        "file": "samples/versions/he-bei/v2.html"
+      }
+    ]
+  },
+  "kitchen-fire": {
+    "current": "v2",
+    "items": [
+      {
+        "id": "v1",
+        "at": "2026-08-14T07-37-00",
+        "note": "整库重跑前的当时当前稿",
+        "file": "samples/versions/kitchen-fire/v1.html"
+      },
+      {
+        "id": "v2",
+        "at": "2026-08-14T08:25:39",
+        "note": "当前稿",
+        "file": "samples/versions/kitchen-fire/v2.html"
+      }
+    ]
+  },
+  "make-ten": {
+    "current": "v4",
+    "items": [
+      {
+        "id": "v1",
+        "at": "2026-08-14",
+        "note": "重跑前精品",
+        "file": "samples/versions/make-ten/v1.html"
+      },
+      {
+        "id": "v2",
+        "at": "2026-08-14T07-37-00",
+        "note": "整库重跑前的当时当前稿",
+        "file": "samples/versions/make-ten/v2.html"
+      },
+      {
+        "id": "v3",
+        "at": "2026-08-14T08:25:39",
+        "note": "当前稿",
+        "file": "samples/versions/make-ten/v3.html"
+      },
+      {
+        "id": "v4",
+        "at": "2026-08-14T10-09-13",
+        "note": "系统重跑 2026-08-14T10-09-13",
+        "file": "samples/versions/make-ten/v4.html"
+      }
+    ]
+  },
+  "memory-match": {
+    "current": "v3",
+    "items": [
+      {
+        "id": "v1",
+        "at": "2026-08-14",
+        "note": "重跑前精品",
+        "file": "samples/versions/memory-match/v1.html"
+      },
+      {
+        "id": "v2",
+        "at": "2026-08-14T07-37-00",
+        "note": "整库重跑前的当时当前稿",
+        "file": "samples/versions/memory-match/v2.html"
+      },
+      {
+        "id": "v3",
+        "at": "2026-08-14T08:25:39",
+        "note": "当前稿",
+        "file": "samples/versions/memory-match/v3.html"
+      }
+    ]
+  },
+  "money-change": {
+    "current": "v1",
+    "items": [
+      {
+        "id": "v1",
+        "at": "2026-08-14T07-37-00",
+        "note": "整库重跑前的当时当前稿（与当前相同）",
+        "file": "samples/versions/money-change/v1.html"
+      }
+    ]
+  },
+  "number-line": {
+    "current": "v2",
+    "items": [
+      {
+        "id": "v1",
+        "at": "2026-08-14T08:25:39",
+        "note": "当前稿",
+        "file": "samples/versions/number-line/v1.html"
+      },
+      {
+        "id": "v2",
+        "at": "2026-08-14T08-40-46",
+        "note": "系统重跑 2026-08-14T08-40-46",
+        "file": "samples/versions/number-line/v2.html"
+      }
+    ]
+  },
+  "odd-even": {
+    "current": "v2",
+    "items": [
+      {
+        "id": "v1",
+        "at": "2026-08-14T08:25:39",
+        "note": "当前稿",
+        "file": "samples/versions/odd-even/v1.html"
+      },
+      {
+        "id": "v2",
+        "at": "2026-08-14T08-40-46",
+        "note": "系统重跑 2026-08-14T08-40-46",
+        "file": "samples/versions/odd-even/v2.html"
+      }
+    ]
+  },
+  "palm-measure": {
+    "current": "v2",
+    "items": [
+      {
+        "id": "v1",
+        "at": "2026-08-14T08:25:39",
+        "note": "当前稿",
+        "file": "samples/versions/palm-measure/v1.html"
+      },
+      {
+        "id": "v2",
+        "at": "2026-08-14T08-40-46",
+        "note": "系统重跑 2026-08-14T08-40-46",
+        "file": "samples/versions/palm-measure/v2.html"
+      }
+    ]
+  },
+  "pattern-lights": {
+    "current": "v3",
+    "items": [
+      {
+        "id": "v1",
+        "at": "2026-08-14T07-37-00",
+        "note": "整库重跑前的当时当前稿",
+        "file": "samples/versions/pattern-lights/v1.html"
+      },
+      {
+        "id": "v2",
+        "at": "2026-08-14T08:25:39",
+        "note": "当前稿",
+        "file": "samples/versions/pattern-lights/v2.html"
+      },
+      {
+        "id": "v3",
+        "at": "2026-08-14T10-09-13",
+        "note": "系统重跑 2026-08-14T10-09-13",
+        "file": "samples/versions/pattern-lights/v3.html"
+      }
+    ]
+  },
+  "perimeter-area": {
+    "current": "v2",
+    "items": [
+      {
+        "id": "v1",
+        "at": "2026-08-14T08:25:39",
+        "note": "当前稿",
+        "file": "samples/versions/perimeter-area/v1.html"
+      },
+      {
+        "id": "v2",
+        "at": "2026-08-14T08-40-46",
+        "note": "系统重跑 2026-08-14T08-40-46",
+        "file": "samples/versions/perimeter-area/v2.html"
+      }
+    ]
+  },
+  "poem-blank": {
+    "current": "v2",
+    "items": [
+      {
+        "id": "v1",
+        "at": "2026-08-14T08:25:39",
+        "note": "当前稿",
+        "file": "samples/versions/poem-blank/v1.html"
+      },
+      {
+        "id": "v2",
+        "at": "2026-08-14T08-40-46",
+        "note": "系统重跑 2026-08-14T08-40-46",
+        "file": "samples/versions/poem-blank/v2.html"
+      }
+    ]
+  },
+  "share-crayon": {
+    "current": "v2",
+    "items": [
+      {
+        "id": "v1",
+        "at": "2026-08-14T08:25:39",
+        "note": "当前稿",
+        "file": "samples/versions/share-crayon/v1.html"
+      },
+      {
+        "id": "v2",
+        "at": "2026-08-14T08-40-46",
+        "note": "系统重跑 2026-08-14T08-40-46",
+        "file": "samples/versions/share-crayon/v2.html"
+      }
+    ]
+  },
+  "stranger-door": {
+    "current": "v2",
+    "items": [
+      {
+        "id": "v1",
+        "at": "2026-08-14T08:25:39",
+        "note": "当前稿",
+        "file": "samples/versions/stranger-door/v1.html"
+      },
+      {
+        "id": "v2",
+        "at": "2026-08-14T08-40-46",
+        "note": "系统重跑 2026-08-14T08-40-46",
+        "file": "samples/versions/stranger-door/v2.html"
+      }
+    ]
+  },
+  "there-be": {
+    "current": "v2",
+    "items": [
+      {
+        "id": "v1",
+        "at": "2026-08-14T08:25:39",
+        "note": "当前稿",
+        "file": "samples/versions/there-be/v1.html"
+      },
+      {
+        "id": "v2",
+        "at": "2026-08-14T08-40-46",
+        "note": "系统重跑 2026-08-14T08-40-46",
+        "file": "samples/versions/there-be/v2.html"
+      }
+    ]
+  },
+  "transform": {
+    "current": "v2",
+    "items": [
+      {
+        "id": "v1",
+        "at": "2026-08-14T08:25:39",
+        "note": "当前稿",
+        "file": "samples/versions/transform/v1.html"
+      },
+      {
+        "id": "v2",
+        "at": "2026-08-14T08-40-46",
+        "note": "系统重跑 2026-08-14T08-40-46",
+        "file": "samples/versions/transform/v2.html"
+      }
+    ]
+  },
+  "tree-planting": {
+    "current": "v2",
+    "items": [
+      {
+        "id": "v1",
+        "at": "2026-08-14T08:25:39",
+        "note": "当前稿",
+        "file": "samples/versions/tree-planting/v1.html"
+      },
+      {
+        "id": "v2",
+        "at": "2026-08-14T08-40-46",
+        "note": "系统重跑 2026-08-14T08-40-46",
+        "file": "samples/versions/tree-planting/v2.html"
+      }
+    ]
+  },
+  "up-down-lr": {
+    "current": "v2",
+    "items": [
+      {
+        "id": "v1",
+        "at": "2026-08-14T08:25:39",
+        "note": "当前稿",
+        "file": "samples/versions/up-down-lr/v1.html"
+      },
+      {
+        "id": "v2",
+        "at": "2026-08-14T08-40-46",
+        "note": "系统重跑 2026-08-14T08-40-46",
+        "file": "samples/versions/up-down-lr/v2.html"
+      }
+    ]
+  }
+}

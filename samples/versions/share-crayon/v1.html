@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta name="aid-version" content="v1">
+<meta name="aid-version-at" content="2026-08-14T08:25:39">
+<meta name="aid-version-note" content="当前稿">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>想借蜡笔 · 礼貌社交</title>
+<!-- branch-story · 教室社交 / 5-8岁 -->
+<style>
+:root{--accent:#8b5cf6;--ok:#10b981;--bad:#ef4444;--ink:#1f2a44;--muted:#667085;--line:#ddd6fe;--ease:cubic-bezier(0.25,1,0.5,1);--touch:52px}
+*{box-sizing:border-box}html,body{margin:0}
+body{font-family:-apple-system,"PingFang SC",system-ui,sans-serif;color:var(--ink);background:linear-gradient(160deg,#f5f3ff,#fce7f3);min-height:100vh;padding:14px 12px 28px}
+.card{max-width:720px;margin:0 auto;background:#fff;border:1px solid var(--line);border-radius:20px;box-shadow:0 12px 28px rgba(139,92,246,.12);padding:18px 16px 22px}
+.top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.top h1{margin:0;font-size:22px;font-weight:800}
+.badge{font-size:14px;font-weight:700;color:#6d28d9;background:#ede9fe;padding:5px 12px;border-radius:999px}
+.progress{font-size:14px;font-weight:700;color:var(--muted);margin-bottom:8px}
+.scene{background:linear-gradient(180deg,#f5f3ff,#fdf4ff);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:12px;text-align:center}
+.scene .emoji{font-size:48px}
+.scene p{font-size:17px;line-height:1.65;margin:10px 0 0;text-align:left}
+.choices{display:flex;flex-direction:column;gap:10px;margin-bottom:12px}
+.btn{min-height:var(--touch);padding:14px 16px;border-radius:14px;border:2px solid var(--line);background:#fff;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit;text-align:left}
+.btn:disabled{opacity:.75;cursor:not-allowed}
+.btn.ok{border-color:var(--ok);background:#ecfdf5}
+.btn.bad{border-color:var(--bad);background:#fef2f2}
+.consequence{display:none;border-radius:14px;padding:12px;margin-bottom:12px;border:1px solid var(--line)}
+.consequence.show{display:block}
+.consequence.ok{background:#ecfdf5;border-color:#6ee7b7}
+.consequence.bad{background:#fff7ed;border-color:#fcd34d}
+.consequence .txt{font-size:16px;line-height:1.6;margin-top:8px}
+.btn-row{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+.btn.small{min-height:48px;font-size:15px;text-align:center}
+.btn.primary{background:linear-gradient(135deg,#8b5cf6,#6d28d9);color:#fff;border:none;text-align:center}
+.thinking{background:#fffbeb;border-radius:12px;padding:10px;font-size:15px;border:1px dashed #fcd34d;margin-top:10px}
+.thinking .tag{font-weight:800;color:#b45309}
+@keyframes wobble{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.shake{animation:wobble .4s ease}
+@media (prefers-reduced-motion:reduce){*{animation:none!important}}
+</style><style id="aid-fit">/* AID_FIT_V1 */
+html,body{height:100%!important;max-height:100dvh!important;overflow:hidden!important}
+body{
+  min-height:100dvh!important;height:100dvh!important;
+  display:flex!important;flex-direction:column!important;
+  padding:clamp(6px,1.2vh,14px) clamp(8px,1.5vw,18px)!important;
+  box-sizing:border-box!important;
+}
+body>.card,main.card{
+  flex:1 1 auto!important;min-height:0!important;width:100%!important;
+  max-width:min(1240px,100%)!important;margin:0 auto!important;
+  display:flex!important;flex-direction:column!important;
+  overflow:hidden!important;
+  padding:clamp(10px,1.5vh,20px) clamp(12px,1.8vw,24px) clamp(10px,1.3vh,16px)!important;
+}
+.stage,.scene,.stage-wrap,.viz{
+  flex:1 1 42%!important;min-height:min(280px,38vh)!important;overflow:hidden!important;
+  display:flex!important;flex-direction:column!important;justify-content:center!important;
+}
+.stage svg,.scene svg,#diagram{
+  flex:1 1 auto;width:100%!important;height:100%!important;max-height:100%!important;min-height:0;
+}
+.ctrl,.choices,.btn-row,.top,.topbar,.fb,.progress{flex:none}
+.slots,.grid,.bins,.pool,.ten{flex:1 1 auto!important;min-height:0}
+html.aid-compact .story,html.aid-compact .thinking,html.aid-compact .say{display:none!important}
+html.aid-compact .fb{min-height:0!important;padding:8px 10px!important;margin:6px 0!important;font-size:14px!important}
+html.aid-compact h1{font-size:clamp(18px,2.2vw,22px)!important}
+html.aid-compact .ctrl{gap:8px}
+html.aid-compact .btn{min-height:44px;padding:8px 14px}
+html.aid-compact .controls{display:grid!important;grid-template-columns:1fr 1fr;gap:6px 12px;max-height:30vh;overflow:auto}
+html.aid-tight .legend,html.aid-tight .hints,html.aid-tight .thinking{display:none!important}
+html.aid-tight .story{display:none!important}
+html.aid-tight .stage,html.aid-tight .scene{min-height:min(200px,32vh)!important}
+@media (min-width:960px) and (min-height:780px){
+  body{font-size:17px}
+  .top h1,.topbar h1{font-size:clamp(24px,2.1vw,30px)}
+}
+</style>
+</head>
+<body>
+<main class="card">
+  <div class="top"><h1>想借蜡笔</h1><span class="badge">5–8 岁 · 教室社交</span></div>
+  <div class="progress" id="progress">情境</div>
+  <div class="scene">
+    <div class="emoji" id="face">🧒✏️</div>
+    <p id="nodeText">美术课上，你的红色蜡笔用完了。同桌有一支。你会怎么做？</p>
+  </div>
+  <div class="choices" id="choices"></div>
+  <div class="consequence" id="consequence">
+    <div id="consSvg"></div>
+    <div class="txt" id="consTxt" aria-live="polite"></div>
+  </div>
+  <div class="btn-row">
+    <button type="button" class="btn small primary" id="btnNext" hidden>下一步 →</button>
+    <button type="button" class="btn small" id="btnReset">↻ 重新开始</button>
+    <button type="button" class="btn small" id="btnSay">🗣️ 我会说</button>
+  </div>
+  <p class="thinking"><span class="tag">我怎么想：</span><span id="thinkText">想用别人的东西，要先问、说请、说谢谢。</span></p>
+</main>
+<script>
+(function(){
+  const NODES={
+    start:{
+      progress:'想用同桌的蜡笔',
+      face:'🧒✏️',
+      text:'美术课上，你的红色蜡笔用完了。同桌有一支。你会怎么做？',
+      choices:[
+        {text:'🙋 轻轻说：「请问，我可以借一下红色蜡笔吗？」', next:'ask', correct:true,
+          fb:'对：先问、用礼貌用语。对方才愿意帮你。',
+          svg:`<svg viewBox="0 0 220 100"><rect width="220" height="100" rx="10" fill="#ecfdf5"/><text x="110" y="50" text-anchor="middle" font-size="36">🙏</text><text x="110" y="85" text-anchor="middle" font-size="13" fill="#065f46">请问…可以吗？</text></svg>`},
+        {text:'有人直接伸手去拿同桌桌上的蜡笔，会怎样？', next:'grab', correct:false,
+          fb:'停下。没问就拿，同桌会不高兴，也不尊重别人。应先问。',
+          svg:`<svg viewBox="0 0 220 100"><rect width="220" height="100" rx="10" fill="#fff7ed"/><text x="90" y="50" font-size="32">✋</text><text x="140" y="50" font-size="32">😮</text><text x="110" y="85" text-anchor="middle" font-size="13" fill="#b45309">没问就拿</text></svg>`},
+        {text:'有人大声喊「把蜡笔给我！」，行吗？', next:'yell', correct:false,
+          fb:'命令别人不礼貌。用「请问」「可以吗」更好。',
+          svg:`<svg viewBox="0 0 220 100"><rect width="220" height="100" rx="10" fill="#fef2f2"/><text x="110" y="55" text-anchor="middle" font-size="36">📢</text></svg>`}
+      ]
+    },
+    grab:{
+      progress:'后果 · 没问就拿',
+      face:'😟',
+      text:'同桌皱眉说：「那是我的。」接下来？',
+      choices:[
+        {text:'把蜡笔放回，说「对不起，我可以借一下吗？」', next:'ask', correct:true,
+          fb:'对：道歉 + 重新礼貌地问。',
+          svg:`<svg viewBox="0 0 220 100"><rect width="220" height="100" rx="10" fill="#ecfdf5"/><text x="110" y="55" text-anchor="middle" font-size="36">🙏</text></svg>`},
+        {text:'有人会说「小气！」然后抢着不还，会怎样？', next:'fail', correct:false,
+          fb:'会伤害友谊，也解决不了问题。应道歉并礼貌请求。',
+          svg:`<svg viewBox="0 0 220 100"><rect width="220" height="100" rx="10" fill="#fff7ed"/><text x="110" y="55" text-anchor="middle" font-size="36">💔</text></svg>`}
+      ]
+    },
+    yell:{
+      progress:'换个说法',
+      face:'🧒',
+      text:'同桌被吓了一跳。怎样补救？',
+      choices:[
+        {text:'小声说：「对不起，请问可以借红色蜡笔吗？」', next:'ask', correct:true,
+          fb:'对：道歉 + 礼貌请求。',
+          svg:`<svg viewBox="0 0 220 100"><rect width="220" height="100" rx="10" fill="#ecfdf5"/><text x="110" y="55" text-anchor="middle" font-size="36">😊</text></svg>`}
+      ]
+    },
+    ask:{
+      progress:'同桌点头了',
+      face:'😊✏️',
+      text:'同桌把蜡笔递给你。用完之后呢？',
+      choices:[
+        {text:'🎨 用完后还回去，并说「谢谢你」', next:'success', correct:true,
+          fb:'完整礼貌：请问 → 借用 → 归还 → 谢谢。',
+          svg:`<svg viewBox="0 0 220 100"><rect width="220" height="100" rx="10" fill="#ecfdf5"/><text x="110" y="50" text-anchor="middle" font-size="36">🤝</text><text x="110" y="85" text-anchor="middle" font-size="13" fill="#065f46">谢谢</text></svg>`},
+        {text:'有人会用完塞进自己笔袋带走，会怎样？', next:'fail', correct:false,
+          fb:'借的要还。不还会失去信任。',
+          svg:`<svg viewBox="0 0 220 100"><rect width="220" height="100" rx="10" fill="#fff7ed"/><text x="110" y="55" text-anchor="middle" font-size="36">🎒🚫</text></svg>`}
+      ]
+    },
+    success:{progress:'✓ 友好相处', ending:true, success:true, face:'🌟',
+      text:'记住：想借东西 → 请问 → 用完归还 → 谢谢。这样大家更愿意互相帮助。', choices:[]},
+    fail:{progress:'需重来', ending:true, success:false, face:'💧',
+      text:'没礼貌会让同学难过。点重新开始，练习「请问」和「谢谢」。', choices:[]}
+  };
+  let nodeId='start', answered=false;
+  const $=id=>document.getElementById(id);
+  function render(){
+    const n=NODES[nodeId]; answered=false;
+    $('progress').textContent=n.progress;
+    $('nodeText').textContent=n.text;
+    if(n.face) $('face').textContent=n.face;
+    // 场景底色随情绪：友好绿 / 紧张橙
+    const sc=document.querySelector('.scene');
+    if(sc){
+      if(nodeId==='success') sc.style.background='linear-gradient(180deg,#ecfdf5,#d1fae5)';
+      else if(nodeId==='grab'||nodeId==='yell'||nodeId==='fail') sc.style.background='linear-gradient(180deg,#fff7ed,#ffedd5)';
+      else sc.style.background='linear-gradient(180deg,#f5f3ff,#fdf4ff)';
+    }
+    $('consequence').className='consequence';
+    $('btnNext').hidden=true;
+    const box=$('choices'); box.innerHTML='';
+    if(n.ending){
+      $('thinkText').textContent=n.success?'请问 + 谢谢 + 归还。':'先问再借，用完要还。';
+      return;
+    }
+    n.choices.forEach(c=>{
+      const b=document.createElement('button');
+      b.type='button'; b.className='btn'; b.textContent=c.text;
+      b.onclick=()=>choose(c,b);
+      box.appendChild(b);
+    });
+    $('thinkText').textContent='想用别人的东西，要先问。';
+  }
+  function choose(c,btn){
+    if(answered) return; answered=true;
+    [...$('choices').children].forEach(el=>el.disabled=true);
+    btn.classList.add(c.correct?'ok':'bad');
+    if(!c.correct) btn.classList.add('shake');
+    const cons=$('consequence');
+    cons.className='consequence show '+(c.correct?'ok':'bad');
+    $('consSvg').innerHTML=c.svg;
+    $('consTxt').textContent=c.fb;
+    nodeId=c.next;
+    $('btnNext').hidden=false;
+    if(!c.correct){
+      setTimeout(()=>{
+        [...$('choices').children].forEach(el=>{ if(!el.classList.contains('bad')) el.disabled=false; });
+        answered=false;
+      }, 900);
+    }
+  }
+  $('btnNext').onclick=render;
+  $('btnReset').onclick=()=>{ nodeId='start'; render(); };
+  $('btnSay').onclick=()=>{
+    $('consequence').className='consequence show ok';
+    $('consSvg').innerHTML='';
+    $('consTxt').textContent='我会说：请问可以借蜡笔吗？用完了，谢谢你！';
+  };
+  render();
+})();
+</script><script id="aid-fit-js">/* AID_FIT_V1 */
+(function(){
+  var html=document.documentElement;
+  function measure(){
+    var card=document.querySelector("main.card, body>.card");
+    if(!card) return;
+    html.classList.remove("aid-compact","aid-tight");
+    card.style.overflowY="hidden";
+    void card.offsetHeight;
+    var stage=card.querySelector(".stage,.scene,.stage-wrap,.viz");
+    var stageH=stage?stage.clientHeight:999;
+    if(card.scrollHeight>card.clientHeight+8 || stageH<240 || innerHeight<820) html.classList.add("aid-compact");
+    void card.offsetHeight;
+    stageH=stage?stage.clientHeight:999;
+    if(card.scrollHeight>card.clientHeight+8 || stageH<200) html.classList.add("aid-tight");
+    void card.offsetHeight;
+    if(card.scrollHeight>card.clientHeight+8) card.style.overflowY="auto";
+  }
+  addEventListener("resize",measure);
+  addEventListener("load",measure);
+  if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",measure);
+  else requestAnimationFrame(measure);
+  setTimeout(measure,80);
+  setTimeout(measure,400);
+  var card=document.querySelector("main.card, body>.card");
+  if(card && typeof MutationObserver==="function"){
+    var t;
+    new MutationObserver(function(){
+      clearTimeout(t); t=setTimeout(measure,40);
+    }).observe(card,{childList:true,subtree:true,characterData:true});
+  }
+})();
+</script>
+</body>
+</html>

@@ -45,7 +45,7 @@
     "scene": "家庭+学前",
     "age": "5-8",
     "type": "param-visual",
-    "category": "life",
+    "category": "math",
     "tier": "featured",
     "ok": true
   },
@@ -65,7 +65,7 @@
     "scene": "家庭+培训",
     "age": "5-9",
     "type": "drag-slot",
-    "category": "game",
+    "category": "preschool",
     "tier": "featured",
     "ok": true
   },
@@ -75,7 +75,7 @@
     "scene": "教室",
     "age": "5-8",
     "type": "branch-story",
-    "category": "classroom",
+    "category": "life",
     "tier": "featured",
     "ok": true
   },
@@ -105,7 +105,7 @@
     "scene": "教室+家庭",
     "age": "6-9",
     "type": "param-visual",
-    "category": "science",
+    "category": "math",
     "tier": "featured",
     "ok": true
   },
@@ -145,7 +145,7 @@
     "scene": "教室",
     "age": "7-10",
     "type": "param-visual",
-    "category": "data",
+    "category": "math",
     "tier": "featured",
     "ok": true
   },
@@ -275,7 +275,7 @@
     "scene": "教室社交",
     "age": "5-8",
     "type": "branch-story",
-    "category": "classroom",
+    "category": "life",
     "tier": "featured",
     "ok": true
   },
@@ -285,7 +285,7 @@
     "scene": "家庭+教室",
     "age": "6-9",
     "type": "param-visual",
-    "category": "science",
+    "category": "math",
     "tier": "featured",
     "ok": true
   },

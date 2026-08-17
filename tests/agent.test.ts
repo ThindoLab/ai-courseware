@@ -113,6 +113,26 @@ test("qa_check 检出外链/外部库/小字号/无重置", async () => {
   assert.ok(rules.includes("font-size"));
 });
 
+test("qa_check 检出紫粉抢戏和底栏压主图", async () => {
+  const busy = `<!doctype html><html><head><title>t</title>
+  <style>
+    body{min-height:100dvh;overflow:hidden;background:linear-gradient(90deg,#8b5cf6,#ec4899)}
+    .foot{position:absolute;bottom:0;left:0;right:0}
+    .b{min-height:48px;font-size:16px}
+  </style></head><body>
+  <div id="stage">主交互</div>
+  <div class="foot">底栏</div>
+  <button class="b" id="btn-reset">重置</button>
+  <script></script>
+  </body></html>`;
+  const r = await qaCheckTool.execute("t", { html: busy });
+  const j = JSON.parse(r.content[0].text);
+  const rules = j.issues.map((i: { rule: string }) => i.rule);
+  assert.ok(rules.includes("look-ai"), JSON.stringify(j.issues));
+  assert.ok(rules.includes("ux-footer"), JSON.stringify(j.issues));
+  assert.equal(j.passed, true, "观感项是 warn，不应单独 fail");
+});
+
 test("qa_check 干净 HTML 通过", async () => {
   const goodHtml = `<!doctype html><html lang="zh"><head><title>好</title></head><body>
   <style>.b{min-height:48px;font-size:16px}@media(prefers-reduced-motion:reduce){*{animation:none}}</style>

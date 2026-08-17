@@ -1,0 +1,585 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta name="aid-version" content="v2">
+<meta name="aid-version-at" content="2026-08-14T08:25:39">
+<meta name="aid-version-note" content="当前稿">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>小兔挂彩灯 · 找规律</title>
+<!-- 题型：学前规律·周期预测 / 核心认知动作：观察序列·预测下一项 / 年龄：3-6 岁 / 场景：中幼儿+家庭 -->
+<style>
+:root{
+  --accent:#2f6fbf; --ok:#2fbf71; --bad:#e85d5d;
+  --ink:#1e3a5f; --muted:#5b6b82; --line:#d9e2ef; --card:#fff;
+  --night:#1e3a5f;
+  --ease:cubic-bezier(.25,1,.5,1);
+  --touch:64px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100dvh;overflow:hidden}
+body{
+  font-family:-apple-system,"PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+  color:var(--ink); background:#eef3f9;
+  display:flex; flex-direction:column;
+  padding:clamp(6px,1.2vh,14px) clamp(8px,1.5vw,18px);
+}
+.card{
+  flex:1 1 auto; min-height:0; width:100%;
+  max-width:min(1120px,100%); margin:0 auto;
+  background:var(--card); border:1px solid var(--line); border-radius:20px;
+  box-shadow:0 12px 30px rgba(30,58,95,.12);
+  display:flex; flex-direction:column; overflow:hidden;
+  padding:clamp(10px,1.5vh,18px) clamp(12px,1.8vw,24px) clamp(10px,1.3vh,16px);
+}
+.top{display:flex;align-items:center;gap:12px;flex-wrap:wrap;flex:none}
+.top h1{margin:0;font-size:clamp(22px,2.4vw,28px);font-weight:800;letter-spacing:.5px}
+.chip{font-size:16px;font-weight:700;color:var(--accent);background:#e8f0fb;padding:6px 14px;border-radius:999px}
+.mode{margin-left:auto;font-size:16px;color:var(--muted);display:flex;align-items:center;gap:8px;cursor:pointer}
+.mode input{width:20px;height:20px;accent-color:var(--accent)}
+.night{
+  flex:none; position:relative; height:clamp(54px,8vh,84px); margin-top:10px;
+  background:linear-gradient(180deg,#14294a,#1e3a5f); border-radius:14px; overflow:hidden;
+}
+.night .star{position:absolute;width:5px;height:5px;border-radius:50%;background:#fff;opacity:.8}
+.night .moon{position:absolute;right:14px;top:10px;width:34px;height:34px;border-radius:50%;
+  background:#fde68a;box-shadow:0 0 18px rgba(253,230,138,.7)}
+.night .moon::after{content:'';position:absolute;right:-6px;top:-2px;width:30px;height:30px;border-radius:50%;background:var(--night)}
+.night .bunny{position:absolute;left:22px;bottom:0;width:54px;height:54px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.25))}
+.stage{
+  flex:1 1 auto; min-height:0; position:relative;
+  display:flex; flex-direction:column; justify-content:center; gap:4px;
+  background:#fbfdff; border:1px solid var(--line); border-radius:16px; margin-top:10px; padding:6px 4px;
+}
+.stage svg{flex:1 1 auto; width:100%; min-height:0; display:block}
+.hintRow{flex:none; display:flex; align-items:center; justify-content:center; gap:10px; font-size:clamp(18px,2vw,22px); font-weight:700; color:var(--muted); padding-bottom:4px}
+.hintRow .unitBox{display:inline-flex; gap:6px; align-items:center; padding:4px 12px; background:#eef4fc; border-radius:999px}
+.hintRow .dot{width:18px;height:18px;border-radius:50%;display:inline-block}
+.materials{
+  flex:none; display:flex; justify-content:center; gap:clamp(10px,2vw,20px); margin-top:10px; flex-wrap:wrap;
+}
+.matBtn{
+  --m:74px; width:clamp(84px,11vw,120px); height:clamp(92px,12vh,116px);
+  border:3px solid var(--line); border-radius:18px; background:#fff; cursor:pointer;
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;
+  font-family:inherit; font-size:clamp(20px,2.2vw,24px); font-weight:800; color:var(--ink);
+  transition:transform .18s var(--ease), border-color .18s, box-shadow .18s;
+  touch-action:none;
+}
+.matBtn svg{width:52px;height:52px;pointer-events:none}
+.matBtn:active{transform:scale(.96)}
+.matBtn.pick{border-color:var(--accent); background:#eef4fc; box-shadow:0 0 0 5px rgba(47,111,191,.18)}
+.matBtn.correct{border-color:var(--ok); background:#e6f9ef}
+.matBtn.wrong{border-color:var(--bad); background:#fdecec}
+.matBtn:disabled{opacity:.6; cursor:default}
+.fb{
+  flex:none; min-height:clamp(52px,7vh,66px); margin-top:10px;
+  display:flex; align-items:center; justify-content:center; text-align:center;
+  padding:10px 14px; border-radius:14px; background:#f4f8fd; border:1px solid var(--line);
+  font-size:clamp(18px,2vw,22px); line-height:1.45; font-weight:600;
+}
+.fb.ok{background:#e6f9ef; border-color:#a7e8c6}
+.fb.bad{background:#fff4ec; border-color:#f6c9a8}
+.fb b{color:var(--accent)}
+.fb.ok b{color:#1c8f57}
+.bar{flex:none; display:flex; justify-content:center; gap:12px; margin-top:12px; flex-wrap:wrap}
+.btn{
+  min-height:var(--touch); padding:14px 26px; border-radius:14px; border:2px solid var(--line);
+  background:#fff; font-family:inherit; font-size:clamp(20px,2vw,24px); font-weight:800; color:var(--ink);
+  cursor:pointer; transition:transform .18s var(--ease), background .18s;
+}
+.btn:active{transform:scale(.97)}
+.btn.primary{background:var(--accent); border-color:var(--accent); color:#fff}
+.btn.ghost{color:var(--muted)}
+.btn:disabled{opacity:.5; cursor:default}
+.bulb{transition:opacity .3s var(--ease); opacity:0}
+.bulb.in{opacity:1}
+.bulb.askPulse{animation:askPulse 1s var(--ease) infinite}
+.bulb.hit{animation:pop .5s var(--ease)}
+.bulb.badBulb{animation:shake .45s ease}
+.bulb.okGlow{filter:drop-shadow(0 0 10px rgba(47,191,113,.9))}
+@keyframes askPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+@keyframes pop{0%{transform:scale(.7)}55%{transform:scale(1.14)}100%{transform:scale(1)}}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+.groupBand{opacity:.28; transition:opacity .3s}
+.groupBand.cur{opacity:.55}
+.groupBand.hl{opacity:.8}
+.fade{transition:opacity .25s; opacity:0}
+.fade.in{opacity:1}
+/* 开场演示 */
+.demoOverlay{
+  position:fixed; inset:0; z-index:50; background:rgba(14,29,52,.82);
+  display:flex; align-items:center; justify-content:center; padding:18px;
+}
+.demoCard{
+  width:min(560px,96vw); background:#fff; border-radius:20px; padding:18px 20px 16px;
+  box-shadow:0 20px 50px rgba(0,0,0,.4); text-align:center;
+}
+.demoCard .demoTitle{font-size:clamp(22px,2.6vw,26px); font-weight:800; margin:0 0 6px}
+.demoCard .demoSub{font-size:clamp(17px,2vw,20px); color:var(--muted); margin:0 0 12px; line-height:1.5}
+.demoCard svg{width:100%; max-height:180px}
+.demoSkip{
+  margin-top:14px; min-height:var(--touch); padding:12px 30px; border:none; border-radius:14px;
+  background:var(--accent); color:#fff; font-family:inherit; font-size:clamp(19px,2vw,22px); font-weight:800; cursor:pointer;
+}
+.demoSkip:active{transform:scale(.97)}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+.bob{animation:bob 1s var(--ease) infinite}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important}
+  .bulb{opacity:1}
+}
+body.static *{animation:none!important; transition:none!important}
+body.static .bulb{opacity:1}
+@media (max-height:760px){
+  .hintRow{display:none}
+  .fb{min-height:44px; font-size:17px}
+}
+</style>
+<style id="aid-fit">/* AID_FIT_V1 */
+html,body{height:100%!important;max-height:100dvh!important;overflow:hidden!important}
+body{min-height:100dvh!important;height:100dvh!important;display:flex!important;flex-direction:column!important;box-sizing:border-box!important}
+main.card,body>.card{flex:1 1 auto!important;min-height:0!important;width:100%!important;max-width:min(1240px,100%)!important;margin:0 auto!important;display:flex!important;flex-direction:column!important;overflow:hidden!important}
+.stage,.scene,.viz{flex:1 1 42%!important;min-height:min(200px,30vh)!important;overflow:hidden!important;display:flex!important;flex-direction:column!important;justify-content:center!important}
+.stage svg,.scene svg{flex:1 1 auto;width:100%!important;height:100%!important;max-height:100%!important;min-height:0}
+.ctrl,.choices,.btn-row,.top,.bar,.materials,.fb,.progress{flex:none}
+html.aid-compact .night,html.aid-compact .hintRow{display:none!important}
+html.aid-compact .fb{min-height:0!important;padding:6px 10px!important;margin:6px 0!important;font-size:16px!important}
+html.aid-compact h1{font-size:clamp(18px,2.2vw,22px)!important}
+html.aid-compact .matBtn{width:74px;height:80px}
+html.aid-compact .matBtn svg{width:40px;height:40px}
+html.aid-compact .matBtn span{font-size:16px}
+html.aid-compact .btn{min-height:48px;padding:8px 16px;font-size:17px}
+html.aid-compact .bar{gap:8px}
+html.aid-tight .fb{display:none!important}
+html.aid-tight .stage{min-height:min(180px,30vh)!important}
+@media (min-width:960px) and (min-height:800px){
+  body{font-size:18px}
+  .top h1{font-size:clamp(24px,2.1vw,30px)}
+}
+</style>
+</head>
+<body>
+<main class="card">
+  <div class="top">
+    <h1>小兔挂彩灯</h1>
+    <span class="chip">找规律</span>
+    <label class="mode"><input type="checkbox" id="staticMode"> 静态模式</label>
+  </div>
+
+  <div class="night" aria-hidden="true">
+    <span class="star" style="left:12%;top:30%"></span>
+    <span class="star" style="left:28%;top:55%"></span>
+    <span class="star" style="left:46%;top:22%"></span>
+    <span class="star" style="left:63%;top:60%"></span>
+    <span class="star" style="left:78%;top:28%"></span>
+    <span class="moon"></span>
+    <svg class="bunny" viewBox="0 0 60 60" aria-hidden="true">
+      <ellipse cx="30" cy="46" rx="16" ry="12" fill="#f8fafc"/>
+      <circle cx="30" cy="32" r="12" fill="#f8fafc"/>
+      <ellipse cx="22" cy="14" rx="5" ry="12" fill="#f8fafc" transform="rotate(-14 22 14)"/>
+      <ellipse cx="38" cy="14" rx="5" ry="12" fill="#f8fafc" transform="rotate(14 38 14)"/>
+      <ellipse cx="22" cy="12" rx="2.6" ry="7" fill="#fbcfe8" transform="rotate(-14 22 12)"/>
+      <ellipse cx="38" cy="12" rx="2.6" ry="7" fill="#fbcfe8" transform="rotate(14 38 12)"/>
+      <circle cx="26" cy="31" r="1.8" fill="#1e3a5f"/>
+      <circle cx="34" cy="31" r="1.8" fill="#1e3a5f"/>
+      <ellipse cx="30" cy="36" rx="2.4" ry="1.8" fill="#f9a8d4"/>
+    </svg>
+  </div>
+
+  <div class="stage">
+    <div class="hintRow">
+      <span>重复小段：</span>
+      <span class="unitBox" id="unitBox"></span>
+      <span id="hintAsk">？＝下一盏</span>
+    </div>
+    <svg id="lightsSvg" viewBox="0 0 640 236" role="img" aria-label="彩灯串，问号处猜下一盏"></svg>
+  </div>
+
+  <div class="materials" id="materials" role="group" aria-label="选择下一盏灯"></div>
+
+  <div class="fb" id="fb" aria-live="polite">先看灯串，再选一盏灯放到问号处。</div>
+
+  <div class="bar">
+    <button type="button" class="btn primary" id="btnCheck">✓ 看看对不对</button>
+    <button type="button" class="btn" id="btnNext" hidden>下一关 →</button>
+    <button type="button" class="btn ghost" id="btnReplay">↻ 重新开始</button>
+  </div>
+</main>
+
+<div class="demoOverlay" id="demoOverlay" role="dialog" aria-label="演示">
+  <div class="demoCard">
+    <p class="demoTitle">🐰 小兔挂彩灯</p>
+    <p class="demoSub" id="demoSub">看灯串，猜下一盏！</p>
+    <svg id="demoSvg" viewBox="0 0 560 190" aria-hidden="true"></svg>
+    <button type="button" class="demoSkip" id="demoSkip">我学会啦，开始 →</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  var $ = function(id){ return document.getElementById(id); };
+  var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var staticMode = false;
+
+  var COLORS = {
+    red:   { cn:'红', hex:'#ef4444', glow:'rgba(239,68,68,.38)' },
+    yellow:{ cn:'黄', hex:'#f5a623', glow:'rgba(245,166,35,.38)' },
+    blue:  { cn:'蓝', hex:'#3b82f6', glow:'rgba(59,130,246,.38)' },
+    green: { cn:'绿', hex:'#22c55e', glow:'rgba(34,197,94,.38)' }
+  };
+  var SHAPES = {
+    circle:   { cn:'圆', draw:'<circle cx="50" cy="52" r="15" fill="none" stroke="#ef4444" stroke-width="4"/>' },
+    triangle: { cn:'三角', draw:'<path d="M50 38 L63 60 L37 60 Z" fill="none" stroke="#f5a623" stroke-width="4" stroke-linejoin="round"/>' },
+    square:   { cn:'方', draw:'<rect x="36" y="42" width="28" height="28" fill="none" stroke="#3b82f6" stroke-width="4" rx="3"/>' }
+  };
+
+  var LEVELS = [
+    { unit:['red','yellow'], show:5, kind:'color', intro:'红-黄 一组，一组一组排' },
+    { unit:['blue','blue','red'], show:5, kind:'color', intro:'蓝-蓝-红 一组，一组一组排' },
+    { unit:['red','red','yellow','yellow'], show:5, kind:'color', intro:'红-红-黄-黄 一组，一组一组排' },
+    { unit:['circle','triangle'], show:5, kind:'shape', intro:'圆-三角 一组，换成灯还是找规律' }
+  ];
+
+  var q = 0, pickKey = null, locked = false;
+  var SP = 88, X0 = 72, BASE_Y = 96, TOP_Y = 52, GROUP_Y = 172;
+  var svg = $('lightsSvg');
+  var ns = 'http://www.w3.org/2000/svg';
+
+  function keyName(k, kind){
+    if(kind === 'color') return COLORS[k].cn;
+    return SHAPES[k].cn;
+  }
+  function nextKey(level){
+    return level.unit[level.show % level.unit.length];
+  }
+
+  function bulbInner(x, k, kind, size){
+    var fill, glow, inner = '';
+    if(kind === 'color'){
+      fill = COLORS[k].hex; glow = COLORS[k].glow;
+    } else {
+      fill = '#e2e8f0'; glow = 'rgba(226,232,240,.6)';
+      inner = SHAPES[k].draw;
+    }
+    var s = size || 1;
+    return '<circle cx="'+x+'" cy="'+BASE_Y+'" r="'+(40*s)+'" fill="'+glow+'"/>' +
+           '<circle cx="'+x+'" cy="'+BASE_Y+'" r="'+(31*s)+'" fill="'+fill+'"/>' +
+           '<circle cx="'+(x-10*s)+'" cy="'+(BASE_Y-12*s)+'" r="'+(8*s)+'" fill="rgba(255,255,255,.55)"/>' +
+           '<rect x="'+(x-17*s)+'" y="'+(TOP_Y-2)+'" width="'+(34*s)+'" height="18" rx="4" fill="#475569"/>' +
+           inner;
+  }
+
+  function wire(x){
+    return '<path d="M '+X0+' '+(TOP_Y+6)+' H '+(x+34)+'" stroke="#94a3b8" stroke-width="3" fill="none" stroke-linecap="round"/>';
+  }
+
+  function render(level, reveal){
+    svg.innerHTML = '';
+    var kind = level.kind;
+    var n = level.show + 1;
+    var lastX = X0 + (n-1)*SP;
+    svg.innerHTML = '<path d="M '+X0+' '+(TOP_Y+6)+' H '+lastX+'" stroke="#94a3b8" stroke-width="3" fill="none" stroke-linecap="round"/>';
+    for(var i=0;i<level.show;i++){
+      var x = X0 + i*SP;
+      svg.innerHTML += '<g class="bulb" data-i="'+i+'">' + bulbInner(x, level.unit[i % level.unit.length], kind, 1) + '</g>';
+    }
+    // 周期分组底条（每 unit.length 盏一组）
+    var unitLen = level.unit.length;
+    var groupCount = Math.ceil(n / unitLen);
+    for(var g=0; g<groupCount; g++){
+      var start = g*unitLen, end = Math.min((g+1)*unitLen, n) - 1;
+      if(end < start) continue;
+      var gx = X0 + start*SP - 34, gw = X0 + end*SP + 34 - gx;
+      var cur = (g === Math.floor(level.show / unitLen));
+      svg.innerHTML += '<rect class="groupBand'+(cur?' cur':'')+'" x="'+gx+'" y="'+GROUP_Y+'" width="'+gw+'" height="30" rx="15" fill="'+ (g%2===0?'#2f6fbf':'#7aa7e0') +'"/>';
+    }
+    // 问号灯（虚线框）
+    var ax = X0 + level.show*SP;
+    var askClass = 'bulb askBulb in' + (reveal ? ' hit' : (reduced||staticMode ? '' : ' askPulse'));
+    svg.innerHTML += '<g class="'+askClass+'" id="askG">' +
+      '<circle cx="'+ax+'" cy="'+BASE_Y+'" r="31" fill="#eef4fc" stroke="#2f6fbf" stroke-width="3" stroke-dasharray="7 6"/>' +
+      '<circle cx="'+ax+'" cy="'+BASE_Y+'" r="40" fill="rgba(47,111,191,.12)"/>' +
+      '<text x="'+ax+'" y="'+(BASE_Y+12)+'" text-anchor="middle" font-size="34" font-weight="800" fill="#2f6fbf">?</text>' +
+      '</g>';
+    var bulbs = svg.querySelectorAll('.bulb:not(.askBulb)');
+    if(!reduced && !staticMode){
+      bulbs.forEach(function(b,i){ setTimeout(function(){ b.classList.add('in'); }, i*14); });
+    } else {
+      bulbs.forEach(function(b){ b.classList.add('in'); });
+    }
+    // 小段提示
+    $('unitBox').innerHTML = level.unit.map(function(k){
+      if(kind === 'color'){
+        var c = COLORS[k];
+        return '<span class="dot" style="background:'+c.hex+';box-shadow:0 0 8px '+c.glow+'"></span>';
+      }
+      var s = SHAPES[k];
+      return '<span style="width:20px;height:20px;border:3px solid '+(k==='circle'?'#ef4444':k==='triangle'?'#f5a623':'#3b82f6')+';border-radius:'+(k==='circle'?'50%':k==='triangle'?'4px 4px 4px 4px':'4px')+';transform:'+(k==='triangle'?'rotate(0)':'')+'"></span>';
+    }).join('');
+    $('hintAsk').textContent = level.show===5 ? '？＝下一盏' : '？＝下一盏';
+  }
+
+  function materialSVG(k, kind){
+    var s = 0.66;
+    return '<svg viewBox="0 0 100 100" aria-hidden="true">' + bulbInner(50, k, kind, s) + '</svg>';
+  }
+
+  function renderMaterials(level){
+    var kind = level.kind;
+    var ans = nextKey(level);
+    var pool = level.unit.slice(0);
+    // 干扰项：另一个出现过的颜色 + 一个新颜色，去重
+    var extras = (kind==='color') ? ['green','blue','red','yellow'] : ['square','circle','triangle'];
+    for(var i=0;i<extras.length && pool.length<3; i++){
+      if(pool.indexOf(extras[i])===-1) pool.push(extras[i]);
+    }
+    pool = pool.slice(0,3);
+    if(pool.indexOf(ans)===-1) pool[0] = ans;
+    // 乱着开始：打乱顺序
+    for(var j=pool.length-1;j>0;j--){
+      var r = Math.floor(Math.random()*(j+1));
+      var t = pool[j]; pool[j]=pool[r]; pool[r]=t;
+    }
+    var wrap = $('materials');
+    wrap.innerHTML = '';
+    pickKey = null;
+    pool.forEach(function(k){
+      var b = document.createElement('button');
+      b.type = 'button'; b.className = 'matBtn'; b.dataset.key = k;
+      b.setAttribute('aria-label','选'+keyName(k,kind)+'灯');
+      b.innerHTML = materialSVG(k, kind) + '<span>' + keyName(k,kind) + '</span>';
+      wrap.appendChild(b);
+    });
+  }
+
+  function setFB(html, cls){
+    var fb = $('fb');
+    fb.className = 'fb' + (cls ? ' '+cls : '');
+    fb.innerHTML = html;
+  }
+
+  function showAnswer(level, ans){
+    var g = $('askG');
+    var ax = X0 + level.show*SP;
+    var kind = level.kind;
+    g.innerHTML = '<g class="bulb in hit okGlow">' + bulbInner(ax, ans, kind, 1) + '</g>';
+    g.classList.remove('askPulse','askBulb');
+    // 高亮当前组
+    var unitLen = level.unit.length;
+    var cur = Math.floor(level.show / unitLen);
+    var bands = svg.querySelectorAll('.groupBand');
+    bands.forEach(function(b,i){ if(i===cur) b.classList.add('hl'); });
+  }
+
+  function load(){
+    locked = false;
+    var level = LEVELS[q];
+    $('btnCheck').disabled = false;
+    $('btnNext').hidden = true;
+    setFB(level.kind==='shape' ? '这是举一反三：还是找「重复小段」，灯换形状啦。' : '先看灯串，再选一盏灯放到问号处。');
+    render(level, false);
+    renderMaterials(level);
+  }
+
+  function check(){
+    if(locked) return;
+    if(!pickKey){
+      setFB('先选下面一盏灯哦，点一下它。','bad');
+      return;
+    }
+    var level = LEVELS[q];
+    var ans = nextKey(level);
+    locked = true;
+    $('btnCheck').disabled = true;
+    var buttons = $('materials').querySelectorAll('.matBtn');
+    buttons.forEach(function(b){
+      b.disabled = true;
+      if(b.dataset.key === ans) b.classList.add('correct');
+      if(b.dataset.key === pickKey && pickKey !== ans) b.classList.add('wrong');
+    });
+    var name = function(k){ return keyName(k, level.kind); };
+    if(pickKey === ans){
+      showAnswer(level, ans);
+      setFB('对啦！一组是 <b>'+level.unit.map(name).join('-')+'</b>，问号在第 '+ (level.show+1) +' 盏，是这一组第 ' + ((level.show % level.unit.length)+1) + ' 位 → <b>'+name(ans)+'</b>！','ok');
+      if(q < LEVELS.length-1){
+        $('btnNext').hidden = false;
+      } else {
+        setFB('全部挂完！你会自己找规律啦！<b>'+name(ans)+'</b> 灯亮起，小兔送你一颗星 ⭐','ok');
+      }
+    } else {
+      // 概念类：对照说明，指出差在哪一处
+      var askG = $('askG');
+      askG.classList.add('badBulb');
+      var posInUnit = (level.show % level.unit.length) + 1;
+      var expect = level.unit[level.show % level.unit.length];
+      setFB('想一想：先找一组「<b>'+level.unit.map(name).join('-')+'</b>」。问号在第 '+(level.show+1)+' 盏 = 组里第 <b>'+posInUnit+'</b> 位，应该是 <b>'+name(expect)+'</b>。你选的 '+name(pickKey)+' 不在这一位哦，再试试。','bad');
+      setTimeout(function(){
+        locked = false;
+        $('btnCheck').disabled = false;
+        askG.classList.remove('badBulb');
+        buttons.forEach(function(b){
+          b.disabled = false;
+          b.classList.remove('correct','wrong');
+          if(b.dataset.key === pickKey) b.classList.remove('pick');
+        });
+        pickKey = null;
+      }, 1600);
+    }
+  }
+
+  // 材料选择：点选入位 + 拖拽跟手
+  var matWrap = $('materials');
+  matWrap.addEventListener('pointerdown', function(e){
+    var b = e.target.closest('.matBtn');
+    if(!b || b.disabled) return;
+    if(e.pointerType === 'mouse' && e.button !== 0) return;
+    var startX = e.clientX, startY = e.clientY, moved = false;
+    var ghost = null;
+    function onMove(ev){
+      if(!moved){
+        moved = true;
+        ghost = b.cloneNode(true);
+        ghost.style.cssText = 'position:fixed;z-index:40;pointer-events:none;opacity:.9;width:'+b.offsetWidth+'px;left:'+b.offsetLeft+'px;top:'+b.offsetTop+'px;margin:0';
+        document.body.appendChild(ghost);
+        b.style.opacity = '.35';
+      }
+      ghost.style.left = (ev.clientX - ghost.offsetWidth/2) + 'px';
+      ghost.style.top = (ev.clientY - ghost.offsetHeight/2) + 'px';
+    }
+    function onUp(ev){
+      document.removeEventListener('pointermove', onMove);
+      document.removeEventListener('pointerup', onUp);
+      var dropped = false;
+      if(moved){
+        var stageRect = svg.getBoundingClientRect();
+        var askG = $('askG');
+        if(askG){
+          var r = askG.getBoundingClientRect();
+          dropped = ev.clientX > r.left && ev.clientX < r.right && ev.clientY > r.top && ev.clientY < r.bottom;
+        }
+        if(ghost){ ghost.remove(); ghost = null; }
+        b.style.opacity = '1';
+      }
+      var dx = ev.clientX - startX, dy = ev.clientY - startY;
+      var isClick = Math.abs(dx) < 8 && Math.abs(dy) < 8;
+      if(dropped || isClick){
+        selectKey(b);
+      }
+    }
+    document.addEventListener('pointermove', onMove);
+    document.addEventListener('pointerup', onUp);
+  });
+
+  function selectKey(b){
+    if(locked) return;
+    pickKey = b.dataset.key;
+    matWrap.querySelectorAll('.matBtn').forEach(function(x){ x.classList.remove('pick'); });
+    b.classList.add('pick');
+    var level = LEVELS[q];
+    setFB('你选了 <b>'+keyName(pickKey, level.kind)+'</b> 灯。点「看看对不对」。');
+  }
+
+  // 开场演示（可跳过；reduced-motion 只出终态静帧）
+  function buildDemo(){
+    var ds = $('demoSvg');
+    var kind = 'color';
+    var unit = ['red','yellow'];
+    var inner = '<path d="M 72 58 H 508" stroke="#94a3b8" stroke-width="3" fill="none" stroke-linecap="round"/>';
+    for(var i=0;i<4;i++){
+      inner += '<g class="bulb in">' + bulbInner(X0 + i*SP, unit[i%2], kind, 1) + '</g>';
+    }
+    inner += '<g class="bulb in askPulse" id="demoAsk"><circle cx="'+(X0+4*SP)+'" cy="'+BASE_Y+'" r="31" fill="#eef4fc" stroke="#2f6fbf" stroke-width="3" stroke-dasharray="7 6"/><text x="'+(X0+4*SP)+'" y="'+(BASE_Y+12)+'" text-anchor="middle" font-size="34" font-weight="800" fill="#2f6fbf">?</text></g>';
+    inner += '<g id="demoPick" opacity="0"><g transform="translate('+(X0+4*SP-34)+','+(BASE_Y-34)+')"><rect width="68" height="68" rx="14" fill="#e6f9ef" stroke="#2fbf71" stroke-width="3"/><text x="34" y="42" text-anchor="middle" font-size="26" font-weight="800" fill="#1c8f57">✓</text></g></g>';
+    ds.innerHTML = inner;
+  }
+
+  function runDemo(){
+    var demo = $('demoOverlay');
+    var ds = $('demoSvg');
+    var sub = $('demoSub');
+    function done(){
+      var ask = ds.querySelector('#demoAsk');
+      if(ask){
+        ask.innerHTML = '<g class="bulb in hit okGlow">' + bulbInner(X0+4*SP, 'yellow', 'color', 1) + '</g>';
+      }
+      ds.querySelector('#demoPick').setAttribute('opacity','1');
+      sub.textContent = '红-黄 一组，下一盏是 黄！';
+    }
+    if(reduced || staticMode){
+      done();
+      return;
+    }
+    var steps = [
+      function(){ sub.textContent = '小兔按「红-黄-红-黄」挂灯…'; },
+      function(){ sub.textContent = '问号处：下一盏是？'; },
+      function(){ ds.querySelector('#demoPick').setAttribute('opacity','1'); sub.textContent = '选 黄！'; },
+      done
+    ];
+    var i = 0;
+    (function next(){
+      if(!demo) return;
+      if(i >= steps.length) return;
+      steps[i++]();
+      setTimeout(next, 900);
+    })();
+  }
+
+  var demo = $('demoOverlay');
+  $('demoSkip').addEventListener('click', function(){
+    demo.remove();
+  });
+  buildDemo();
+  runDemo();
+
+  $('btnCheck').addEventListener('click', check);
+  $('btnNext').addEventListener('click', function(){ if(q < LEVELS.length-1){ q++; load(); } });
+  $('btnReplay').addEventListener('click', function(){ q = 0; load(); });
+  $('staticMode').addEventListener('change', function(e){
+    staticMode = e.target.checked;
+    document.body.classList.toggle('static', staticMode);
+    load();
+  });
+  if(reduced){
+    $('staticMode').checked = true;
+    staticMode = true;
+    document.body.classList.add('static');
+  }
+  load();
+})();
+</script>
+<script id="aid-fit-js">/* AID_FIT_V1 */
+(function(){
+  var html=document.documentElement;
+  function measure(){
+    var card=document.querySelector("main.card, body>.card");
+    if(!card) return;
+    html.classList.remove("aid-compact","aid-tight");
+    card.style.overflowY="hidden";
+    void card.offsetHeight;
+    var stage=card.querySelector(".stage,.scene,.viz");
+    var stageH=stage?stage.clientHeight:999;
+    if(card.scrollHeight>card.clientHeight+8 || stageH<220 || innerHeight<820) html.classList.add("aid-compact");
+    void card.offsetHeight;
+    stageH=stage?stage.clientHeight:999;
+    if(card.scrollHeight>card.clientHeight+8 || stageH<180) html.classList.add("aid-tight");
+    void card.offsetHeight;
+    if(card.scrollHeight>card.clientHeight+8) card.style.overflowY="auto";
+  }
+  addEventListener("resize",measure);
+  addEventListener("load",measure);
+  if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",measure);
+  else requestAnimationFrame(measure);
+  setTimeout(measure,80);
+  setTimeout(measure,400);
+  var card=document.querySelector("main.card, body>.card");
+  if(card && typeof MutationObserver==="function"){
+    var t;
+    new MutationObserver(function(){
+      clearTimeout(t); t=setTimeout(measure,40);
+    }).observe(card,{childList:true,subtree:true,characterData:true});
+  }
+})();
+</script>
+</body>
+</html>

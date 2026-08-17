@@ -7,7 +7,7 @@
     "node": ">=18"
   },
   "scripts": {
-    "test": "node --test tests/contract.test.ts tests/knowledge.test.ts tests/agent.test.ts tests/skills.test.ts tests/ima.test.ts",
+    "test": "node --test tests/contract.test.ts tests/knowledge.test.ts tests/agent.test.ts tests/skills.test.ts tests/ima.test.ts tests/gallery.test.ts",
     "create": "node src/cli.ts create-from-content",
     "validate": "node src/cli.ts validate",
     "start": "node src/server.ts",
