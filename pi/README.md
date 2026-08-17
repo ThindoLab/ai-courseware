@@ -26,6 +26,7 @@ pi/
 ├── teams.yaml                花名册（线上 / 快线 / 进化环）
 ├── memory/
 │   ├── product.md            人群、目的、五硬核
+│   ├── keep.md               当前基线保留清单（禁止整页重写）
 │   └── lessons.md            写不出文件、假命中等教训
 ├── 角色/                     队员认定（见该目录 README）
 │   ├── README.md

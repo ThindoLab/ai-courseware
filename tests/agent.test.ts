@@ -144,3 +144,50 @@ test("qa_check 干净 HTML 通过", async () => {
   assert.equal(j.passed, true, JSON.stringify(j.issues));
   assert.equal(j.stats.errorCount, 0);
 });
+
+test("qa_check 可玩契约：低龄无跳过、多关无下一关/祝贺、死题 应 fail", async () => {
+  const young = `<!doctype html><html><head><title>分类</title></head><body>
+  <p>3-6 岁 · 学前分类</p>
+  <div id="stage">主交互</div>
+  <button id="btn-reset">重置</button>
+  <script></script></body></html>`;
+  const y = JSON.parse((await qaCheckTool.execute("t", { html: young })).content[0].text);
+  assert.equal(y.passed, false);
+  assert.ok(y.issues.some((i: { rule: string }) => i.rule === "ux-intro"), JSON.stringify(y.issues));
+
+  const stuck = `<!doctype html><html><head><title>多关</title></head><body>
+  <p>第一关</p><div id="stage">主交互</div>
+  <button id="btn-reset">重置</button><script>var LEVELS=[]</script></body></html>`;
+  const s = JSON.parse((await qaCheckTool.execute("t", { html: stuck })).content[0].text);
+  assert.equal(s.passed, false);
+  const sr = s.issues.map((i: { rule: string }) => i.rule);
+  assert.ok(sr.includes("ux-next"), JSON.stringify(s.issues));
+  assert.ok(sr.includes("ux-end"), JSON.stringify(s.issues));
+  assert.ok(sr.includes("aid-contract"), JSON.stringify(s.issues));
+
+  const dead = `<!doctype html><html><head><title>诗</title>
+  <!-- aid-contract {"levels":[{"answers":["月"],"tiles":["举","望"]}]} -->
+  </head><body>
+  <p>第一关</p><button id="nextBtn">下一关</button>
+  <div id="done">祝贺完成</div>
+  <button id="btn-reset">重置</button><script></script></body></html>`;
+  const d = JSON.parse((await qaCheckTool.execute("t", { html: dead })).content[0].text);
+  assert.equal(d.passed, false);
+  assert.ok(d.issues.some((i: { rule: string }) => i.rule === "playable-dead"), JSON.stringify(d.issues));
+});
+
+test("qa_check 可玩契约完整则通过", async () => {
+  const good = `<!doctype html><html><head><title>诗</title>
+  <!-- aid-contract {"levels":[{"answers":["月"],"tiles":["月","霜"]}]} -->
+  <style>.b{min-height:48px;font-size:16px}@media(prefers-reduced-motion:reduce){*{animation:none}}</style>
+  </head><body>
+  <p>第一关</p>
+  <div id="stage">主交互</div>
+  <button id="nextBtn">下一关</button>
+  <div id="done">祝贺完成</div>
+  <button class="b" id="btn-reset">重置</button>
+  <script></script></body></html>`;
+  const r = await qaCheckTool.execute("t", { html: good });
+  const j = JSON.parse(r.content[0].text);
+  assert.equal(j.passed, true, JSON.stringify(j.issues));
+});
