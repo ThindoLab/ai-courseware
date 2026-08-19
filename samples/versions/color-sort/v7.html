@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta name="aid-version" content="v7">
+<meta name="aid-version-at" content="2026-08-17T07-23-02">
+<meta name="aid-iteration" content="R3">
+<meta name="aid-version-note" content="迭代R3 系统重跑 2026-08-17T07-23-02">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>按颜色分类 · 小鱼回家</title>
+<!-- aid-contract {"type":"drag-slot","levels":[{"answers":["red","red","blue","blue"],"tiles":["red","blue"]},{"answers":["red","red","blue","blue","yellow","yellow"],"tiles":["red","blue","yellow"]},{"answers":["red","red","blue","blue","yellow","yellow","green","green"],"tiles":["red","blue","yellow","green"]}]} -->
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden}
+body{font-family:system-ui,-apple-system,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;background:#F2FAFF;color:#1e3a5f;user-select:none;-webkit-user-select:none}
+#app{position:relative;height:100vh;height:100dvh;display:flex;flex-direction:column;max-width:900px;margin:0 auto}
+header{display:flex;align-items:center;justify-content:space-between;padding:10px 16px 4px;gap:8px;flex:0 0 auto}
+.h-title{font-size:clamp(18px,2.6vmin,26px);font-weight:900;display:flex;align-items:center;gap:6px}
+.h-right{display:flex;align-items:center;gap:8px}
+.h-progress{font-size:clamp(15px,2.2vmin,18px);font-weight:800;background:#fff;border:2px solid #BEE3F5;border-radius:999px;padding:6px 14px;color:#2f6fbf;white-space:nowrap}
+.reset-btn{min-width:48px;height:48px;border-radius:50%;border:2px solid #BEE3F5;background:#fff;font-size:20px;font-weight:900;color:#2f6fbf;cursor:pointer}
+.reset-btn:active{transform:scale(.92)}
+main.stage{position:relative;flex:1;min-height:0;margin:6px 10px 4px;overflow:visible}
+.stage-bg{position:absolute;inset:0;border-radius:26px;background:linear-gradient(180deg,#EAF8FF,#D2EEFF);box-shadow:inset 0 0 0 3px #BEE3F5;pointer-events:none;z-index:0}
+.bg-svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1}
+.hint{position:absolute;top:10px;left:0;right:0;text-align:center;font-size:clamp(15px,2.2vmin,18px);font-weight:800;color:#2f6fbf;z-index:2;pointer-events:none}
+footer{flex:0 0 auto;padding:6px 10px 10px}
+.ponds{display:flex;justify-content:center;gap:clamp(6px,2vmin,14px);padding:0 4px}
+.pond{flex:1;min-width:0;max-width:190px;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;position:relative}
+.pond-tag{font-size:clamp(15px,2vmin,18px);font-weight:900;color:#1e3a5f;display:flex;align-items:center;gap:6px;white-space:nowrap}
+.swatch{width:18px;height:18px;border-radius:6px;background:var(--c);flex:0 0 auto}
+.pond-water{width:100%;min-height:64px;border-radius:16px 16px 22px 22px;background:var(--soft);border:4px solid var(--c);box-shadow:0 3px 0 rgba(30,58,95,.08);position:relative}
+.pond.ok{animation:pondOk .7s ease}
+@keyframes pondOk{0%{box-shadow:0 0 0 0 rgba(47,191,113,0)}35%{box-shadow:0 0 0 9px rgba(47,191,113,.55)}100%{box-shadow:0 0 0 0 rgba(47,191,113,0)}}
+.pond.shake{animation:shake .4s ease}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}50%{transform:translateX(6px)}75%{transform:translateX(-4px)}}
+.ctrl{height:52px;display:flex;align-items:center;justify-content:center}
+.next-btn{font-size:clamp(18px,2.4vmin,22px);font-weight:900;color:#fff;background:#2f6fbf;border:none;border-radius:999px;padding:12px 30px;min-height:56px;cursor:pointer;box-shadow:0 4px 0 #1c4a86;animation:popIn .35s ease}
+.next-btn:active{transform:translateY(3px);box-shadow:0 1px 0 #1c4a86}
+@keyframes popIn{from{transform:scale(.6);opacity:0}to{transform:scale(1);opacity:1}}
+.fish{position:absolute;width:clamp(64px,9vmin,96px);aspect-ratio:120/80;cursor:grab;touch-action:none;filter:drop-shadow(0 3px 3px rgba(30,58,95,.2));transition:left .25s ease,top .25s ease;z-index:5}
+.fish svg{width:100%;height:100%;display:block}
+.fish.selected{z-index:25;transform:scale(1.12)}
+.fish.selected::after{content:"";position:absolute;inset:-9px;border:4px dashed #F59E0B;border-radius:50%;pointer-events:none}
+.fish.dragging{transition:none;z-index:30;transform:scale(1.18);filter:drop-shadow(0 7px 8px rgba(30,58,95,.3))}
+.fish.settled{pointer-events:none;z-index:15;transform:scale(.52);opacity:.92;filter:drop-shadow(0 2px 3px rgba(30,58,95,.25));transition:left .6s cubic-bezier(.25,1,.5,1),top .6s cubic-bezier(.25,1,.5,1),transform .5s ease,opacity .5s ease}
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:22vh;z-index:60;max-width:88vw;background:#fff;border-radius:18px;padding:12px 20px;font-size:clamp(16px,2.2vmin,20px);font-weight:800;box-shadow:0 8px 24px rgba(0,0,0,.18);opacity:0;transition:opacity .2s;text-align:center;pointer-events:none}
+#toast.show{opacity:1}
+#toast.ok{border:3px solid #2fbf71}
+#toast.err{border:3px solid #F59E0B}
+.overlay{position:absolute;inset:0;z-index:100;background:linear-gradient(160deg,#F2FAFF,#D9EEFF);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:20px;text-align:center}
+.overlay.hidden{display:none}
+.demo-emoji{font-size:clamp(52px,12vmin,84px);animation:bob 1.6s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.demo-title{font-size:clamp(26px,5.5vmin,38px);font-weight:900;color:#1e3a5f}
+.demo-sub{font-size:clamp(17px,3.4vmin,22px);font-weight:700;color:#2f6fbf}
+.demo-stage{display:flex;align-items:center;gap:10px;background:#fff;border:3px dashed #BEE3F5;border-radius:22px;padding:14px 18px;margin:4px 0}
+.demo-fish{width:64px;animation:demoFly 1.8s ease-in-out infinite}
+@keyframes demoFly{0%{transform:translate(0,0);opacity:1}72%{transform:translate(88px,0);opacity:1}100%{transform:translate(88px,0);opacity:0}}
+.demo-arrow{font-size:30px;color:#1e3a5f}
+.demo-pond{display:flex;flex-direction:column;align-items:center;gap:4px}
+.demo-water{width:96px;height:52px;border-radius:14px 14px 18px 18px;background:var(--soft);border:4px solid var(--c)}
+.big-btn{font-size:clamp(20px,2.6vmin,24px);font-weight:900;color:#fff;background:#2f6fbf;border:none;border-radius:999px;padding:16px 44px;min-height:60px;cursor:pointer;box-shadow:0 5px 0 #1c4a86}
+.big-btn:active{transform:translateY(3px);box-shadow:0 2px 0 #1c4a86}
+.skip{position:absolute;top:14px;right:14px;font-size:clamp(15px,2vmin,17px);font-weight:800;color:#2f6fbf;background:#fff;border:2px solid #BEE3F5;border-radius:999px;padding:10px 18px;min-height:46px;cursor:pointer}
+.green-btn{background:#2fbf71;box-shadow:0 5px 0 #1f9d52}
+.congrats-title{font-size:clamp(28px,6.5vmin,42px);font-weight:900;color:#1e3a5f}
+.congrats-emoji{font-size:clamp(60px,14vmin,100px)}
+.variant-card{background:#fff;border:3px solid #BEE3F5;border-radius:20px;padding:16px 22px;max-width:540px;font-size:clamp(17px,2.4vmin,20px);font-weight:700;color:#1e3a5f;line-height:1.6}
+.variant-card b{color:#2f6fbf}
+@media (prefers-reduced-motion: reduce){
+  *{animation:none !important;transition:none !important}
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="h-title">🐠 按颜色分类 · 小鱼回家</div>
+    <div class="h-right">
+      <div id="progress" class="h-progress">第 1 关 · 已回家 0/4</div>
+      <button id="resetBtn" class="reset-btn" title="重新开始本关">↻</button>
+    </div>
+  </header>
+  <main class="stage" id="stage">
+    <div class="stage-bg"></div>
+    <svg class="bg-svg" viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      <circle cx="340" cy="44" r="22" fill="#FFF7D6" opacity=".9"/>
+      <path d="M30 268 Q70 248 110 262 T180 258 T250 268" stroke="#7FC8F0" stroke-width="6" fill="none" stroke-linecap="round" opacity=".5"/>
+      <path d="M150 262 Q170 240 190 258" stroke="#7FC8F0" stroke-width="6" fill="none" stroke-linecap="round" opacity=".4"/>
+      <circle cx="66" cy="150" r="5" fill="#9FD8F7" opacity=".55"/>
+      <circle cx="86" cy="170" r="3.4" fill="#9FD8F7" opacity=".5"/>
+      <circle cx="318" cy="140" r="4" fill="#9FD8F7" opacity=".5"/>
+      <circle cx="300" cy="158" r="3" fill="#9FD8F7" opacity=".45"/>
+    </svg>
+    <div id="hint" class="hint">点一条小鱼，再点同颜色的池塘</div>
+  </main>
+  <footer>
+    <div id="ponds" class="ponds"></div>
+    <div class="ctrl"><button id="nextBtn" class="next-btn" hidden>下一关 ➜</button></div>
+  </footer>
+</div>
+
+<div id="demo" class="overlay">
+  <button id="skipDemo" class="skip">跳过演示 ➜</button>
+  <div class="demo-emoji">🐠</div>
+  <div class="demo-title">小鱼们迷路了！</div>
+  <div class="demo-sub">帮它们游回同颜色的池塘</div>
+  <div class="demo-stage">
+    <div class="demo-fish" id="demoFish"></div>
+    <div class="demo-arrow">➜</div>
+    <div class="demo-pond" style="--c:#EF4444;--soft:#FEE2E2">
+      <div class="demo-water"></div>
+      <div class="pond-tag"><span class="swatch"></span>红池塘</div>
+    </div>
+  </div>
+  <button id="startBtn" class="big-btn">开始玩 🎮</button>
+</div>
+
+<div id="congrats" class="overlay hidden">
+  <div class="congrats-emoji">🎉🐟🎊</div>
+  <div class="congrats-title">祝贺你，通关完成！</div>
+  <div class="demo-sub">所有小鱼都游回了自己的池塘！</div>
+  <div class="variant-card">想一想：家里的<b>彩色积木、蜡笔、袜子</b>，也能按颜色收拾吗？试试看！</div>
+  <button id="againBtn" class="big-btn green-btn">再玩一次 🔁</button>
+</div>
+
+<div id="toast"></div>
+
+<script>
+(function(){
+'use strict';
+var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+var LEVELS = [
+  { colors:['red','blue'], per:2 },
+  { colors:['red','blue','yellow'], per:2 },
+  { colors:['red','blue','yellow','green'], per:2 }
+];
+var COLORS = {
+  red:{name:'红',hex:'#EF4444',soft:'#FEE2E2'},
+  blue:{name:'蓝',hex:'#3B82F6',soft:'#DBEAFE'},
+  yellow:{name:'黄',hex:'#F59E0B',soft:'#FEF3C7'},
+  green:{name:'绿',hex:'#22C55E',soft:'#DCFCE7'}
+};
+var stage=document.getElementById('stage'), pondsEl=document.getElementById('ponds'),
+    progress=document.getElementById('progress'), nextBtn=document.getElementById('nextBtn'),
+    resetBtn=document.getElementById('resetBtn'), toast=document.getElementById('toast'),
+    demo=document.getElementById('demo'), congrats=document.getElementById('congrats'),
+    demoFish=document.getElementById('demoFish');
+var state=null, pondEls=[];
+
+function fishSVG(hex){
+  return '<svg viewBox="0 0 120 80" aria-hidden="true">'+
+    '<ellipse cx="50" cy="40" rx="34" ry="21" fill="'+hex+'" stroke="#1e3a5f" stroke-width="3"/>'+
+    '<path d="M82 40 L110 26 L104 40 L110 54 Z" fill="'+hex+'" stroke="#1e3a5f" stroke-width="3" stroke-linejoin="round"/>'+
+    '<path d="M40 22 L54 8 L64 21 Z" fill="'+hex+'" stroke="#1e3a5f" stroke-width="3" stroke-linejoin="round"/>'+
+    '<path d="M30 52 Q50 65 72 52 Q50 59 30 52 Z" fill="#fff" opacity=".55"/>'+
+    '<circle cx="33" cy="36" r="5.5" fill="#1e3a5f"/>'+
+    '<circle cx="31.5" cy="34" r="1.8" fill="#fff"/>'+
+    '<path d="M42 28 Q38 40 42 52" stroke="#1e3a5f" stroke-width="2.5" fill="none" opacity=".7"/>'+
+    '</svg>';
+}
+demoFish.innerHTML = fishSVG('#EF4444');
+
+function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
+function clamp(v,min,max){return Math.max(min,Math.min(max,v));}
+
+function showToast(msg,kind,ms){toast.textContent=msg;toast.className=kind?('show '+kind):'show';clearTimeout(showToast._t);showToast._t=setTimeout(function(){toast.className='';},ms||1800);}
+
+function beep(freq,dur,type,vol){
+  try{
+    var ctx=beep.ctx || (beep.ctx=new (window.AudioContext||window.webkitAudioContext)());
+    if(ctx.state==='suspended')ctx.resume();
+    var o=ctx.createOscillator(),g=ctx.createGain();
+    o.type=type||'sine';o.frequency.value=freq;
+    g.gain.setValueAtTime(vol||0.12,ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+(dur||0.12));
+    o.connect(g);g.connect(ctx.destination);o.start();o.stop(ctx.currentTime+(dur||0.12));
+  }catch(e){}
+}
+
+function renderPonds(colors){
+  pondsEl.innerHTML='';
+  pondEls=[];
+  colors.forEach(function(c){
+    var info=COLORS[c];
+    var p=document.createElement('div');
+    p.className='pond';
+    p.dataset.color=c;
+    p.dataset.count=0;
+    p.style.setProperty('--c',info.hex);
+    p.style.setProperty('--soft',info.soft);
+    p.innerHTML='<div class="pond-water"></div><div class="pond-tag"><span class="swatch"></span>'+info.name+'池塘</div>';
+    p.addEventListener('click',function(){
+      if(state.finished)return;
+      if(state.suppressClick){state.suppressClick=false;return;}
+      if(!state.selected){showToast('先点一条小鱼，再点池塘','',1600);return;}
+      judge(state.selected,p);
+    });
+    pondsEl.appendChild(p);
+    pondEls.push(p);
+  });
+}
+
+function layoutFish(){
+  var items=stage.querySelectorAll('.fish:not(.settled)');
+  var n=items.length;
+  if(!n)return;
+  var sr=stage.getBoundingClientRect();
+  var cols=Math.min(4,Math.max(2,n));
+  var rows=Math.ceil(n/cols);
+  var cellW=sr.width/cols, cellH=sr.height/rows;
+  Array.prototype.forEach.call(items,function(el,i){
+    var col=i%cols, row=Math.floor(i/cols);
+    var s=el.offsetWidth, h=el.offsetHeight;
+    var jx=(Math.random()*14-7), jy=(Math.random()*14-7);
+    var left=clamp(6,sr.width-s-6,cellW*col+cellW/2-s/2+jx);
+    var top=clamp(6,sr.height-h-6,cellH*row+cellH/2-h/2+jy);
+    el.dataset.ox=left; el.dataset.oy=top;
+    el.style.left=left+'px'; el.style.top=top+'px';
+  });
+}
+
+function renderLevel(lv){
+  state={level:lv,placed:0,selected:null,drag:null,finished:false,suppressClick:false};
+  var cfg=LEVELS[lv];
+  state.per=cfg.per;
+  state.total=cfg.colors.length*cfg.per;
+  progress.textContent='第 '+(lv+1)+' 关 · 已回家 0/'+state.total;
+  var fishes=stage.querySelectorAll('.fish');
+  Array.prototype.forEach.call(fishes,function(f){if(f.parentNode)f.parentNode.removeChild(f);});
+  var list=[];
+  cfg.colors.forEach(function(c){
+    for(var k=0;k<cfg.per;k++)list.push(c);
+  });
+  shuffle(list);
+  list.forEach(function(c,i){
+    var d=document.createElement('div');
+    d.className='fish';
+    d.dataset.color=c;
+    d.dataset.id='f_'+c+'_'+(i+1);
+    d.innerHTML=fishSVG(COLORS[c].hex);
+    stage.appendChild(d);
+    bindFish(d);
+  });
+  renderPonds(cfg.colors);
+  layoutFish();
+  nextBtn.hidden=true;
+  showToast('把小鱼送回同颜色的池塘','',2000);
+}
+
+function bindFish(el){
+  el.addEventListener('pointerdown',function(e){
+    if(state.finished||el.classList.contains('settled'))return;
+    e.preventDefault();
+    var r=el.getBoundingClientRect();
+    state.drag={el:el,offX:e.clientX-(r.left+r.width/2),offY:e.clientY-(r.top+r.height/2),moved:false,startX:e.clientX,startY:e.clientY};
+    el.classList.add('dragging');
+    try{el.setPointerCapture(e.pointerId);}catch(err){}
+  });
+  el.addEventListener('pointermove',function(e){
+    if(!state.drag||state.drag.el!==el)return;
+    e.preventDefault();
+    var dx=e.clientX-state.drag.startX, dy=e.clientY-state.drag.startY;
+    if(!state.drag.moved && Math.abs(dx)+Math.abs(dy)>10){ state.drag.moved=true; el.classList.remove('selected'); if(state.selected===el)state.selected=null; }
+    if(!state.drag.moved)return;
+    var sr=stage.getBoundingClientRect();
+    el.style.left=(e.clientX-state.drag.offX-sr.left)+'px';
+    el.style.top=(e.clientY-state.drag.offY-sr.top)+'px';
+  });
+  el.addEventListener('pointerup',function(e){
+    if(!state.drag||state.drag.el!==el)return;
+    e.preventDefault();
+    var drag=state.drag;
+    state.drag=null;
+    el.classList.remove('dragging');
+    if(!drag.moved){ selectFish(el); return; }
+    var r=el.getBoundingClientRect();
+    var cx=r.left+r.width/2, cy=r.top+r.height/2;
+    var hit=null;
+    pondEls.forEach(function(p){
+      var pr=p.getBoundingClientRect();
+      if(cx>=pr.left&&cx<=pr.right&&cy>=pr.top&&cy<=pr.bottom)hit=p;
+    });
+    if(hit){ state.suppressClick=true; setTimeout(function(){state.suppressClick=false;},400); judge(el,hit); }
+    else backHome(el);
+  });
+  el.addEventListener('pointercancel',function(){
+    if(state.drag&&state.drag.el===el){state.drag=null;el.classList.remove('dragging');backHome(el);}
+  });
+}
+
+function selectFish(el){
+  if(state.selected&&state.selected!==el)state.selected.classList.remove('selected');
+  state.selected = (state.selected===el)?null:el;
+  if(state.selected)state.selected.classList.add('selected');
+}
+
+function backHome(el){
+  el.classList.remove('selected');
+  if(state.selected===el)state.selected=null;
+  el.style.left=el.dataset.ox+'px';
+  el.style.top=el.dataset.oy+'px';
+}
+
+function settleFish(el,pond){
+  el.classList.remove('selected');
+  if(state.selected===el)state.selected=null;
+  var pr=pond.getBoundingClientRect(), sr=stage.getBoundingClientRect();
+  var count=+pond.dataset.count;
+  var off=(count-(state.per-1)/2)*20;
+  var tx=pr.left+pr.width/2+off-sr.left;
+  var ty=pr.top+pr.height/2+10-sr.top;
+  el.style.left=(tx-el.offsetWidth/2)+'px';
+  el.style.top=(ty-el.offsetHeight/2)+'px';
+  pond.dataset.count=count+1;
+  el.classList.add('settled');
+}
+
+function judge(el,pond){
+  var fc=el.dataset.color, pc=pond.dataset.color;
+  if(fc===pc){
+    state.placed++;
+    beep(660,0.1);setTimeout(function(){beep(880,0.14);},90);
+    showToast('对啦！'+COLORS[fc].name+'鱼回'+COLORS[pc].name+'池塘 ✓','ok');
+    progress.textContent='第 '+(state.level+1)+' 关 · 已回家 '+state.placed+'/'+state.total;
+    pond.classList.remove('ok');void pond.offsetWidth;pond.classList.add('ok');
+    settleFish(el,pond);
+    if(state.placed===state.total)onLevelDone();
+  }else{
+    beep(200,0.18,'triangle',0.1);
+    showToast('这是'+COLORS[fc].name+'鱼，想回'+COLORS[fc].name+'池塘，不是'+COLORS[pc].name+'池塘哦','err',2600);
+    pond.classList.remove('shake');void pond.offsetWidth;pond.classList.add('shake');
+    backHome(el);
+  }
+}
+
+function onLevelDone(){
+  state.finished=true;
+  if(state.level<LEVELS.length-1){
+    nextBtn.hidden=false;
+    showToast('第 '+(state.level+1)+' 关完成！','ok');
+  }else{
+    setTimeout(function(){
+      congrats.classList.remove('hidden');
+      beep(660,0.12);setTimeout(function(){beep(880,0.15);},120);setTimeout(function(){beep(1046,0.2);},260);
+    },reduceMotion?0:600);
+  }
+}
+
+nextBtn.addEventListener('click',function(){renderLevel(state.level+1);});
+resetBtn.addEventListener('click',function(){if(!congrats.classList.contains('hidden'))congrats.classList.add('hidden');renderLevel(state.level);});
+document.getElementById('startBtn').addEventListener('click',function(){demo.classList.add('hidden');renderLevel(0);});
+document.getElementById('skipDemo').addEventListener('click',function(){demo.classList.add('hidden');renderLevel(0);});
+document.getElementById('againBtn').addEventListener('click',function(){congrats.classList.add('hidden');renderLevel(0);});
+window.addEventListener('resize',function(){layoutFish();});
+})();
+</script>
+</body>
+</html>

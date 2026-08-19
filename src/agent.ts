@@ -11,6 +11,9 @@ import { createRequire } from "node:module";
 import { isTemplateType, type TemplateType } from "./inject.ts";
 import { loadSkills, typeByName, type SkillDef } from "./skills-loader.ts";
 import { inline } from "./inline.ts";
+import { collectScriptSyntaxIssues } from "./tools.ts";
+import { injectCastPlaceholders } from "../pi/tools/icon-cast.ts";
+import { injectCastRoster, injectCastPack } from "../pi/tools/cast-roster.ts";
 import { createInjectedTools, INJECTED_TOOL_NAMES } from "../pi/tools/index.ts";
 
 const ROOT = path.resolve(import.meta.dirname, "..");
@@ -182,9 +185,14 @@ export function pickAgentModel(available: any[]): any | null {
   if (!available?.length) return null;
   const envModel = process.env.AGENT_MODEL || process.env.GMNCODE_MODEL;
   if (envModel) {
-    const hit = available.find(
+    const hits = available.filter(
       (m: any) => m.id === envModel || `${m.provider}/${m.id}` === envModel
     );
+    const hit =
+      hits.find((m: any) => `${m.provider}/${m.id}` === envModel) ||
+      hits.find((m: any) => m.provider === "bai") ||
+      hits.find((m: any) => m.provider === "ark") ||
+      hits[0];
     if (hit) return hit;
     console.error(`[create] 未找到模型 ${envModel}，回退自动优选`);
   }
@@ -193,7 +201,8 @@ export function pickAgentModel(available: any[]): any | null {
   const blocked = /(fable|codex-auto-review|spark)/i;
   const usable = available.filter((m: any) => !blocked.test(m.id || ""));
 
-  // id 关键词优先（越靠前越好）
+  // id 关键词优先（越靠前越好）。
+  // 同名 deepseek-v4-flash：bai（已测通）> ark 套餐 > 官方 api.deepseek.com（常 402）。
   const idPrefer = [
     /deepseek-v4-flash/i,
     /deepseek-v4-pro/i,
@@ -208,12 +217,16 @@ export function pickAgentModel(available: any[]): any | null {
     /gpt-5/i,
   ];
   for (const re of idPrefer) {
+    const baiHit = usable.find((x: any) => x.provider === "bai" && re.test(x.id || ""));
+    if (baiHit) return baiHit;
+    const arkHit = usable.find((x: any) => x.provider === "ark" && re.test(x.id || ""));
+    if (arkHit) return arkHit;
     const m = usable.find((x: any) => re.test(x.id || ""));
     if (m) return m;
   }
 
-  // provider 顺序（deepseek 已验证可 write）
-  const providers = ["deepseek", "anthropic", "xai", "liangrekui", "gmncode", "ark", "minimax-cn"];
+  // provider 顺序
+  const providers = ["bai", "ark", "deepseek", "anthropic", "xai", "liangrekui", "gmncode", "minimax-cn"];
   for (const p of providers) {
     const m = usable.find((x: any) => x.provider === p);
     if (m) return m;
@@ -268,6 +281,14 @@ const TOOL_LABEL: Record<string, string> = {
   qa_check: "质检",
   knowledge_search: "本地知识",
   ima_search: "ima 检索",
+  icon_search: "搜图标",
+  icon_svg: "拉图标 SVG",
+  dicebear_svg: "拼人 SVG",
+  cast_roster: "人物库",
+  cast_search: "搜图",
+  cast_asset: "取材",
+  cast_icon: "档1图标",
+  cast_svg: "档3代码SVG",
   web_search: "联网搜索",
 };
 
@@ -318,6 +339,30 @@ function toolStartLine(name: string, args: Record<string, unknown> | undefined):
     const q = clip(String(args.query || ""), 28);
     return q ? `联网搜索：${q}` : "联网搜索…";
   }
+  if (name === "icon_search") {
+    const q = clip(String(args.query || ""), 28);
+    return q ? `搜图标：${q}` : "搜图标…";
+  }
+  if (name === "icon_svg") {
+    const id = clip(String(args.id || ""), 28);
+    return id ? `拉图标：${id}` : "拉图标 SVG…";
+  }
+  if (name === "dicebear_svg") {
+    const seed = clip(String(args.seed || ""), 20);
+    return seed ? `拼人：${seed}` : "拼人 SVG…";
+  }
+  if (name === "cast_roster") {
+    const id = clip(String(args.id || ""), 20);
+    return id ? `人物库：${id}` : "人物库目录…";
+  }
+  if (name === "cast_search") {
+    const q = clip(String(args.query || ""), 20);
+    return q ? `搜素材：${q}` : "搜素材…";
+  }
+  if (name === "cast_asset") {
+    const id = clip(String(args.id || ""), 24);
+    return id ? `取材：${id}` : "取材 SVG…";
+  }
   if (name === "match_sample") return "匹配精品…";
   if (name === "use_sample") return args.slug ? `交付精品：${args.slug}` : "交付精品…";
   if (name === "write") {
@@ -363,6 +408,34 @@ function toolEndLine(
     const top = Array.isArray(j?.results) && (j.results[0] as { title?: string } | undefined)?.title;
     return `联网搜索${q ? `「${q}」` : ""}：${n != null ? `${n} 条` : "完成"}${top ? `，如「${clip(String(top), 18)}」` : ""}`;
   }
+  if (name === "icon_search") {
+    const q = clip(String(j?.searched || j?.query || args?.query || ""), 20);
+    const n = j?.returned ?? (Array.isArray(j?.hits) ? (j.hits as unknown[]).length : undefined);
+    const top = Array.isArray(j?.hits) && (j.hits[0] as { id?: string } | undefined)?.id;
+    return `搜图标${q ? `「${q}」` : ""}：${n != null ? `${n} 枚` : "完成"}${top ? `，如 ${clip(String(top), 18)}` : ""}`;
+  }
+  if (name === "icon_svg") {
+    const id = clip(String(j?.id || args?.id || ""), 24);
+    const n = j?.bytes;
+    return `拉图标${id ? ` ${id}` : ""}：${n != null ? `${n}B` : "完成"}`;
+  }
+  if (name === "dicebear_svg") {
+    const seed = clip(String(j?.seed || args?.seed || ""), 16);
+    const n = j?.bytes;
+    return `拼人${seed ? ` ${seed}` : ""}：${n != null ? `${n}B` : "完成"}`;
+  }
+  if (name === "cast_roster") {
+    const id = clip(String(j?.id || args?.id || ""), 16);
+    if (!id && Array.isArray(j?.members)) return `人物库：${(j.members as unknown[]).length} 人`;
+    return `人物库${id ? ` ${id}` : ""}：${j?.bytes != null ? `${j.bytes}B` : "完成"}`;
+  }
+  if (name === "cast_search") {
+    const n = Array.isArray(j?.hits) ? j.hits.length : 0;
+    return `搜素材「${clip(String(j?.query || args?.query || ""), 16)}」：${n} 条`;
+  }
+  if (name === "cast_asset") {
+    return `取材 ${clip(String(j?.id || args?.id || ""), 24)}`;
+  }
   if (name === "qa_check" && j) {
     const n = Array.isArray(j.issues) ? j.issues.length : 0;
     return j.passed ? "质检：通过" : `质检：未过${n ? `（${n} 条）` : ""}`;
@@ -385,9 +458,12 @@ export function resolvePiWebAccessExtension(): string | undefined {
 function loadDefaultPiPrompt(): string {
   const skill = readIfExists(path.join(ROOT, "pi", "教练.md"));
   const product = readIfExists(path.join(ROOT, "pi", "memory", "product.md"));
+  const keep = readIfExists(path.join(ROOT, "pi", "memory", "keep.md"));
   const lessons = readIfExists(path.join(ROOT, "pi", "memory", "lessons.md"));
   const core = readIfExists(path.join(ROOT, "pi", "角色", "_CORE.md"));
-  return [skill, product, lessons, core ? `---\n${core.slice(0, 1800)}` : ""].filter(Boolean).join("\n\n");
+  return [skill, product, keep ? keep.slice(0, 2200) : "", lessons, core ? `---\n${core.slice(0, 1800)}` : ""]
+    .filter(Boolean)
+    .join("\n\n");
 }
 
 export async function createTeachingAid(
@@ -453,8 +529,8 @@ export async function createTeachingAid(
 ${outPath}
 
 ${forceLlm ? "本次禁止 use_sample，必须按用户主题新写。" : "按 pi/教练.md 排程：先派匹配员。"}
-是否搜 ima 由教练按 pi/ima/知识库目录.md 判断；对得上再 ima_search。本地与 ima 都不够时教练可 web_search（建议 ≤2）。写手禁止 ima_search / web_search。
-写手认定 pi/角色/writer.md，写前必读 pi/角色/图解.md（SVG/CSS3D/过程动画，禁止 CDN）。质检 pi/角色/qa.md。
+是否搜 ima 由教练按 pi/ima/知识库目录.md 判断；对得上再 ima_search。本地与 ima 都不够时教练可 web_search（建议 ≤2）。写手禁止 ima_search / web_search。有名字的人用 cast_roster（OpenMAIC 闭集，write 放 <g data-cast-roster=id></g>），手册 pi/assets/cast/openmaic/手册.md。动物/物用 cast_search + cast_asset（data-cast-pack，优先 noto:）。小颗粒也可 cast_icon，过程 cast_svg。禁止手画五官。本场不注入、不调用 cast_image / GPT Image 2。禁止外链。禁止用皮卡丘等版权 IP。
+写手认定 pi/角色/writer.md，写前必读 pi/角色/图解.md、pi/assets/cast/openmaic/手册.md、pi/assets/cast/README.md 与 pi/memory/keep.md。对象字面量里回调必须写成 (d)=>{ ... }，禁止 (d)=>expr;。图解按问题类型落地（演示=玩、答案自洽、填入不盖、揭晓章不盖答案、每关能前进），不要针对某一篇旧样例写死题面。质检 pi/角色/qa.md；write 之后必须 qa_check；script-syntax / reveal-cover / cast-quality 不过必须再 write。
 推断仅供参考（不要据此交差题精品）：年龄 ${aud.ageLabel}，场景 ${aud.scenes.join("+")}，交互倾向 ${type}。
 触控建议 ≥${aud.touchMin}px，正文 ≥${aud.bodyFont}px。`;
 
@@ -530,12 +606,18 @@ ${forceLlm ? "本次禁止 use_sample，必须按用户主题新写。" : "按 p
           if (m?.role === "assistant") {
             const types = Array.isArray(m.content)
               ? m.content
-                  .map((c: any) => `${c.type}:${(c.text || c.thinking || "").length || 0}`)
+                  .map((c: any) => `${c.type}:${(c.text || c.thinking || c.error || "").length || 0}`)
                   .join(",")
               : "";
             console.error(`[create] assistant stop=${m.stopReason || "-"} ${types}`);
+            if (m.stopReason === "error") {
+              console.error("[create] assistant error", m.errorMessage || JSON.stringify(m).slice(0, 800));
+            }
           }
         }
+      }
+      if (event.type === "error" || event.type === "agent_error") {
+        console.error("[create] event", event.type, String(event.message || event.error || JSON.stringify(event)).slice(0, 500));
       }
     });
 
@@ -544,7 +626,8 @@ ${forceLlm ? "本次禁止 use_sample，必须按用户主题新写。" : "按 p
         ? userPrompt
         : `用户原句仍是：${topic}
 输出路径仍是 ${outPath}。
-禁止交付无关精品（There is、鸡兔、凑十等）。必须按「${topic}」立刻 write 完整单文件 HTML。不要再 match_sample。不要空谈。`;
+上一轮 HTML 脚本无法解析（常见：对象里写成 draw:(d)=>expr; ）。必须整份再 write：所有回调用 (d)=>{ ... }，写完 qa_check。
+禁止交付无关精品。不要再 match_sample。不要空谈。`;
 
     try {
       console.error(`[create] attempt ${attempt + 1}/2 timeout=${attemptTimeout}ms`);
@@ -563,15 +646,28 @@ ${forceLlm ? "本次禁止 use_sample，必须按用户主题新写。" : "按 p
     }
     unsub();
 
-    if (fs.existsSync(outPath) && fs.statSync(outPath).size > 0) break;
-
-    const extracted = extractHtmlFromSession(session);
-    if (extracted) {
-      console.error(`[create] 从回复提取 HTML ${extracted.length} bytes`);
-      fs.writeFileSync(outPath, extracted, "utf8");
-      toolCalls.push("html_extract_from_reply");
-      emit({ type: "info", message: `从回复提取 HTML ${extracted.length} 字节` });
-      break;
+    if (fs.existsSync(outPath) && fs.statSync(outPath).size > 0) {
+      const syn = collectScriptSyntaxIssues(fs.readFileSync(outPath, "utf8"));
+      if (syn.length && attempt === 0) {
+        console.error("[create] script-syntax, retry", syn[0].detail);
+        emit({ type: "info", message: `脚本无法解析，将重写：${syn[0].detail}` });
+      } else {
+        break;
+      }
+    } else {
+      const extracted = extractHtmlFromSession(session);
+      if (extracted) {
+        console.error(`[create] 从回复提取 HTML ${extracted.length} bytes`);
+        fs.writeFileSync(outPath, extracted, "utf8");
+        toolCalls.push("html_extract_from_reply");
+        emit({ type: "info", message: `从回复提取 HTML ${extracted.length} 字节` });
+        const syn = collectScriptSyntaxIssues(extracted);
+        if (syn.length && attempt === 0) {
+          console.error("[create] extract script-syntax, retry", syn[0].detail);
+        } else {
+          break;
+        }
+      }
     }
   }
 
@@ -586,13 +682,35 @@ ${forceLlm ? "本次禁止 use_sample，必须按用户主题新写。" : "按 p
   const finalPath = outPath;
 
   if (fs.existsSync(finalPath) && fs.statSync(finalPath).size > 0) {
-    const html = fs.readFileSync(finalPath, "utf8");
+    let html = fs.readFileSync(finalPath, "utf8");
+    const castDir = path.join(ROOT, "output", "cast");
+    const rosterDir = path.join(ROOT, "pi", "assets", "cast", "openmaic");
+    let injected = injectCastPlaceholders(html, castDir);
+    injected = injectCastRoster(injected, rosterDir);
+    injected = injectCastPack(injected, path.join(ROOT, "pi", "assets", "cast"));
+    if (injected !== html) {
+      html = injected;
+      fs.writeFileSync(finalPath, html, "utf8");
+      console.error("[create] 已把人物库 / 素材库填进 data-cast-roster / data-cast-pack");
+    }
     const inl = inline(html);
     const quality = scoreAudienceQuality(inl.html, aud);
     console.error(
       `[create] audience quality score=${quality.score} notes=${quality.notes.join("; ") || "ok"}`
     );
     const fromSample = toolCalls.includes("use_sample") && !!deliveredSlug;
+    const syn = collectScriptSyntaxIssues(html);
+    if (syn.length && !fromSample) {
+      console.error("[create] script-syntax final fail", syn[0].detail);
+      return {
+        ok: false,
+        type,
+        model: modelForCreate.id,
+        out: finalPath,
+        error: `HTML 已写出但脚本无法解析：${syn[0].detail}`,
+        toolCalls,
+      };
+    }
     const report = {
       ok: true,
       type,

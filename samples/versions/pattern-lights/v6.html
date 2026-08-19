@@ -1,0 +1,653 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta name="aid-version" content="v6">
+<meta name="aid-version-at" content="2026-08-17T07-23-02">
+<meta name="aid-iteration" content="R3">
+<meta name="aid-version-note" content="迭代R3 系统重跑 2026-08-17T07-23-02">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>小熊的彩灯串 · 找规律</title>
+<!-- 题型：学前规律·周期预测与补空 / 核心认知动作：找重复小段·补问号灯 / 年龄：3-6 岁 / 场景：中幼儿+家庭 -->
+<!-- aid-contract {"levels":[{"answers":["red"],"tiles":["red","blue","green"]},{"answers":["red"],"tiles":["red","blue","green"]},{"answers":["green"],"tiles":["yellow","green","red"]},{"answers":["blue"],"tiles":["red","yellow","blue"]}]} -->
+<style>
+:root{
+  --accent:#2f6fbf; --ok:#2fbf71; --bad:#e85d5d;
+  --ink:#1e3a5f; --muted:#5b6b82; --line:#d9e2ef; --card:#fff;
+  --ease:cubic-bezier(.25,1,.5,1);
+  --touch:64px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100dvh;overflow:hidden}
+body{
+  font-family:-apple-system,"PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+  color:var(--ink); background:#e8eef7;
+  display:flex; flex-direction:column;
+  padding:clamp(6px,1.2vh,14px) clamp(8px,1.5vw,18px);
+}
+.card{
+  flex:1 1 auto; min-height:0; width:100%;
+  max-width:min(1120px,100%); margin:0 auto;
+  background:var(--card); border:1px solid var(--line); border-radius:20px;
+  box-shadow:0 12px 30px rgba(30,58,95,.12);
+  display:flex; flex-direction:column; overflow:hidden;
+  padding:clamp(10px,1.5vh,18px) clamp(12px,1.8vw,24px) clamp(10px,1.3vh,16px);
+}
+.top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;flex:none}
+.top h1{margin:0;font-size:clamp(26px,2.6vw,32px);font-weight:800;letter-spacing:.5px}
+.chip{font-size:20px;font-weight:700;color:var(--accent);background:#e8f0fb;padding:6px 14px;border-radius:999px;white-space:nowrap}
+.chip.idx{color:var(--muted);background:#eef1f6}
+.mode{margin-left:auto;font-size:20px;color:var(--muted);display:flex;align-items:center;gap:8px;cursor:pointer;white-space:nowrap}
+.mode input{width:22px;height:22px;accent-color:var(--accent)}
+.stage{
+  flex:1 1 auto; min-height:0; position:relative; margin-top:10px;
+  display:flex; flex-direction:column;
+  background:linear-gradient(180deg,#12253f,#1e3a5f 78%,#25476f);
+  border-radius:16px; overflow:hidden;
+}
+.hintRow{
+  flex:none; display:flex; align-items:center; justify-content:center; gap:10px;
+  font-size:clamp(24px,2.4vw,28px); font-weight:700; color:#dbe7f7;
+  padding:10px 8px 2px;
+}
+.hintRow .unitBox{display:inline-flex; gap:7px; align-items:center; padding:5px 14px; background:rgba(255,255,255,.12); border-radius:999px}
+.hintRow .dot{width:20px;height:20px;border-radius:50%;display:inline-block;border:2px solid rgba(255,255,255,.35)}
+.stage svg{flex:1 1 auto; width:100%; min-height:0; display:block}
+.materials{
+  flex:none; display:flex; justify-content:center; gap:clamp(10px,2vw,20px); margin-top:10px; flex-wrap:wrap;
+}
+.matBtn{
+  width:clamp(100px,12vw,132px); height:clamp(104px,13vh,132px);
+  border:3px solid var(--line); border-radius:18px; background:#fff; cursor:pointer;
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px;
+  font-family:inherit; font-size:clamp(24px,2.4vw,28px); font-weight:800; color:var(--ink);
+  transition:transform .18s var(--ease), border-color .18s, box-shadow .18s;
+  touch-action:none;
+}
+.matBtn svg{width:60px;height:60px;pointer-events:none}
+.matBtn:active{transform:scale(.96)}
+.matBtn.pick{border-color:var(--accent); background:#eef4fc; box-shadow:0 0 0 6px rgba(47,111,191,.16)}
+.matBtn.correct{border-color:var(--ok); background:#e6f9ef}
+.matBtn.wrong{border-color:var(--bad); background:#fdecec; animation:shake .4s ease}
+.matBtn:disabled{opacity:.55; cursor:default}
+.fb{
+  flex:none; min-height:clamp(56px,7.5vh,72px); margin-top:10px;
+  display:flex; align-items:center; justify-content:center; text-align:center;
+  padding:10px 14px; border-radius:14px; background:#f4f8fd; border:1px solid var(--line);
+  font-size:clamp(24px,2.4vw,28px); line-height:1.45; font-weight:700;
+}
+.fb.ok{background:#e6f9ef; border-color:#a7e8c6}
+.fb.bad{background:#fff4ec; border-color:#f6c9a8}
+.fb b{color:var(--accent)}
+.fb.ok b{color:#1c8f57}
+.bar{flex:none; display:flex; justify-content:center; gap:12px; margin-top:12px; flex-wrap:wrap}
+.btn{
+  min-height:var(--touch); padding:14px 26px; border-radius:14px; border:2px solid var(--line);
+  background:#fff; font-family:inherit; font-size:clamp(24px,2.4vw,28px); font-weight:800; color:var(--ink);
+  cursor:pointer; transition:transform .18s var(--ease), background .18s;
+}
+.btn:active{transform:scale(.97)}
+.btn.primary{background:var(--accent); border-color:var(--accent); color:#fff}
+.btn.ghost{color:var(--muted)}
+.btn:disabled{opacity:.5; cursor:default}
+
+/* 灯串动态 */
+.bulb{opacity:0}
+.bulb.in{opacity:1}
+.bulb.light{animation:lightUp .45s var(--ease)}
+@keyframes lightUp{0%{opacity:0;transform:translateY(-8px) scale(.82)}60%{opacity:1;transform:translateY(2px) scale(1.06)}100%{transform:translateY(0) scale(1)}}
+.askPulse{animation:askPulse 1.1s var(--ease) infinite}
+@keyframes askPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+.badSlot{animation:shake .45s ease}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-9px)}75%{transform:translateX(9px)}}
+.okGlow{filter:drop-shadow(0 0 12px rgba(47,191,113,.95))}
+.ripple{opacity:.7}
+.ripple.go{transition:r .6s var(--ease), opacity .6s var(--ease)}
+.band{opacity:0; transition:opacity .3s var(--ease)}
+.band.in{opacity:1}
+.band.hot{stroke-width:4!important}
+.bearJump{animation:bearJump .55s var(--ease)}
+@keyframes bearJump{0%,100%{transform:translateY(0)}40%{transform:translateY(-22px)}}
+.wire{stroke-dasharray:460;stroke-dashoffset:460;transition:stroke-dashoffset .8s var(--ease)}
+.wire.drawn{stroke-dashoffset:0}
+
+/* 覆盖层 */
+.overlay{
+  position:fixed; inset:0; z-index:50; background:rgba(14,29,52,.84);
+  display:flex; align-items:center; justify-content:center; padding:18px;
+}
+.overlay[hidden]{display:none}
+.ovCard{
+  width:min(580px,96vw); background:#fff; border-radius:20px; padding:18px 20px 16px;
+  box-shadow:0 20px 50px rgba(0,0,0,.4); text-align:center;
+}
+.ovTitle{font-size:clamp(28px,3vw,32px); font-weight:800; margin:0 0 6px}
+.ovSub{font-size:clamp(22px,2.4vw,26px); color:var(--muted); margin:0 0 12px; line-height:1.5}
+.ovCard svg{width:100%; max-height:220px}
+.ovBtn{
+  margin-top:14px; min-height:var(--touch); padding:13px 32px; border:none; border-radius:14px;
+  background:var(--accent); color:#fff; font-family:inherit;
+  font-size:clamp(24px,2.5vw,27px); font-weight:800; cursor:pointer;
+}
+.ovBtn:active{transform:scale(.97)}
+.winLamps{display:flex; justify-content:center; gap:16px; margin:10px 0 4px}
+.winLamp{width:74px;height:74px;border-radius:50%;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 0 12px rgba(255,255,255,.5))}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important}
+  .bulb{opacity:1}
+  .band{opacity:1}
+  .wire{stroke-dashoffset:0}
+}
+body.static *{animation:none!important;transition:none!important}
+body.static .bulb{opacity:1}
+body.static .band{opacity:1}
+body.static .wire{stroke-dashoffset:0}
+@media (max-height:760px){
+  .hintRow{display:none}
+  .fb{min-height:48px; font-size:20px; padding:6px 10px}
+  .top h1{font-size:22px}
+}
+</style>
+<style id="aid-fit">/* AID_FIT_V1 */
+html,body{height:100%!important;max-height:100dvh!important;overflow:hidden!important}
+body{min-height:100dvh!important;height:100dvh!important;display:flex!important;flex-direction:column!important;box-sizing:border-box!important}
+main.card,body>.card{flex:1 1 auto!important;min-height:0!important;width:100%!important;max-width:min(1240px,100%)!important;margin:0 auto!important;display:flex!important;flex-direction:column!important;overflow:hidden!important}
+.stage,.scene,.viz{flex:1 1 42%!important;min-height:min(200px,30vh)!important;overflow:hidden!important;display:flex!important;flex-direction:column!important;justify-content:center!important}
+.stage svg,.scene svg{flex:1 1 auto;width:100%!important;height:100%!important;max-height:100%!important;min-height:0}
+.ctrl,.choices,.btn-row,.top,.bar,.materials,.fb,.progress{flex:none}
+html.aid-compact .hintRow{display:none!important}
+html.aid-compact .fb{min-height:0!important;padding:6px 10px!important;margin:6px 0!important;font-size:20px!important}
+html.aid-compact h1{font-size:22px!important}
+html.aid-compact .matBtn{width:92px;height:92px}
+html.aid-compact .matBtn svg{width:48px;height:48px}
+html.aid-compact .matBtn span{font-size:20px}
+html.aid-compact .btn{min-height:54px;padding:8px 16px;font-size:21px}
+html.aid-compact .bar{gap:8px}
+html.aid-tight .fb{display:none!important}
+html.aid-tight .stage{min-height:min(180px,30vh)!important}
+</style>
+</head>
+<body>
+<main class="card">
+  <div class="top">
+    <h1>小熊的彩灯串</h1>
+    <span class="chip">找规律</span>
+    <span class="chip idx" id="levelChip">第 1 关</span>
+    <label class="mode"><input type="checkbox" id="staticMode"> 静态模式</label>
+  </div>
+
+  <div class="stage">
+    <div class="hintRow">
+      <span>一组：</span>
+      <span class="unitBox" id="unitBox"></span>
+      <span id="hintAsk">？＝要补的灯</span>
+    </div>
+    <svg id="scene" viewBox="0 0 340 460" role="img" aria-label="屋檐下挂着一串彩灯，问号处要补一盏灯"></svg>
+  </div>
+
+  <div class="materials" id="materials" role="group" aria-label="选择要补的灯"></div>
+
+  <div class="fb" id="fb" aria-live="polite">先看灯串，找一找「一组」怎么排，再选灯补上问号。</div>
+
+  <div class="bar">
+    <button type="button" class="btn primary" id="btnCheck">✓ 看看对不对</button>
+    <button type="button" class="btn" id="btnNext" hidden>下一关 →</button>
+    <button type="button" class="btn ghost" id="btnReplay">↻ 重新开始</button>
+  </div>
+</main>
+
+<div class="overlay" id="demoOverlay" role="dialog" aria-label="开场演示">
+  <div class="ovCard">
+    <p class="ovTitle">🐻 小熊挂彩灯</p>
+    <p class="ovSub" id="demoSub">看灯串，补上问号灯！</p>
+    <svg id="demoSvg" viewBox="0 0 260 220" aria-hidden="true"></svg>
+    <button type="button" class="ovBtn" id="demoSkip">我学会啦，开始 →</button>
+  </div>
+</div>
+
+<div class="overlay" id="winOverlay" role="dialog" aria-label="通关" hidden>
+  <div class="ovCard">
+    <p class="ovTitle">🎉 四关全过！</p>
+    <p class="ovSub">你会自己找规律啦：<b>先找一组，一组一组排。</b></p>
+    <div class="winLamps" id="winLamps"></div>
+    <p class="ovSub" style="margin-top:8px">小熊送给你一颗星星 ⭐</p>
+    <button type="button" class="ovBtn" id="winAgain">再玩一次 ↻</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  var $ = function(id){ return document.getElementById(id); };
+  var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var staticMode = false;
+
+  var COLORS = {
+    red:   { cn:'红', hex:'#ef4444', glow:'rgba(239,68,68,.35)' },
+    blue:  { cn:'蓝', hex:'#3b82f6', glow:'rgba(59,130,246,.35)' },
+    yellow:{ cn:'黄', hex:'#f5a623', glow:'rgba(245,166,35,.35)' },
+    green: { cn:'绿', hex:'#22c55e', glow:'rgba(34,197,94,.35)' }
+  };
+
+  // 先少后多：AB 末尾空 → AB 中间空 → AAB 末尾空 → 举一反三（ABC 换色，骨架不变）
+  var LEVELS = [
+    { unit:['red','blue'],               gapIdx:4, n:5, kind:'color', intro:'红-蓝 一组，问号是下一盏' },
+    { unit:['red','blue'],               gapIdx:2, n:6, kind:'color', intro:'还是红-蓝 一组，中间掉了一盏' },
+    { unit:['yellow','yellow','green'],  gapIdx:5, n:6, kind:'color', intro:'黄-黄-绿 一组，问号是下一盏' },
+    { unit:['red','yellow','blue'],      gapIdx:5, n:6, kind:'color', intro:'举一反三：换成红-黄-蓝 一组，还是先找「一组」' }
+  ];
+
+  var q = 0, pickKey = null, locked = false;
+  var X0 = 170, Y0 = 66, SP = 64, WIRE_TOP = 34;
+  var svg = $('scene');
+
+  function keyName(k, kind){
+    return kind === 'color' ? COLORS[k].cn : k;
+  }
+  function keyAt(level, i){ return level.unit[i % level.unit.length]; }
+  function ansKey(level){ return level.unit[level.gapIdx % level.unit.length]; }
+  function posInGroup(level){ return (level.gapIdx % level.unit.length) + 1; }
+  function unitName(level){
+    return level.unit.map(function(k){ return keyName(k, level.kind); }).join('-');
+  }
+  function yAt(i){ return Y0 + i * SP; }
+
+  // 竖排彩灯：灯帽在上、灯泡在下，串在屋檐垂下的线上
+  function bulbSVG(x, y, k, kind, s){
+    s = s || 1;
+    var fill = COLORS[k].hex, glow = COLORS[k].glow;
+    return '<circle cx="'+x+'" cy="'+(y+6*s)+'" r="'+(33*s)+'" fill="'+glow+'"/>' +
+           '<circle cx="'+x+'" cy="'+(y+6*s)+'" r="'+(25*s)+'" fill="'+fill+'"/>' +
+           '<circle cx="'+(x-8*s)+'" cy="'+(y-5*s)+'" r="'+(6*s)+'" fill="rgba(255,255,255,.55)"/>' +
+           '<rect x="'+(x-13*s)+'" y="'+(y-34*s)+'" width="'+(26*s)+'" height="12" rx="3" fill="#475569"/>';
+  }
+
+  function bearSVG(tx, ty, cls){
+    return '<g class="bear'+(cls?' '+cls:'')+'" transform="translate('+tx+','+ty+')">' +
+      '<ellipse cx="0" cy="26" rx="22" ry="16" fill="#3b4a63"/>' +
+      '<circle cx="0" cy="4" r="17" fill="#3b4a63"/>' +
+      '<circle cx="-9" cy="-9" r="7" fill="#3b4a63"/>' +
+      '<circle cx="9" cy="-9" r="7" fill="#3b4a63"/>' +
+      '<circle cx="-9" cy="-9" r="3.5" fill="#f5f5f7"/>' +
+      '<circle cx="9" cy="-9" r="3.5" fill="#f5f5f7"/>' +
+      '<ellipse cx="0" cy="10" rx="9" ry="8" fill="#f5f5f7"/>' +
+      '<circle cx="-6" cy="1" r="2.6" fill="#1e3a5f"/>' +
+      '<circle cx="6" cy="1" r="2.6" fill="#1e3a5f"/>' +
+      '<path d="M-3 9 Q0 14 3 9" stroke="#1e3a5f" stroke-width="2.2" fill="none" stroke-linecap="round"/>' +
+      '<path d="M-10 28 L-19 42 M10 28 L19 42" stroke="#1e3a5f" stroke-width="3.4" stroke-linecap="round"/>' +
+      '<path d="M-16 12 L-31 22 M16 12 L31 22" stroke="#1e3a5f" stroke-width="3" stroke-linecap="round"/>' +
+      '</g>';
+  }
+
+  function bgSVG(){
+    var stars = [[24,42],[52,24],[86,56],[112,20],[150,44],[206,30],[236,58],[280,24],[318,48],[330,88]];
+    var s = stars.map(function(p,i){
+      var r = (i % 3 === 0) ? 2.6 : 1.8;
+      return '<circle cx="'+p[0]+'" cy="'+p[1]+'" r="'+r+'" fill="#ffffff" opacity="'+(i%2?'.55':'.85')+'"/>';
+    }).join('');
+    return '<circle cx="306" cy="40" r="22" fill="#fde68a"/>' +
+           '<circle cx="316" cy="34" r="20" fill="#12253f"/>' +
+           s +
+           // 屋檐
+           '<rect x="0" y="4" width="340" height="22" rx="6" fill="#3b4a63"/>' +
+           '<rect x="10" y="26" width="12" height="12" fill="#4b5c78"/>' +
+           '<rect x="318" y="26" width="12" height="12" fill="#4b5c78"/>' +
+           // 草地
+           '<rect x="0" y="438" width="340" height="22" fill="#2a4d3a" rx="6"/>' +
+           bearSVG(286, 396, '');
+  }
+
+  function render(level, reveal){
+    svg.innerHTML = '';
+    var kind = level.kind;
+    var lastY = yAt(level.n - 1) + 6;
+    var inner = bgSVG();
+    inner += '<line class="wire'+(reduced||staticMode?' drawn':'')+'" id="wireLine" x1="'+X0+'" y1="'+WIRE_TOP+'" x2="'+X0+'" y2="'+lastY+'" stroke="#8fa6c4" stroke-width="3" stroke-linecap="round"/>';
+
+    // 灯（竖排）
+    for(var i = 0; i < level.n; i++){
+      if(i === level.gapIdx) continue;
+      inner += '<g class="bulb" data-i="'+i+'">' + bulbSVG(X0, yAt(i), keyAt(level, i), kind, 1) + '</g>';
+    }
+    // 周期分组括号（左侧）
+    var len = level.unit.length;
+    var groups = Math.ceil(level.n / len);
+    for(var g = 0; g < groups; g++){
+      var start = g * len, end = Math.min((g + 1) * len, level.n) - 1;
+      if(end < start) continue;
+      var y1 = yAt(start) - 36, y2 = yAt(end) + 42;
+      var hot = (level.gapIdx >= start && level.gapIdx <= end);
+      inner += '<path class="band'+(hot?' hot':'')+'" d="M 128 '+y1+' Q 116 '+(y1+y2)/2+' 128 '+y2+'" fill="none" stroke="'+(hot?'rgba(127,176,234,.95)':'rgba(255,255,255,.35)')+'" stroke-width="3" stroke-linecap="round"/>';
+    }
+    // 问号槽
+    var ax = X0, ay = yAt(level.gapIdx) + 6;
+    var askCls = 'askSlot' + (reveal ? '' : (reduced || staticMode ? '' : ' askPulse'));
+    inner += '<g class="'+askCls+'" id="askSlot">' +
+      '<circle cx="'+ax+'" cy="'+ay+'" r="27" fill="#eef4fc" stroke="#7fb0ea" stroke-width="3" stroke-dasharray="8 7"/>' +
+      '<circle cx="'+ax+'" cy="'+ay+'" r="34" fill="rgba(255,255,255,.14)"/>' +
+      '<text x="'+ax+'" y="'+(ay+13)+'" text-anchor="middle" font-size="34" font-weight="800" fill="#9cc3f0">?</text>' +
+      '</g>';
+    svg.innerHTML = inner;
+
+    var bulbs = svg.querySelectorAll('.bulb');
+    if(!reduced && !staticMode){
+      var wire = $('wireLine');
+      if(wire){ wire.classList.add('drawn'); }
+      bulbs.forEach(function(b, idx){
+        setTimeout(function(){ b.classList.add('in','light'); }, 140 + idx * 60);
+      });
+      svg.querySelectorAll('.band').forEach(function(bb, idx){
+        setTimeout(function(){ bb.classList.add('in'); }, 260 + idx * 80);
+      });
+    } else {
+      bulbs.forEach(function(b){ b.classList.add('in'); });
+      svg.querySelectorAll('.band').forEach(function(bb){ bb.classList.add('in'); });
+    }
+    // 小段提示
+    $('unitBox').innerHTML = level.unit.map(function(k){
+      var c = COLORS[k];
+      return '<span class="dot" style="background:'+c.hex+'"></span>';
+    }).join('');
+    $('hintAsk').textContent = (level.gapIdx === level.n - 1) ? '？＝下一盏' : '？＝掉的灯';
+  }
+
+  function materialSVG(k, kind){
+    // 材料卡片里也画竖排同款灯
+    return '<svg viewBox="0 0 100 100" aria-hidden="true">' +
+      '<line x1="50" y1="8" x2="50" y2="38" stroke="#8fa6c4" stroke-width="3"/>' +
+      bulbSVG(50, 40, k, kind, 0.62) + '</svg>';
+  }
+
+  function renderMaterials(level){
+    var kind = level.kind;
+    var ans = ansKey(level);
+    var pool = [];
+    level.unit.forEach(function(k){ if(pool.indexOf(k) === -1) pool.push(k); });
+    var extras = ['green','blue','red','yellow'];
+    for(var i = 0; i < extras.length && pool.length < 3; i++){
+      if(pool.indexOf(extras[i]) === -1) pool.push(extras[i]);
+    }
+    pool = pool.slice(0, 3);
+    if(pool.indexOf(ans) === -1) pool[0] = ans;   // 死题零容忍：必含正确答案
+    // 乱着开始：打乱
+    for(var j = pool.length - 1; j > 0; j--){
+      var r = Math.floor(Math.random() * (j + 1));
+      var t = pool[j]; pool[j] = pool[r]; pool[r] = t;
+    }
+    var wrap = $('materials');
+    wrap.innerHTML = '';
+    pickKey = null;
+    pool.forEach(function(k){
+      var b = document.createElement('button');
+      b.type = 'button'; b.className = 'matBtn'; b.dataset.key = k;
+      b.setAttribute('aria-label', '选' + keyName(k, kind) + '灯');
+      b.innerHTML = materialSVG(k, kind) + '<span>' + keyName(k, kind) + '</span>';
+      wrap.appendChild(b);
+    });
+  }
+
+  function setFB(html, cls){
+    var fb = $('fb');
+    fb.className = 'fb' + (cls ? ' ' + cls : '');
+    fb.innerHTML = html;
+  }
+
+  function showAnswer(level, k){
+    var slot = $('askSlot');
+    var ax = X0, ay = yAt(level.gapIdx) + 6;
+    // 填入后拆问号圈：整段替换为彩灯，虚线圈与 ? 一并移除，不再盖住答案
+    slot.innerHTML = '<g class="bulb in light okGlow">' + bulbSVG(ax, yAt(level.gapIdx), k, level.kind, 1) + '</g>';
+    slot.classList.remove('askPulse');
+    slot.setAttribute('data-filled','1');
+    // 涟漪
+    var ripple = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    ripple.setAttribute('cx', ax); ripple.setAttribute('cy', ay); ripple.setAttribute('r', 27);
+    ripple.setAttribute('fill', 'none'); ripple.setAttribute('stroke', '#2fbf71'); ripple.setAttribute('stroke-width', '4');
+    ripple.setAttribute('class', 'ripple');
+    svg.appendChild(ripple);
+    requestAnimationFrame(function(){
+      ripple.setAttribute('class', 'ripple go');
+      ripple.setAttribute('r', 70);
+      ripple.setAttribute('opacity', '0');
+    });
+    setTimeout(function(){ if(ripple.parentNode) ripple.parentNode.removeChild(ripple); }, 700);
+    var bear = svg.querySelector('.bear');
+    if(bear && !reduced && !staticMode){
+      bear.classList.add('bearJump');
+      setTimeout(function(){ bear.classList.remove('bearJump'); }, 600);
+    }
+  }
+
+  function load(){
+    locked = false;
+    var level = LEVELS[q];
+    $('btnCheck').disabled = false;
+    $('btnNext').hidden = true;
+    $('levelChip').textContent = '第 ' + (q + 1) + ' 关 / 共 ' + LEVELS.length + ' 关';
+    setFB(level.gapIdx === level.n - 1
+      ? '先看灯串，再选一盏灯补到问号处。'
+      : '灯串中间掉了一盏灯，找一找它是什么颜色。');
+    render(level, false);
+    renderMaterials(level);
+  }
+
+  function check(){
+    if(locked) return;
+    if(!pickKey){ setFB('先点下面一盏灯选好，再点「看看对不对」。','bad'); return; }
+    var level = LEVELS[q];
+    var ans = ansKey(level);
+    locked = true;
+    $('btnCheck').disabled = true;
+    var buttons = $('materials').querySelectorAll('.matBtn');
+    buttons.forEach(function(b){
+      b.disabled = true;
+      if(b.dataset.key === ans) b.classList.add('correct');
+      if(b.dataset.key === pickKey && pickKey !== ans) b.classList.add('wrong');
+    });
+    if(pickKey === ans){
+      showAnswer(level, ans);
+      setFB('对啦！一组是 <b>'+unitName(level)+'</b>，问号在组里第 <b>'+posInGroup(level)+'</b> 位 → <b>'+keyName(ans, level.kind)+'</b>！','ok');
+      if(q < LEVELS.length - 1){
+        $('btnNext').hidden = false;
+      } else {
+        setTimeout(function(){ openWin(); }, 900);
+      }
+    } else {
+      // 概念类：对照说明，指出差在哪一处
+      var slot = $('askSlot');
+      if(slot) slot.classList.add('badSlot');
+      var expect = ansKey(level);
+      setFB('想一想：先找一组「<b>'+unitName(level)+'</b>」。问号是这一组第 <b>'+posInGroup(level)+'</b> 位，应该是 <b>'+keyName(expect, level.kind)+'</b>。你选的 '+keyName(pickKey, level.kind)+' 不在这一位哦，再试试。','bad');
+      setTimeout(function(){
+        locked = false;
+        $('btnCheck').disabled = false;
+        if(slot) slot.classList.remove('badSlot');
+        buttons.forEach(function(b){
+          b.disabled = false;
+          b.classList.remove('correct','wrong');
+          if(b.dataset.key === pickKey) b.classList.remove('pick');
+        });
+        pickKey = null;
+      }, 1700);
+    }
+  }
+
+  // 材料选择：点选 + 拖拽跟手，两种都能用
+  var matWrap = $('materials');
+  matWrap.addEventListener('pointerdown', function(e){
+    var b = e.target.closest('.matBtn');
+    if(!b || b.disabled) return;
+    if(e.pointerType === 'mouse' && e.button !== 0) return;
+    var startX = e.clientX, startY = e.clientY, moved = false;
+    var ghost = null;
+    function onMove(ev){
+      if(!moved){
+        moved = true;
+        ghost = b.cloneNode(true);
+        ghost.style.cssText = 'position:fixed;z-index:40;pointer-events:none;opacity:.92;width:'+b.offsetWidth+'px;left:'+b.offsetLeft+'px;top:'+b.offsetTop+'px;margin:0';
+        document.body.appendChild(ghost);
+        b.style.opacity = '.35';
+      }
+      ghost.style.left = (ev.clientX - ghost.offsetWidth / 2) + 'px';
+      ghost.style.top = (ev.clientY - ghost.offsetHeight / 2) + 'px';
+    }
+    function onUp(ev){
+      document.removeEventListener('pointermove', onMove);
+      document.removeEventListener('pointerup', onUp);
+      var dropped = false;
+      if(moved){
+        var slot = $('askSlot');
+        if(slot){
+          var r = slot.getBoundingClientRect();
+          dropped = ev.clientX > r.left && ev.clientX < r.right && ev.clientY > r.top && ev.clientY < r.bottom;
+        }
+        if(ghost){ ghost.remove(); ghost = null; }
+        b.style.opacity = '1';
+      }
+      var dx = ev.clientX - startX, dy = ev.clientY - startY;
+      var isClick = Math.abs(dx) < 8 && Math.abs(dy) < 8;
+      if(dropped || isClick) selectKey(b);
+    }
+    document.addEventListener('pointermove', onMove);
+    document.addEventListener('pointerup', onUp);
+  });
+
+  function selectKey(b){
+    if(locked) return;
+    pickKey = b.dataset.key;
+    matWrap.querySelectorAll('.matBtn').forEach(function(x){ x.classList.remove('pick'); });
+    b.classList.add('pick');
+    var level = LEVELS[q];
+    setFB('你选了 <b>'+keyName(pickKey, level.kind)+'</b> 灯。点「看看对不对」。');
+  }
+
+  // 开场演示：可跳过、真动；红-蓝-红-蓝 → 下一盏必须是红（与第 1 关同一规律）
+  function buildDemo(){
+    var ds = $('demoSvg');
+    var kind = 'color';
+    var unit = ['red','blue'];
+    var dx = 108, dsp = 36, dy0 = 30;
+    var inner = '<rect x="0" y="4" width="260" height="16" rx="5" fill="#3b4a63"/>' +
+      '<line x1="'+dx+'" y1="20" x2="'+dx+'" y2="'+(dy0+4*dsp+10)+'" stroke="#8fa6c4" stroke-width="3"/>';
+    for(var i = 0; i < 4; i++){
+      inner += '<g class="bulb">' + bulbSVG(dx, dy0 + i * dsp, unit[i % 2], kind, 0.62) + '</g>';
+    }
+    inner += '<g id="demoAsk"><circle cx="'+dx+'" cy="'+(dy0+4*dsp+6)+'" r="20" fill="#eef4fc" stroke="#7fb0ea" stroke-width="3" stroke-dasharray="7 6"/><text x="'+dx+'" y="'+(dy0+4*dsp+13)+'" text-anchor="middle" font-size="26" font-weight="800" fill="#9cc3f0">?</text></g>';
+    inner += '<g id="demoFly" transform="translate(80,0)">' + bulbSVG(dx, dy0 + 4 * dsp, 'red', kind, 0.62) + '</g>';
+    inner += '<g id="demoCheck" opacity="0"><g transform="translate('+(dx-30)+','+(dy0+4*dsp-30)+')"><rect width="60" height="60" rx="14" fill="#e6f9ef" stroke="#2fbf71" stroke-width="3"/><text x="30" y="38" text-anchor="middle" font-size="26" font-weight="800" fill="#1c8f57">✓</text></g></g>';
+    inner += bearSVG(196, 156, 'demoBear');
+    ds.innerHTML = inner;
+  }
+
+  function runDemo(){
+    var ds = $('demoSvg');
+    var sub = $('demoSub');
+    var bulbs = ds.querySelectorAll('.bulb');
+    function done(){
+      var fly = ds.querySelector('#demoFly');
+      if(fly) fly.setAttribute('transform', 'translate(0,0)');
+      var ask = ds.querySelector('#demoAsk');
+      // 填入后拆问号圈：整段替换为红灯泡，? 与虚线圈移除
+      if(ask){ ask.innerHTML = '<g class="bulb in okGlow">' + bulbSVG(108, 30 + 4 * 36, 'red', 'color', 0.62) + '</g>'; }
+      ds.querySelector('#demoCheck').setAttribute('opacity','1');
+      var bear = ds.querySelector('.demoBear');
+      if(bear) bear.classList.add('bearJump');
+      sub.textContent = '对！一组是 红-蓝，下一盏是 红！';
+    }
+    if(reduced || staticMode){
+      bulbs.forEach(function(b){ b.classList.add('in'); });
+      done();
+      return;
+    }
+    var steps = [
+      function(){ sub.textContent = '小熊按「红-蓝-红-蓝」挂灯…'; },
+      function(){ sub.textContent = '问号处：下一盏是？'; },
+      function(){ sub.textContent = '选 红 灯，飞过去补上！'; },
+      done
+    ];
+    var i = 0;
+    (function next(){
+      if(i >= steps.length) return;
+      if(i === 0){
+        bulbs.forEach(function(b, idx){ setTimeout(function(){ b.classList.add('in','light'); }, idx * 180); });
+      }
+      steps[i++]();
+      setTimeout(next, 1000);
+    })();
+  }
+
+  var demoOv = $('demoOverlay');
+  $('demoSkip').addEventListener('click', function(){ demoOv.remove(); });
+  buildDemo();
+  runDemo();
+
+  // 通关页
+  function openWin(){
+    var wl = $('winLamps');
+    wl.innerHTML = '';
+    var reps = [ ['red','color'], ['yellow','color'], ['blue','color'], ['green','color'] ];
+    reps.forEach(function(rp){
+      var d = document.createElement('div');
+      d.className = 'winLamp';
+      d.style.background = COLORS[rp[0]].hex;
+      d.style.boxShadow = '0 0 18px ' + COLORS[rp[0]].glow;
+      wl.appendChild(d);
+    });
+    $('winOverlay').hidden = false;
+  }
+  $('winAgain').addEventListener('click', function(){
+    $('winOverlay').hidden = true;
+    q = 0; load();
+  });
+
+  $('btnCheck').addEventListener('click', check);
+  $('btnNext').addEventListener('click', function(){ if(q < LEVELS.length - 1){ q++; load(); } });
+  $('btnReplay').addEventListener('click', function(){ q = 0; load(); });
+  $('staticMode').addEventListener('change', function(e){
+    staticMode = e.target.checked;
+    document.body.classList.toggle('static', staticMode);
+    load();
+  });
+  if(reduced){
+    $('staticMode').checked = true;
+    staticMode = true;
+    document.body.classList.add('static');
+  }
+  load();
+})();
+</script>
+<script id="aid-fit-js">/* AID_FIT_V1 */
+(function(){
+  var html=document.documentElement;
+  function measure(){
+    var card=document.querySelector("main.card, body>.card");
+    if(!card) return;
+    html.classList.remove("aid-compact","aid-tight");
+    card.style.overflowY="hidden";
+    void card.offsetHeight;
+    var stage=card.querySelector(".stage,.scene,.viz");
+    var stageH=stage?stage.clientHeight:999;
+    if(card.scrollHeight>card.clientHeight+8 || stageH<220 || innerHeight<820) html.classList.add("aid-compact");
+    void card.offsetHeight;
+    stageH=stage?stage.clientHeight:999;
+    if(card.scrollHeight>card.clientHeight+8 || stageH<180) html.classList.add("aid-tight");
+    void card.offsetHeight;
+    if(card.scrollHeight>card.clientHeight+8) card.style.overflowY="auto";
+  }
+  addEventListener("resize",measure);
+  addEventListener("load",measure);
+  if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",measure);
+  else requestAnimationFrame(measure);
+  setTimeout(measure,80);
+  setTimeout(measure,400);
+  var card=document.querySelector("main.card, body>.card");
+  if(card && typeof MutationObserver==="function"){
+    var t;
+    new MutationObserver(function(){
+      clearTimeout(t); t=setTimeout(measure,40);
+    }).observe(card,{childList:true,subtree:true,characterData:true});
+  }
+})();
+</script>
+</body>
+</html>

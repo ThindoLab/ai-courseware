@@ -7,7 +7,7 @@
     "node": ">=22"
   },
   "scripts": {
-    "test": "node --test tests/contract.test.ts tests/knowledge.test.ts tests/agent.test.ts tests/skills.test.ts tests/ima.test.ts tests/gallery.test.ts",
+    "test": "node --test tests/contract.test.ts tests/knowledge.test.ts tests/agent.test.ts tests/skills.test.ts tests/ima.test.ts tests/gallery.test.ts tests/icon-cast.test.ts tests/cast-lanes.test.ts tests/cast-roster.test.ts",
     "create": "node src/cli.ts create-from-content",
     "validate": "node src/cli.ts validate",
     "start": "node src/server.ts",
@@ -15,6 +15,7 @@
     "qa-samples": "node scripts/sample-qa-batch.mjs",
     "qa-all": "node scripts/sample-detect.mjs && node scripts/sample-qa-batch.mjs",
     "smoke-samples": "node scripts/sample-smoke-http.mjs",
+    "cast:fetch": "node scripts/fetch-cast-library.mjs",
     "ima:sync": "node scripts/ima-sync-catalog.mjs",
     "ima:sync:hourly": "zsh scripts/ima-sync-hourly.sh"
   },

@@ -19,6 +19,8 @@ const catalog = manifest
   .filter((it) => it.tier !== "made" && it.slug && it.topic)
   .map((it) => ({ slug: it.slug, topic: it.topic, age: it.age, category: it.category }));
 
+const iterFlag = process.argv.find((a) => a.startsWith("--iter="));
+const iter = iterFlag ? iterFlag.slice("--iter=".length) : "R?";
 const only = process.argv.slice(2).filter((a) => !a.startsWith("-"));
 const jobs = only.length ? catalog.filter((j) => only.includes(j.slug)) : catalog;
 if (!jobs.length) {
@@ -60,7 +62,8 @@ for (const job of jobs) {
   if (res.ok && res.html && !res.fromSample) {
     const ver = publishNewVersion(job.slug, res.html, {
       at: stamp,
-      note: `系统重跑 ${stamp}`,
+      iteration: iter,
+      note: `迭代${iter} 系统重跑 ${stamp}`,
     });
     row.wrote = src;
     row.version = ver;

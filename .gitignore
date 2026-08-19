@@ -16,6 +16,10 @@ archive/
 public/diagram-preview/
 public/test-preview/
 pi/ima/catalog.json
+pi/assets/cast/.vendor/
+pi/assets/cast/packs/
+pi/assets/cast/catalog.json
+pi/assets/cast/index.json
 
 
 skills/frontend-design
