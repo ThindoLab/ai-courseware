@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta name="aid-version" content="v6">
+<meta name="aid-version-at" content="2026-08-17T07-00-47">
+<meta name="aid-iteration" content="R2">
+<meta name="aid-version-note" content="迭代R2 系统重跑 2026-08-17T07-00-47">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>按颜色分类 · 帮小兔收玩具</title>
+<!-- aid-contract {"type":"drag-slot","slots":["red","blue","yellow","green"],"answers":{"apple":"red","strawberry":"red","car":"blue","whale":"blue","banana":"yellow","duck":"yellow","frog":"green","watermelon":"green"}} -->
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden}
+body{font-family:system-ui,-apple-system,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;background:#FFF6E3;color:#3B2F2F;user-select:none;-webkit-user-select:none}
+#app{position:relative;height:100vh;height:100dvh;display:flex;flex-direction:column;max-width:900px;margin:0 auto}
+header{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;gap:8px;flex:0 0 auto}
+.h-title{font-size:18px;font-weight:800;display:flex;align-items:center;gap:6px}
+.h-right{display:flex;align-items:center;gap:8px}
+.h-progress{font-size:16px;font-weight:700;background:#fff;border:2px solid #F2C94C;border-radius:999px;padding:6px 14px;color:#7A5B1E}
+.reset-btn{min-width:44px;height:44px;border-radius:50%;border:2px solid #E8C07A;background:#fff;font-size:20px;font-weight:900;color:#8A6A3A;cursor:pointer}
+.reset-btn:active{transform:scale(.92)}
+main.stage{position:relative;flex:1;min-height:0;margin:0 8px;border-radius:24px;background:linear-gradient(#FFFDF6,#FFF0D2);box-shadow:inset 0 0 0 3px #FBE3A8;overflow:hidden}
+.bg-svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0}
+#playArea{position:absolute;inset:0;z-index:1}
+footer{flex:0 0 auto;padding:6px 10px 12px}
+.bins{display:flex;justify-content:center;gap:clamp(6px,2vmin,18px)}
+.bin{width:clamp(80px,20vmin,150px);height:clamp(64px,15vmin,100px);border-radius:20px;background:#fff;border:4px solid var(--c);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;position:relative;box-shadow:0 3px 0 rgba(0,0,0,.08)}
+.bin .bin-swatch{width:22px;height:22px;border-radius:7px;background:var(--c)}
+.bin .bin-name{font-size:18px;font-weight:900;color:#3B2F2F;letter-spacing:1px}
+.bin .dots{display:flex;gap:3px;flex-wrap:wrap;justify-content:center;min-height:16px}
+.dot{width:16px;height:16px;border-radius:50%;background:var(--c);pointer-events:none}
+.bin.bounce{animation:binBounce .45s ease}
+@keyframes binBounce{0%{transform:scale(1)}35%{transform:scale(1.12)}100%{transform:scale(1)}}
+.ctrl-row{height:56px;display:flex;align-items:center;justify-content:center}
+.next-btn{font-size:20px;font-weight:900;color:#fff;background:#F2A33C;border:none;border-radius:999px;padding:12px 30px;min-height:48px;cursor:pointer;box-shadow:0 4px 0 #C97B1F;animation:popIn .35s ease}
+.next-btn:active{transform:translateY(3px);box-shadow:0 1px 0 #C97B1F}
+@keyframes popIn{from{transform:scale(.6);opacity:0}to{transform:scale(1);opacity:1}}
+.item{position:absolute;font-size:clamp(44px,10vmin,66px);line-height:1;cursor:grab;touch-action:none;filter:drop-shadow(0 3px 3px rgba(0,0,0,.18));transition:left .18s ease,top .18s ease;z-index:5}
+.item.dragging{transition:none;z-index:20;transform:scale(1.18);filter:drop-shadow(0 6px 8px rgba(0,0,0,.28))}
+.item.flying{transition:left .45s ease,top .45s ease,opacity .45s ease;z-index:15;pointer-events:none;opacity:.25}
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:24vh;z-index:60;max-width:88vw;background:#fff;border-radius:18px;padding:12px 20px;font-size:17px;font-weight:800;box-shadow:0 8px 24px rgba(0,0,0,.18);opacity:0;transition:opacity .2s;text-align:center;pointer-events:none}
+#toast.show{opacity:1}
+#toast.ok{border:3px solid #34C759}
+#toast.err{border:3px solid #FF9F0A}
+.overlay{position:absolute;inset:0;z-index:100;background:linear-gradient(160deg,#FFF6E3,#FFE9C7);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:20px;text-align:center}
+.overlay.hidden{display:none}
+.demo-emoji{font-size:clamp(52px,12vmin,84px);animation:bob 1.6s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.demo-title{font-size:clamp(24px,5vmin,34px);font-weight:900}
+.demo-sub{font-size:clamp(16px,3.4vmin,20px);font-weight:700;color:#8A6A3A}
+.demo-stage{display:flex;align-items:center;gap:12px;background:#fff;border:3px dashed #E8C07A;border-radius:22px;padding:14px 18px;margin:4px 0}
+.demo-item{font-size:46px;animation:demoFly 1.8s ease-in-out infinite}
+@keyframes demoFly{0%{transform:translate(0,0);opacity:1}70%{transform:translate(64px,0);opacity:1}100%{transform:translate(64px,0);opacity:0}}
+.demo-bin{width:76px;height:58px;border-radius:14px;background:#fff;border:4px solid #EF4444;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:900;color:#B91C1C}
+.big-btn{font-size:22px;font-weight:900;color:#fff;background:#F2A33C;border:none;border-radius:999px;padding:16px 44px;min-height:56px;cursor:pointer;box-shadow:0 5px 0 #C97B1F}
+.big-btn:active{transform:translateY(3px);box-shadow:0 2px 0 #C97B1F}
+.skip{position:absolute;top:14px;right:14px;font-size:16px;font-weight:800;color:#8A6A3A;background:#fff;border:2px solid #E8C07A;border-radius:999px;padding:10px 18px;min-height:44px;cursor:pointer}
+.green-btn{background:#34C759;box-shadow:0 5px 0 #1F9D42}
+.congrats-title{font-size:clamp(28px,6.5vmin,42px);font-weight:900;color:#D97706}
+.congrats-emoji{font-size:clamp(60px,14vmin,100px)}
+.variant-card{background:#fff;border:3px solid #F2C94C;border-radius:20px;padding:16px 22px;max-width:520px;font-size:18px;font-weight:700;color:#6B4F1D;line-height:1.6}
+.variant-card b{color:#D97706}
+@media (prefers-reduced-motion: reduce){
+  *{animation:none !important;transition:none !important}
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="h-title">🐰 小兔的玩具屋</div>
+    <div class="h-right">
+      <div id="progress" class="h-progress">第 1 关 · 已收 0/4</div>
+      <button id="resetBtn" class="reset-btn" title="重新开始本关">↻</button>
+    </div>
+  </header>
+  <main class="stage">
+    <svg class="bg-svg" viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      <circle cx="330" cy="50" r="30" fill="#FFE08A" opacity=".9"/>
+      <path d="M20 215 Q100 155 170 205 T330 195 T400 205" stroke="#FBE3A8" stroke-width="20" fill="none" stroke-linecap="round" opacity=".85"/>
+      <ellipse cx="80" cy="70" rx="48" ry="20" fill="#fff" opacity=".8"/>
+      <ellipse cx="125" cy="60" rx="34" ry="16" fill="#fff" opacity=".7"/>
+      <ellipse cx="285" cy="120" rx="42" ry="18" fill="#fff" opacity=".75"/>
+      <ellipse cx="325" cy="128" rx="30" ry="14" fill="#fff" opacity=".65"/>
+      <text x="55" y="170" font-size="34" opacity=".4">⭐</text>
+      <text x="305" y="200" font-size="26" opacity=".35">⭐</text>
+      <text x="240" y="60" font-size="24" opacity=".4">☁️</text>
+    </svg>
+    <div id="playArea"></div>
+  </main>
+  <footer>
+    <div id="bins" class="bins"></div>
+    <div class="ctrl-row"><button id="nextBtn" class="next-btn" hidden>下一关 ➜</button></div>
+  </footer>
+</div>
+
+<div id="demo" class="overlay">
+  <button id="skipDemo" class="skip">跳过演示 ➜</button>
+  <div class="demo-emoji">🐰</div>
+  <div class="demo-title">玩具乱乱的！</div>
+  <div class="demo-sub">帮小兔按颜色收进筐里</div>
+  <div class="demo-stage">
+    <div class="demo-item">🍎</div>
+    <div style="font-size:32px">➡️</div>
+    <div class="demo-bin">红筐</div>
+  </div>
+  <button id="startBtn" class="big-btn">开始玩 🎮</button>
+</div>
+
+<div id="congrats" class="overlay hidden">
+  <div class="congrats-emoji">🎉🎊</div>
+  <div class="congrats-title">祝贺你，通关完成！</div>
+  <div class="demo-sub">所有玩具都按颜色回家啦！</div>
+  <div class="variant-card">想一想：<b>蜡笔、衣服、积木</b>，也能按颜色收拾吗？在家试试看！</div>
+  <button id="againBtn" class="big-btn green-btn">再玩一次 🔁</button>
+</div>
+
+<div id="toast"></div>
+
+<script>
+(function(){
+'use strict';
+var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+var LEVELS = [
+  { bins:['red','blue'],
+    items:[['🍎','red','苹果'],['🍓','red','草莓'],['🚗','blue','小汽车'],['🐳','blue','鲸鱼']] },
+  { bins:['red','yellow','blue'],
+    items:[['🍎','red','苹果'],['🍌','yellow','香蕉'],['🚗','blue','小汽车'],['🐤','yellow','小鸭'],['🍓','red','草莓'],['🐳','blue','鲸鱼']] },
+  { bins:['red','yellow','blue','green'],
+    items:[['🍎','red','苹果'],['🍌','yellow','香蕉'],['🚗','blue','小汽车'],['🐸','green','青蛙'],['🍓','red','草莓'],['🐤','yellow','小鸭'],['🐳','blue','鲸鱼'],['🍉','green','西瓜']] }
+];
+var COLOR = { red:{name:'红',hex:'#EF4444',soft:'#FEE2E2'}, yellow:{name:'黄',hex:'#F59E0B',soft:'#FEF3C7'}, blue:{name:'蓝',hex:'#3B82F6',soft:'#DBEAFE'}, green:{name:'绿',hex:'#22C55E',soft:'#DCFCE7'} };
+var playArea=document.getElementById('playArea'), binsEl=document.getElementById('bins'), progress=document.getElementById('progress'), nextBtn=document.getElementById('nextBtn'), resetBtn=document.getElementById('resetBtn'), toast=document.getElementById('toast');
+var demo=document.getElementById('demo'), congrats=document.getElementById('congrats');
+var level=0, placed=0, total=0, finished=false, drag=null, binEls=[];
+
+function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
+
+function showToast(msg, kind, ms){toast.textContent=msg;toast.className=kind?('show '+kind):'show';clearTimeout(showToast._t);showToast._t=setTimeout(function(){toast.className='';},ms||1800);}
+
+function beep(freq,dur,type,vol){
+  try{
+    var ctx=beep.ctx || (beep.ctx=new (window.AudioContext||window.webkitAudioContext)());
+    if(ctx.state==='suspended')ctx.resume();
+    var o=ctx.createOscillator(),g=ctx.createGain();
+    o.type=type||'sine';o.frequency.value=freq;
+    g.gain.setValueAtTime(vol||0.12,ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+(dur||0.12));
+    o.connect(g);g.connect(ctx.destination);o.start();o.stop(ctx.currentTime+(dur||0.12));
+  }catch(e){}
+}
+
+function renderBins(bins){
+  binsEl.innerHTML='';
+  binEls=[];
+  bins.forEach(function(c){
+    var info=COLOR[c];
+    var b=document.createElement('div');
+    b.className='bin';
+    b.style.setProperty('--c',info.hex);
+    b.style.background='linear-gradient(#fff,'+info.soft+')';
+    b.dataset.color=c;
+    b.innerHTML='<span class="bin-swatch"></span><span class="bin-name">'+info.name+'筐</span><span class="dots"></span>';
+    binsEl.appendChild(b);binEls.push(b);
+  });
+}
+
+function layoutItems(){
+  var area=playArea.getBoundingClientRect();
+  var items=playArea.querySelectorAll('.item');
+  var n=items.length;
+  if(!n)return;
+  var cols=Math.min(4,n);
+  var rows=Math.ceil(n/cols);
+  var cellW=area.width/cols, cellH=area.height/rows;
+  Array.prototype.forEach.call(items,function(el,i){
+    var col=i%cols, row=Math.floor(i/cols);
+    var cx=cellW*col+cellW/2, cy=cellH*row+cellH/2;
+    var s=el.offsetWidth, h=el.offsetHeight;
+    var jx=(Math.random()*16-8), jy=(Math.random()*16-8);
+    var left=Math.max(4,Math.min(area.width-s-4,cx-s/2+jx));
+    var top=Math.max(4,Math.min(area.height-h-4,cy-h/2+jy));
+    el.dataset.ox=left; el.dataset.oy=top;
+    el.style.left=left+'px'; el.style.top=top+'px';
+  });
+}
+
+function renderLevel(lv){
+  level=lv; placed=0; finished=false; drag=null;
+  var cfg=LEVELS[lv];
+  total=cfg.items.length;
+  progress.textContent='第 '+(lv+1)+' 关 · 已收 '+placed+'/'+total;
+  playArea.innerHTML='';
+  var order=shuffle(cfg.items.slice());
+  order.forEach(function(it){
+    var d=document.createElement('div');
+    d.className='item';
+    d.textContent=it[0];
+    d.dataset.color=it[1];
+    d.dataset.name=it[2];
+    playArea.appendChild(d);
+  });
+  renderBins(cfg.bins);
+  layoutItems();
+  nextBtn.hidden=true;
+  bindItems();
+  showToast('把玩具拖到一样颜色的筐里','',2200);
+}
+
+function bindItems(){
+  var items=playArea.querySelectorAll('.item');
+  Array.prototype.forEach.call(items,function(el){
+    el.addEventListener('pointerdown',function(e){
+      if(finished)return;
+      e.preventDefault();
+      var r=el.getBoundingClientRect();
+      drag={el:el,offX:e.clientX-r.left-r.width/2,offY:e.clientY-r.top-r.height/2};
+      el.classList.add('dragging');
+      try{el.setPointerCapture(e.pointerId);}catch(err){}
+    });
+    el.addEventListener('pointermove',function(e){
+      if(!drag||drag.el!==el)return;
+      e.preventDefault();
+      var area=playArea.getBoundingClientRect();
+      el.style.left=(e.clientX-drag.offX-area.left)+'px';
+      el.style.top=(e.clientY-drag.offY-area.top)+'px';
+    });
+    el.addEventListener('pointerup',function(e){
+      if(!drag||drag.el!==el)return;
+      e.preventDefault();
+      var r=el.getBoundingClientRect();
+      var cx=r.left+r.width/2, cy=r.top+r.height/2;
+      var hit=null;
+      binEls.forEach(function(b){
+        var br=b.getBoundingClientRect();
+        if(cx>=br.left&&cx<=br.right&&cy>=br.top&&cy<=br.bottom)hit=b;
+      });
+      el.classList.remove('dragging');
+      drag=null;
+      if(hit){
+        if(hit.dataset.color===el.dataset.color){ placeOk(el,hit); }
+        else{ placeBad(el,hit); }
+      }else{
+        backHome(el);
+      }
+    });
+    el.addEventListener('pointercancel',function(){
+      if(drag&&drag.el===el){ drag=null; el.classList.remove('dragging'); backHome(el); }
+    });
+  });
+}
+
+function backHome(el){
+  el.style.left=el.dataset.ox+'px';
+  el.style.top=el.dataset.oy+'px';
+}
+
+function placeOk(el,bin){
+  placed++;
+  beep(660,0.1);setTimeout(function(){beep(880,0.14);},90);
+  var info=COLOR[el.dataset.color];
+  showToast('对啦！'+el.dataset.name+'是'+info.name+'色的，放进'+info.name+'筐 ✓','ok');
+  progress.textContent='第 '+(level+1)+' 关 · 已收 '+placed+'/'+total;
+  bin.classList.remove('bounce'); void bin.offsetWidth; bin.classList.add('bounce');
+  var dot=document.createElement('span'); dot.className='dot';
+  bin.querySelector('.dots').appendChild(dot);
+  var r=el.getBoundingClientRect(), br=bin.getBoundingClientRect(), area=playArea.getBoundingClientRect();
+  el.classList.add('flying');
+  if(!reduceMotion){
+    el.style.left=(br.left+br.width/2-r.width/2-area.left)+'px';
+    el.style.top=(br.top+br.height/2-r.height/2-area.top)+'px';
+  }
+  setTimeout(function(){
+    if(el.parentNode)el.parentNode.removeChild(el);
+    if(placed===total){ onLevelDone(); }
+  },reduceMotion?0:480);
+}
+
+function placeBad(el,bin){
+  var info=COLOR[el.dataset.color], binInfo=COLOR[bin.dataset.color];
+  beep(200,0.18,'triangle',0.1);
+  showToast(el.dataset.name+'是'+info.name+'色的，该进'+info.name+'筐，不是'+binInfo.name+'筐哦','err',2400);
+  setTimeout(function(){ backHome(el); },reduceMotion?0:120);
+}
+
+function onLevelDone(){
+  finished=true;
+  if(level<LEVELS.length-1){
+    nextBtn.hidden=false;
+    showToast('第 '+(level+1)+' 关完成！','ok');
+  }else{
+    setTimeout(function(){
+      congrats.classList.remove('hidden');
+      beep(660,0.12);setTimeout(function(){beep(880,0.15);},120);setTimeout(function(){beep(1046,0.2);},260);
+    },reduceMotion?0:600);
+  }
+}
+
+nextBtn.addEventListener('click',function(){ renderLevel(level+1); });
+resetBtn.addEventListener('click',function(){ if(!congrats.classList.contains('hidden'))congrats.classList.add('hidden'); renderLevel(level); });
+document.getElementById('startBtn').addEventListener('click',function(){ demo.classList.add('hidden'); renderLevel(0); });
+document.getElementById('skipDemo').addEventListener('click',function(){ demo.classList.add('hidden'); renderLevel(0); });
+document.getElementById('againBtn').addEventListener('click',function(){ congrats.classList.add('hidden'); renderLevel(0); });
+
+if(reduceMotion){ var stage=document.querySelector('.demo-stage'); if(stage)stage.style.display='none'; }
+window.addEventListener('resize',function(){ if(playArea.querySelector('.item')) layoutItems(); });
+})();
+</script>
+</body>
+</html>

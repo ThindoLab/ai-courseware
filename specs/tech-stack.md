@@ -51,7 +51,7 @@ Node.js **≥ 18**。包管理：**npm**（`package-lock.json`）。
 | 知识检索 | 本地切片 + 可选 ima | `knowledge_search` 本地；`ima_search` 由教练按目录判断 |
 | 教练 / 角色 | `pi/教练.md` + `pi/角色/*.md` | 排程与岗位认定分开 |
 | 受众 | `inferAudience` + `scoreAudienceQuality` | 中幼儿/家庭/教室/培训 + 五硬核打分 |
-| 模型 | `pickAgentModel`（deepseek 优先，避开 fable）；`maxTokens` ≥ 32k | fable 不调工具；8192 会 thinking 截断 |
+| 模型 | `pickAgentModel`（`bai/deepseek-v4-flash` 优先，其次 ark 套餐，避开 fable）；`maxTokens` ≥ 32k | B.AI：`https://api.b.ai/v1`。火山 Agent Plan 作后备。官方 `api.deepseek.com` 常 402。 |
 
 ---
 

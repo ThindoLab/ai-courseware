@@ -24,14 +24,15 @@ export function saveVersionManifest(data) {
   fs.writeFileSync(MANIFEST_PATH, JSON.stringify(data, null, 2) + "\n");
 }
 
-export function stampHtml(html, { id, at, note }) {
+export function stampHtml(html, { id, at, note, iteration }) {
   const metas = [
     `<meta name="aid-version" content="${esc(id)}">`,
     `<meta name="aid-version-at" content="${esc(at)}">`,
   ];
+  if (iteration) metas.push(`<meta name="aid-iteration" content="${esc(iteration)}">`);
   if (note) metas.push(`<meta name="aid-version-note" content="${esc(note)}">`);
   const block = metas.join("\n");
-  let next = String(html).replace(/\s*<meta name="aid-version(?:-at|-note)?"[^>]*>/gi, "");
+  let next = String(html).replace(/\s*<meta name="aid-(?:version(?:-at|-note)?|iteration)"[^>]*>/gi, "");
   if (/<head[^>]*>/i.test(next)) return next.replace(/<head[^>]*>/i, (m) => `${m}\n${block}`);
   return `${block}\n${next}`;
 }
@@ -49,7 +50,7 @@ export function nextVersionId(items = []) {
 }
 
 /** 冻结当前 samples/<slug>.html 为下一版历史（内容未变则不新增）。返回新 id 或已有 id。 */
-export function snapshotCurrent(slug, { at, note } = {}) {
+export function snapshotCurrent(slug, { at, note, iteration } = {}) {
   const src = path.join(ROOT, "samples", `${slug}.html`);
   if (!fs.existsSync(src)) return null;
   const html = fs.readFileSync(src, "utf8");
@@ -63,7 +64,7 @@ export function snapshotCurrent(slug, { at, note } = {}) {
   }
   const id = nextVersionId(items);
   const stampedAt = at || new Date().toISOString().slice(0, 19);
-  const stamped = stampHtml(html, { id, at: stampedAt, note: note || "快照" });
+  const stamped = stampHtml(html, { id, at: stampedAt, note: note || "快照", iteration });
   const rel = `samples/versions/${slug}/${id}.html`;
   const dest = path.join(ROOT, rel);
   fs.mkdirSync(path.dirname(dest), { recursive: true });
@@ -76,20 +77,20 @@ export function snapshotCurrent(slug, { at, note } = {}) {
 }
 
 /** 写入新当前版：先确保旧当前已入库，再落新 HTML 为 vN+1。 */
-export function publishNewVersion(slug, html, { at, note } = {}) {
+export function publishNewVersion(slug, html, { at, note, iteration } = {}) {
   const src = path.join(ROOT, "samples", `${slug}.html`);
-  if (fs.existsSync(src)) snapshotCurrent(slug, { at, note: "被下一版替换前的当前稿" });
+  if (fs.existsSync(src)) snapshotCurrent(slug, { at, note: "被下一版替换前的当前稿", iteration });
   const man = loadVersionManifest();
   const entry = man[slug] || { current: "", items: [] };
   const items = Array.isArray(entry.items) ? entry.items : [];
   const id = nextVersionId(items);
   const stampedAt = at || new Date().toISOString().slice(0, 19);
-  const stamped = stampHtml(html, { id, at: stampedAt, note: note || "新生成" });
+  const stamped = stampHtml(html, { id, at: stampedAt, note: note || "新生成", iteration });
   const rel = `samples/versions/${slug}/${id}.html`;
   fs.mkdirSync(path.join(VERSIONS_DIR, slug), { recursive: true });
   fs.writeFileSync(path.join(ROOT, rel), stamped, "utf8");
   fs.writeFileSync(src, stamped, "utf8");
-  items.push({ id, at: stampedAt, note: note || "新生成", file: rel });
+  items.push({ id, at: stampedAt, note: note || "新生成", iteration: iteration || "", file: rel });
   man[slug] = { current: id, items };
   saveVersionManifest(man);
   return id;
@@ -100,7 +101,7 @@ function sameHtml(a, b) {
 }
 
 function stripStamp(html) {
-  return String(html).replace(/\s*<meta name="aid-version(?:-at|-note)?"[^>]*>/gi, "").trim();
+  return String(html).replace(/\s*<meta name="aid-(?:version(?:-at|-note)?|iteration)"[^>]*>/gi, "").trim();
 }
 
 function esc(s) {

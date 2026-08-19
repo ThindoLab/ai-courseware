@@ -45,8 +45,11 @@ test("pickAgentModel 避开 fable、优先 deepseek/haiku", () => {
     { provider: "anthropic", id: "claude-fable-5" },
     { provider: "anthropic", id: "claude-haiku-4-5" },
     { provider: "deepseek", id: "deepseek-v4-flash" },
+    { provider: "ark", id: "deepseek-v4-flash" },
+    { provider: "bai", id: "deepseek-v4-flash" },
   ];
   const m = pickAgentModel(fake);
+  assert.equal(m.provider, "bai");
   assert.equal(m.id, "deepseek-v4-flash");
   // fable 单独在列表时也不该被选（blocked 后回退 available[0] 仅当无 usable——此处 usable 有 haiku）
   const onlyFableAndHaiku = [
@@ -133,6 +136,69 @@ test("qa_check 检出紫粉抢戏和底栏压主图", async () => {
   assert.equal(j.passed, true, "观感项是 warn，不应单独 fail");
 });
 
+test("qa_check 不把 SVG 坐标 24-72 当成 4-7 岁", async () => {
+  const html = `<!doctype html><html><head><title>t</title></head><body>
+  <style>.b{min-height:48px;font-size:16px}</style>
+  <div id="stage"></div><button class="b" id="btn-reset">重置</button>
+  <script>const d="m24-72l5 2";</script></body></html>`;
+  const j = JSON.parse((await qaCheckTool.execute("t", { html })).content[0].text);
+  assert.equal(
+    j.issues.some((i: { rule: string }) => i.rule === "ux-intro"),
+    false,
+    JSON.stringify(j.issues)
+  );
+});
+
+test("qa_check 认下一幕；注释关卡不单独当多关", async () => {
+  const onlyComment = `<!doctype html><html><head><title>t</title></head><body>
+  <style>.b{min-height:48px;font-size:16px}</style>
+  <div id="stage"></div><button class="b" id="btn-reset">重置</button>
+  <script>/* 渲染关卡 */</script></body></html>`;
+  const c = JSON.parse((await qaCheckTool.execute("t", { html: onlyComment })).content[0].text);
+  assert.equal(
+    c.issues.some((i: { rule: string }) => i.rule === "ux-next"),
+    false,
+    JSON.stringify(c.issues)
+  );
+  const withNext = `<!doctype html><html><head><title>t</title></head><body>
+  <style>.b{min-height:48px;font-size:16px}</style>
+  <div id="stage"></div><button class="b" id="btn-reset">重置</button>
+  <button class="next-btn">下一幕</button>
+  <div class="celebrate">完成啦</div>
+  <script>const LEVELS=[{}];</script></body></html>`;
+  const n = JSON.parse((await qaCheckTool.execute("t", { html: withNext })).content[0].text);
+  assert.equal(
+    n.issues.some((i: { rule: string }) => i.rule === "ux-next"),
+    false,
+    JSON.stringify(n.issues)
+  );
+});
+
+test("qa_check 自写 bean 无 Peeps 给 warn", async () => {
+  const html = `<!doctype html><html><head><title>均分</title></head><body>
+  <style>.b{min-height:48px;font-size:16px}</style>
+  <div id="stage"></div><button class="b" id="btn-reset">重置</button>
+  <script>function bean(x,y){return '<g></g>';}</script></body></html>`;
+  const j = JSON.parse((await qaCheckTool.execute("t", { html })).content[0].text);
+  assert.ok(j.issues.some((i: { rule: string }) => i.rule === "cast-inline"));
+  assert.equal(j.passed, true);
+});
+
+test("qa_check 脚本语法错误应 fail", async () => {
+  const dead = `<!doctype html><html><head><title>t</title></head><body>
+  <style>.b{min-height:48px;font-size:16px}</style>
+  <div id="stage"></div><button class="b" id="btn-reset">重置</button>
+  <script>
+  const scenes = [
+    {draw:(d)=>d.innerHTML=\`<svg></svg>\`;},
+  ];
+  </script></body></html>`;
+  const r = await qaCheckTool.execute("t", { html: dead });
+  const j = JSON.parse(r.content[0].text);
+  assert.equal(j.passed, false);
+  assert.ok(j.issues.some((i: { rule: string }) => i.rule === "script-syntax"), JSON.stringify(j.issues));
+});
+
 test("qa_check 干净 HTML 通过", async () => {
   const goodHtml = `<!doctype html><html lang="zh"><head><title>好</title></head><body>
   <style>.b{min-height:48px;font-size:16px}@media(prefers-reduced-motion:reduce){*{animation:none}}</style>
@@ -174,6 +240,37 @@ test("qa_check 可玩契约：低龄无跳过、多关无下一关/祝贺、死�
   const d = JSON.parse((await qaCheckTool.execute("t", { html: dead })).content[0].text);
   assert.equal(d.passed, false);
   assert.ok(d.issues.some((i: { rule: string }) => i.rule === "playable-dead"), JSON.stringify(d.issues));
+});
+
+test("qa_check 揭晓章盖住答案应 fail，镂空环和按钮对号应过", async () => {
+  const stamp = `<!doctype html><html><head><title>灯</title>
+  <style>.b{min-height:48px;font-size:16px}@media(prefers-reduced-motion:reduce){*{animation:none}}</style>
+  </head><body>
+  <p>3-6 岁 · 学前</p>
+  <div id="stage">主交互</div>
+  <button class="b" id="skip">跳过</button>
+  <button class="b" id="btn-reset">重置</button>
+  <script>
+    inner += '<g id="demoCheck"><rect width="60" height="60" rx="14" fill="#e6f9ef"/><text x="30" y="38">✓</text></g>';
+  </script></body></html>`;
+  const s = JSON.parse((await qaCheckTool.execute("t", { html: stamp })).content[0].text);
+  assert.equal(s.passed, false);
+  assert.ok(s.issues.some((i: { rule: string }) => i.rule === "reveal-cover"), JSON.stringify(s.issues));
+
+  const ring = `<!doctype html><html><head><title>灯</title>
+  <style>.b{min-height:48px;font-size:16px}@media(prefers-reduced-motion:reduce){*{animation:none}}</style>
+  </head><body>
+  <p>3-6 岁 · 学前</p>
+  <div id="stage">主交互</div>
+  <button class="b" id="skip">跳过</button>
+  <button class="b" id="btnCheck">✓ 看看对不对</button>
+  <button class="b" id="btn-reset">重置</button>
+  <script>
+    slot.innerHTML = '<circle fill="none" stroke="#2fbf71" stroke-width="4" r="28"/>';
+  </script></body></html>`;
+  const r = JSON.parse((await qaCheckTool.execute("t", { html: ring })).content[0].text);
+  assert.equal(r.passed, true, JSON.stringify(r.issues));
+  assert.ok(!r.issues.some((i: { rule: string }) => i.rule === "reveal-cover"));
 });
 
 test("qa_check 可玩契约完整则通过", async () => {

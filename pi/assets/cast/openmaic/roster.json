@@ -1,0 +1,24 @@
+{
+  "source": "THU-MAIC/OpenMAIC public/avatars",
+  "viewBox": "0 0 280 280",
+  "members": [
+    { "id": "teacher", "role": "adult", "zh": ["老师", "教师", "大人", "家长", "王母"], "use": "讲解、权威、家长" },
+    { "id": "assistant", "role": "adult", "zh": ["助教", "助手"], "use": "第二大人、旁白助手" },
+    { "id": "student1", "role": "child", "zh": ["同学", "孩子", "小孩", "主角"], "use": "默认孩子主角" },
+    { "id": "student2", "role": "child", "zh": ["男孩", "男同学"], "use": "第二孩子、对照同伴" },
+    { "id": "student3", "role": "child", "zh": ["女孩", "女同学", "织女"], "use": "第三孩子、织女可先用这个" },
+    { "id": "learner", "role": "child", "zh": ["学员"], "use": "听讲的孩子" },
+    { "id": "curious", "role": "child", "zh": ["好奇", "提问"], "use": "提问、发现" },
+    { "id": "thinker", "role": "child", "zh": ["思考", "想办法"], "use": "假设法、想一想" },
+    { "id": "scholar", "role": "child", "zh": ["书生", "读书"], "use": "文静、看书" },
+    { "id": "explorer", "role": "child", "zh": ["出行", "探险", "牛郎"], "use": "行程、出门、赶路" },
+    { "id": "dreamer", "role": "child", "zh": ["幻想", "嫦娥"], "use": "梦、月亮、想象" },
+    { "id": "reader", "role": "child", "zh": ["阅读"], "use": "读题、看书" },
+    { "id": "notes", "role": "child", "zh": ["笔记"], "use": "记录、列步骤" },
+    { "id": "coder", "role": "child", "zh": ["动手"], "use": "操作、做题" },
+    { "id": "builder", "role": "child", "zh": ["搭建"], "use": "拼搭、工程" },
+    { "id": "creative", "role": "child", "zh": ["创作"], "use": "画画、创作" },
+    { "id": "clown", "role": "trickster", "zh": ["捣蛋", "小丑", "错例"], "use": "错例角色，不要当安全题主角" },
+    { "id": "user", "role": "child", "zh": ["用户", "自己"], "use": "「你」的替身" }
+  ]
+}

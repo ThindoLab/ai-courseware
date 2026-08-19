@@ -16,10 +16,10 @@
 | 文件 | 岗位 | 上场 |
 |------|------|------|
 | `匹配员.md` | 案例画像匹配 | 每场先上，只调 `match_sample` |
-| `writer.md` | 写手 | 未交付精品时；`read` / `write` / `knowledge_search` |
+| `writer.md` | 写手 | 未交付精品时；`read` / `write` / `knowledge_search` / `cast_roster` / `cast_search` / `cast_asset` / `cast_icon` / `cast_svg` |
 | `图解.md` | 图解工艺 | 写手 `write` 前必读，不是独立上场岗 |
 | `qa.md` | 质检 | 落盘后；`read` / `qa_check` |
-| `regenerator.md` | 按 QA 重写 | 质检不过；`read` / `write` |
+| `regenerator.md` | 按 QA 重写 | 质检不过；`read` / `write` / 出图工具与写手相同 |
 
 教练本人认定在 `../教练.md`，不在本目录再写一份。
 

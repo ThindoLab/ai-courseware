@@ -63,7 +63,7 @@ pi/
    └ none       → 先判 ima，再派写手
 4. 教练 read ima/知识库目录.md → 对得上才 ima_search（≤5）
    本地/ima 都盖不住 → 可 web_search 1–2 次
-5. 写手 read writer.md + 图解.md → write
+5. 写手 read writer.md + 图解.md + assets/cast 手册 → write（人 roster，动物/物 search+asset；不调 cast_image）
 6. 质检 qa_check；不过 → regenerator 再 write 一轮
 7. 教练宣布结束
 ```

@@ -108,7 +108,7 @@
     ]
   },
   "classroom-hand": {
-    "current": "v2",
+    "current": "v3",
     "items": [
       {
         "id": "v1",
@@ -121,6 +121,13 @@
         "at": "2026-08-14T08:25:38",
         "note": "当前稿",
         "file": "samples/versions/classroom-hand/v2.html"
+      },
+      {
+        "id": "v3",
+        "at": "2026-08-17T10-03-41",
+        "note": "迭代R6 系统重跑 2026-08-17T10-03-41",
+        "iteration": "R6",
+        "file": "samples/versions/classroom-hand/v3.html"
       }
     ]
   },
@@ -148,7 +155,7 @@
     ]
   },
   "color-sort": {
-    "current": "v4",
+    "current": "v8",
     "items": [
       {
         "id": "v1",
@@ -173,6 +180,33 @@
         "at": "2026-08-14T10-09-13",
         "note": "系统重跑 2026-08-14T10-09-13",
         "file": "samples/versions/color-sort/v4.html"
+      },
+      {
+        "id": "v5",
+        "at": "2026-08-17T06-33-24",
+        "note": "系统重跑 2026-08-17T06-33-24",
+        "file": "samples/versions/color-sort/v5.html"
+      },
+      {
+        "id": "v6",
+        "at": "2026-08-17T07-00-47",
+        "note": "迭代R2 系统重跑 2026-08-17T07-00-47",
+        "iteration": "R2",
+        "file": "samples/versions/color-sort/v6.html"
+      },
+      {
+        "id": "v7",
+        "at": "2026-08-17T07-23-02",
+        "note": "迭代R3 系统重跑 2026-08-17T07-23-02",
+        "iteration": "R3",
+        "file": "samples/versions/color-sort/v7.html"
+      },
+      {
+        "id": "v8",
+        "at": "2026-08-17T09-44-41",
+        "note": "迭代R5 系统重跑 2026-08-17T09-44-41",
+        "iteration": "R5",
+        "file": "samples/versions/color-sort/v8.html"
       }
     ]
   },
@@ -223,7 +257,7 @@
     ]
   },
   "distance-meet": {
-    "current": "v2",
+    "current": "v3",
     "items": [
       {
         "id": "v1",
@@ -236,11 +270,18 @@
         "at": "2026-08-14T08-40-46",
         "note": "系统重跑 2026-08-14T08-40-46",
         "file": "samples/versions/distance-meet/v2.html"
+      },
+      {
+        "id": "v3",
+        "at": "2026-08-17T10-03-41",
+        "note": "迭代R6 系统重跑 2026-08-17T10-03-41",
+        "iteration": "R6",
+        "file": "samples/versions/distance-meet/v3.html"
       }
     ]
   },
   "fraction": {
-    "current": "v2",
+    "current": "v3",
     "items": [
       {
         "id": "v1",
@@ -253,6 +294,12 @@
         "at": "2026-08-14T08-40-46",
         "note": "系统重跑 2026-08-14T08-40-46",
         "file": "samples/versions/fraction/v2.html"
+      },
+      {
+        "id": "v3",
+        "at": "2026-08-17T06-33-24",
+        "note": "系统重跑 2026-08-17T06-33-24",
+        "file": "samples/versions/fraction/v3.html"
       }
     ]
   },
@@ -405,7 +452,7 @@
     ]
   },
   "pattern-lights": {
-    "current": "v3",
+    "current": "v7",
     "items": [
       {
         "id": "v1",
@@ -424,6 +471,33 @@
         "at": "2026-08-14T10-09-13",
         "note": "系统重跑 2026-08-14T10-09-13",
         "file": "samples/versions/pattern-lights/v3.html"
+      },
+      {
+        "id": "v4",
+        "at": "2026-08-17T06-33-24",
+        "note": "系统重跑 2026-08-17T06-33-24",
+        "file": "samples/versions/pattern-lights/v4.html"
+      },
+      {
+        "id": "v5",
+        "at": "2026-08-17T07-00-47",
+        "note": "迭代R2 系统重跑 2026-08-17T07-00-47",
+        "iteration": "R2",
+        "file": "samples/versions/pattern-lights/v5.html"
+      },
+      {
+        "id": "v6",
+        "at": "2026-08-17T07-23-02",
+        "note": "迭代R3 系统重跑 2026-08-17T07-23-02",
+        "iteration": "R3",
+        "file": "samples/versions/pattern-lights/v6.html"
+      },
+      {
+        "id": "v7",
+        "at": "2026-08-17T07-52-53",
+        "note": "迭代R4 系统重跑 2026-08-17T07-52-53",
+        "iteration": "R4",
+        "file": "samples/versions/pattern-lights/v7.html"
       }
     ]
   },
@@ -479,7 +553,7 @@
     ]
   },
   "stranger-door": {
-    "current": "v2",
+    "current": "v3",
     "items": [
       {
         "id": "v1",
@@ -492,6 +566,12 @@
         "at": "2026-08-14T08-40-46",
         "note": "系统重跑 2026-08-14T08-40-46",
         "file": "samples/versions/stranger-door/v2.html"
+      },
+      {
+        "id": "v3",
+        "at": "2026-08-17T06-33-24",
+        "note": "系统重跑 2026-08-17T06-33-24",
+        "file": "samples/versions/stranger-door/v3.html"
       }
     ]
   },

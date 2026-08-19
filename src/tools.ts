@@ -36,6 +36,53 @@ interface QaIssue {
   detail: string;
 }
 
+/** 抽出内联 JS（跳过 src= 与 JSON-LD）。给 qa_check 和 create 复用。 */
+/** 去掉注释、path 数据，避免坐标 `24-72` 或注释「关卡」误伤年龄/关卡规则。 */
+export function stripMarkupNoise(html: string): string {
+  return html
+    .replace(/<!--[\s\S]*?-->/g, " ")
+    .replace(/\/\*[\s\S]*?\*\//g, " ")
+    .replace(/(^|[^:]);?\/\/[^\n]*/g, "$1")
+    .replace(/\bd\s*=\s*["'][^"']*["']/gi, 'd=""')
+    .replace(/<path\b[^>]*>[\s\S]*?<\/path>/gi, "");
+}
+
+export function extractInlineScripts(html: string): string[] {
+  const out: string[] = [];
+  const re = /<script\b([^>]*)>([\s\S]*?)<\/script>/gi;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(html))) {
+    const attrs = m[1] || "";
+    if (/\bsrc\s*=/i.test(attrs)) continue;
+    if (/type\s*=\s*["'][^"']*(json|ld\+json)[^"']*["']/i.test(attrs)) continue;
+    out.push(m[2] || "");
+  }
+  return out;
+}
+
+export function collectScriptSyntaxIssues(html: string): QaIssue[] {
+  const issues: QaIssue[] = [];
+  const scripts = extractInlineScripts(html);
+  scripts.forEach((src, i) => {
+    const body = src.trim();
+    if (!body) return;
+    try {
+      // 与浏览器一样当脚本体解析；对象字面量里 `(d)=>expr;` 会在此挂
+      new Function(body);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      issues.push({
+        level: "error",
+        rule: "script-syntax",
+        detail:
+          `第 ${i + 1} 段 <script> 无法解析：${msg}。` +
+          "对象字面量里禁止 (d)=>expr; 要写成 (d)=>{ expr; }。模板字符串必须闭合。",
+      });
+    }
+  });
+  return issues;
+}
+
 function quotedStrings(src: string): string[] {
   const out: string[] = [];
   const re = /["']([^"']+)["']/g;
@@ -66,6 +113,34 @@ function asStringList(v: unknown): string[] {
   return v.map((x) => String(x));
 }
 
+function numAttr(attrs: string, name: string): number | null {
+  const m = attrs.match(new RegExp(`\\b${name}\\s*=\\s*["']([\\d.]+)`, "i"));
+  return m ? Number(m[1]) : null;
+}
+
+/** 不透明「对了」方牌叠在刚揭示的答案上（演示/玩同一条）。镂空环、按钮上的 ✓、旁白里的 ✓ 不算。 */
+export function hasOpaqueRevealStamp(html: string): boolean {
+  if (
+    /id=["'][^"']*(demoCheck|okStamp|checkStamp|revealStamp|stampOk)[^"']*["']/i.test(html) &&
+    /[✓✔]/.test(html) &&
+    /<rect\b[^>]*\bfill\s*=\s*["'](?!none|transparent)/i.test(html)
+  ) {
+    return true;
+  }
+  const plate =
+    /<rect\b([^>]*)>(?:\s*<[^/>][^>]*>\s*){0,3}<text\b[^>]*>\s*[✓✔]/gi;
+  let m: RegExpExecArray | null;
+  while ((m = plate.exec(html))) {
+    const attrs = m[1];
+    if (!/\bfill\s*=\s*["'](?!none|transparent)[^"']+["']/i.test(attrs)) continue;
+    const w = numAttr(attrs, "width");
+    const h = numAttr(attrs, "height");
+    if (w == null || h == null) continue;
+    if (w >= 36 && w <= 96 && h >= 36 && h <= 96 && Math.abs(w - h) <= 24) return true;
+  }
+  return false;
+}
+
 /**
  * 自动化质检：对生成的 HTML 教具做合规检查。
  * 检查项：外链 / 触控尺寸 / 结构 / 外部库 / reduced-motion / 字号 / 体积 / 一屏 / 紫粉抢戏 / 底栏压主图 /
@@ -78,7 +153,8 @@ export const qaCheckTool = defineTool({
   description:
     "对生成的单文件 HTML 教具做自动化合规检查：外链资源、触控尺寸(≥44px)、结构完整性、外部库引用、" +
     "reduced-motion/静态模式、字号(≥16px)、体积(≤500KB)、一屏视口、紫粉抢戏、底栏压主图、" +
-    "可玩契约（多关必须有下一关和祝贺页；学前必须可跳过真演示；aid-contract 中答案必须出现在候选里）。" +
+    "可玩契约（多关必须有下一关和祝贺页；学前必须可跳过真演示；aid-contract 中答案必须出现在候选里；" +
+    "揭晓章不得用实心方牌+对号盖住刚出现的答案；内联 <script> 必须能解析）。" +
     "返回 JSON 问题清单（passed/issues/stats）。error 级不通过，必须修正后再交。" +
     "写完 HTML 后用本工具自查。现有精品锁在 pi/memory/keep.md，不要为过检去整页重写它们。",
   parameters: Type.Object({
@@ -172,8 +248,11 @@ export const qaCheckTool = defineTool({
         detail: "未检测到「我会说」；若做成挡主图的长旁白应改藏，不要为补这一项挤掉主操作",
       });
     }
-    const youngTopic = /3-6|4-7|学前|中幼儿|分类|凑十|翻牌|配对|比长短|比一比/i.test(html);
-    const multiLevel = /第一关|LEVELS\s*=|levelIndex|curLevel|关卡/i.test(html);
+    const visible = stripMarkupNoise(html);
+    const youngTopic = /3\s*[-–]\s*6\s*岁|4\s*[-–]\s*7\s*岁|学前|中幼儿|分类|凑十|翻牌|配对|比长短|比一比/i.test(
+      visible
+    );
+    const multiLevel = /第一关|LEVELS\s*=|levelIndex|curLevel|下一幕|下一关/i.test(visible);
     if (youngTopic && !/跳过|skip/i.test(html)) {
       issues.push({
         level: "error",
@@ -193,16 +272,43 @@ export const qaCheckTool = defineTool({
         detail: "低龄开场有演示壳，但没有 keyframes/WAAPI，可能是静图冒充「看一遍」",
       });
     }
-    if (multiLevel && !/下一关|nextBtn|nextLevel|next-level/i.test(html)) {
+    if (multiLevel && !/下一关|下一幕|nextBtn|nextLevel|next-level|next-btn/i.test(html)) {
       issues.push({
         level: "error",
         rule: "ux-next",
-        detail: "检测到多关，但没有「下一关」入口，第一关做完可能停死",
+        detail: "检测到多关，但没有「下一关/下一幕」入口，第一关做完可能停死",
+      });
+    }
+    if (
+      /function\s+bean\s*\(/i.test(html) &&
+      !/open-peeps|viewBox\s*=\s*["']0 0 704/i.test(html)
+    ) {
+      issues.push({
+        level: "warn",
+        rule: "cast-inline",
+        detail: "自写 bean() 且未见 Open Peeps。有名字的人应内联 dicebear_svg，不要竖线断肢",
+      });
+    }
+    const namedFolk = /牛郎|织女|王母|悟空|哪吒|嫦娥/.test(visible);
+    const weakPerson = /function\s+(bean|person|maggieSVG|magpie)\s*\(/i.test(html);
+    const hasRoster =
+      /data-cast-roster=/.test(html) ||
+      /data-cast-pack=/.test(html) ||
+      /viewBox\s*=\s*["']0 0 280 280["']/.test(html);
+    const hasIconPerson = /man-farmer|woman-farmer|princess|fairy|person-with-crown|kimono|cast_icon|noto:ox|noto:cow/.test(
+      html
+    );
+    if (namedFolk && weakPerson && !hasRoster && !hasIconPerson) {
+      issues.push({
+        level: "error",
+        rule: "cast-quality",
+        detail:
+          "故事人物仍是手画。人用 cast_roster（data-cast-roster）；动物/物用 cast_search+cast_asset（data-cast-pack）。不要手画，不要 cast_image。",
       });
     }
     if (
       multiLevel &&
-      !/祝贺|庆祝|完成啦|通关|well-?done|celebrate|winScreen|endScreen|id=["'](done|final|win)/i.test(html)
+      !/祝贺|庆祝|完成啦|通关|well-?done|celebrate|winScreen|endScreen|id=["'](done|final|win|finish)/i.test(html)
     ) {
       issues.push({
         level: "error",
@@ -214,12 +320,20 @@ export const qaCheckTool = defineTool({
       multiLevel &&
       /完成/.test(html) &&
       /(?:stage|levelIndex|curLevel|level)\s*=\s*0/.test(html) &&
-      !/id=["'](done|final|win|end)|winScreen|endScreen|screen-done/i.test(html)
+      !/id=["'](done|final|win|end|finish)|winScreen|endScreen|screen-done|id=["']celebrate/i.test(html)
     ) {
       issues.push({
         level: "error",
         rule: "ux-end-loop",
         detail: "文案有「完成」但下一关仍把关卡清零，且没有独立结束页（对照 there-be）",
+      });
+    }
+    if (hasOpaqueRevealStamp(html)) {
+      issues.push({
+        level: "error",
+        rule: "reveal-cover",
+        detail:
+          "揭晓章盖住答案：不透明方牌 + 对号叠在刚补上/刚填入的内容上（演示层也算）。对了用镂空环（fill=none 的圈），或把对号放在答案旁边，不要实心牌盖上去",
       });
     }
 
@@ -280,6 +394,8 @@ export const qaCheckTool = defineTool({
         }
       }
     }
+
+    for (const syn of collectScriptSyntaxIssues(html)) issues.push(syn);
 
     // 4. 外部库：<script src="非空"> 且非 http（http 已由 external-link 捕获）
     const extLibRe = /<script[^>]*\bsrc\s*=\s*["']([^"']+)["']/gi;

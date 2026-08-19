@@ -18,6 +18,14 @@
 | `qa_check` | 包装 `src/tools.ts` | 写完后合规检查 |
 | `knowledge_search` | 包装 `src/tools.ts` | 本地 `knowledge/extracted/` |
 | `ima_search` | `ima-search.ts` | 账号知识库；写手禁用 |
+| `cast_roster` | `cast-roster.ts` | OpenMAIC 闭集人物；有名字的人用这个 |
+| `cast_search` | `cast-roster.ts` | 搜图：返回 类型/名称 + id |
+| `cast_asset` | `cast-roster.ts` | 按 id 取 SVG，占位 `data-cast-pack` |
+| `cast_icon` | `cast-lanes.ts` | 小颗粒图标搜+拉 |
+| `cast_svg` | `cast-lanes.ts` | 代码 SVG 模板兜底（过程） |
+| `icon_search` | `icon-cast.ts` | Iconify 搜图标 id；生成时用，写手可调 |
+| `icon_svg` | `icon-cast.ts` | 按 id 拉 SVG 源码内联；禁止把 URL 写进教具 |
+| `dicebear_svg` | `icon-cast.ts` | Open Peeps 拼人 SVG；动物不要用 |
 | `web_search` | `web-search.ts` + 扩展 | 公开网页；写手禁用 |
 
 ## 二层：按岗位
@@ -26,17 +34,18 @@
 |------|------|
 | 匹配员 | 仅 `match_sample` |
 | 教练 | `read` `ima_search` `web_search`（另可 `use_sample` 在匹配为 use 之后） |
-| 写手 | `read` `write` `knowledge_search` |
+| 写手 | `read` `write` `knowledge_search` `cast_roster` `cast_search` `cast_asset` `cast_icon` `cast_svg` `icon_search` `icon_svg` `dicebear_svg` |
 | 质检 | `read` `qa_check` |
-| 重写 | `read` `write` |
+| 重写 | `read` `write` `cast_roster` `cast_search` `cast_asset` `cast_icon` `cast_svg` `icon_search` `icon_svg` `dicebear_svg` |
 
-禁止 bash。外网只给教练。
+禁止 bash。网页检索只给教练（`ima_search` / `web_search`）。写手可调图标接口，只把 SVG 源码内联进教具，禁止把 `api.iconify.design` / `api.dicebear.com` 写进 HTML。不接 Iconfont。
 
 ## 三层：未注入
 
 | 名称 | 说明 |
 |------|------|
 | `edit` | 易拉长 loop；修正用再 `write` |
+| `cast_image` | GPT Image 2，代码仍在 `cast-lanes.ts`，**暂不注入** |
 | 整包 `pi-web-access` | 含 fetch / YouTube / 策展 TUI。create 仍 `noExtensions`，只挂薄封装 `web_search` |
 
 ## 给人审
