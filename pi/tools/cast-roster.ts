@@ -261,8 +261,8 @@ export function injectCastPack(html: string, castRoot: string): string {
   );
 }
 
-export function createCastSearchTool(opts: { root?: string } = {}) {
-  const castRoot = defaultCastRoot(opts.root);
+export function createCastSearchTool(opts: { root?: string; castRoot?: string } = {}) {
+  const castRoot = opts.castRoot || defaultCastRoot(opts.root);
   return defineTool({
     name: "cast_search",
     label: "搜图",
@@ -300,8 +300,8 @@ export function createCastSearchTool(opts: { root?: string } = {}) {
   });
 }
 
-export function createCastAssetTool(opts: { root?: string } = {}) {
-  const castRoot = defaultCastRoot(opts.root);
+export function createCastAssetTool(opts: { root?: string; castRoot?: string } = {}) {
+  const castRoot = opts.castRoot || defaultCastRoot(opts.root);
   return defineTool({
     name: "cast_asset",
     label: "取材 SVG",

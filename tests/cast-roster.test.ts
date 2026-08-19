@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { qaCheckTool } from "../src/tools.ts";
 import { INJECTED_TOOL_NAMES } from "../pi/tools/index.ts";
@@ -16,7 +17,44 @@ import {
   defaultCastRoot,
   stripRosterMetadata,
   readRosterSvg,
+  resetCastCatalogCache,
 } from "../pi/tools/cast-roster.ts";
+
+function makeCastFixture() {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "cast-idx-"));
+  fs.mkdirSync(path.join(dir, "packs", "noto"), { recursive: true });
+  const cow = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M2 8h12"/></svg>`;
+  const dragon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M1 8h8"/></svg>`;
+  fs.writeFileSync(path.join(dir, "packs", "noto", "cow-face.svg"), cow);
+  fs.writeFileSync(path.join(dir, "packs", "noto", "dragon-face.svg"), dragon);
+  fs.writeFileSync(
+    path.join(dir, "index.json"),
+    JSON.stringify({
+      items: [
+        {
+          id: "noto:cow-face",
+          type: "animal",
+          type_zh: "动物",
+          name: "cow-face",
+          label: "动物/cow-face",
+          pack: "noto",
+          file: "packs/noto/cow-face.svg",
+        },
+        {
+          id: "noto:dragon-face",
+          type: "animal",
+          type_zh: "动物",
+          name: "dragon-face",
+          label: "动物/dragon-face",
+          pack: "noto",
+          file: "packs/noto/dragon-face.svg",
+        },
+      ],
+    })
+  );
+  resetCastCatalogCache();
+  return dir;
+}
 
 const rosterDir = defaultRosterDir();
 
@@ -78,23 +116,22 @@ test("open-doodles 是合法 SVG 不是 JSX", () => {
 });
 
 test("cast_search 能搜到牛和龙", async () => {
-  const tool = createCastSearchTool();
+  const fixture = makeCastFixture();
+  const tool = createCastSearchTool({ castRoot: fixture });
   const cow = JSON.parse((await tool.execute("t", { query: "牛" })).content[0].text);
-  assert.equal(cow.ok, true);
+  assert.equal(cow.ok, true, JSON.stringify(cow));
   assert.ok(cow.hits.some((h: { id: string }) => /cow|ox/.test(h.id)), JSON.stringify(cow.hits));
   const dragon = JSON.parse((await tool.execute("t", { query: "dragon" })).content[0].text);
-  assert.ok(dragon.hits.some((h: { id: string }) => /dragon/.test(h.id)));
+  assert.ok(dragon.hits.some((h: { id: string }) => /dragon/.test(h.id)), JSON.stringify(dragon));
 });
 
 test("cast_asset + injectCastPack 填 noto 牛", async () => {
-  const tool = createCastAssetTool();
+  const fixture = makeCastFixture();
+  const tool = createCastAssetTool({ castRoot: fixture });
   const r = JSON.parse((await tool.execute("t", { id: "noto:cow-face" })).content[0].text);
-  assert.equal(r.ok, true);
+  assert.equal(r.ok, true, JSON.stringify(r));
   assert.match(r.svg, /<svg/);
-  const html = injectCastPack(
-    `<svg><g data-cast-pack="noto:cow-face"></g></svg>`,
-    defaultCastRoot()
-  );
+  const html = injectCastPack(`<svg><g data-cast-pack="noto:cow-face"></g></svg>`, fixture);
   assert.match(html, /<path|<g /);
   assert.ok(!/<g data-cast-pack="noto:cow-face"><\/g>/.test(html));
 });
